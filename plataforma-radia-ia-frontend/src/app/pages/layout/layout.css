@@ -1,0 +1,100 @@
+/* Layout Principal mediante CSS Grid */
+.app-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr; /* 280px para el menú, el resto para el contenido */
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--bg-dark-base);
+  overflow: hidden;
+}
+
+/* Sidebar Estilos */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(0, 229, 255, 0.1);
+  border-radius: 0;
+  padding: 25px 20px;
+  background: rgba(11, 14, 20, 0.85); /* Glassmorphism oscuro */
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  padding-left: 10px;
+}
+
+.sidebar-header h2 {
+  color: #ffffff;
+  font-size: 22px;
+  letter-spacing: 1.5px;
+}
+
+/* Perfil */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  margin-bottom: 35px;
+  border: 1px solid var(--border-color);
+}
+
+.avatar {
+  width: 45px;
+  height: 45px;
+  background: var(--accent-cyan);
+  color: #000;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name { color: #fff; font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.user-role { color: var(--accent-cyan); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* Navegación */
+.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 14px 20px;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.nav-item:hover { background: rgba(0, 229, 255, 0.05); color: #fff; }
+
+.nav-item.active {
+  background: rgba(0, 229, 255, 0.1);
+  color: var(--accent-cyan);
+  border-left: 3px solid var(--accent-cyan);
+}
+
+.sidebar-footer { margin-top: auto; }
+.logout:hover { background: rgba(255, 77, 77, 0.1); color: var(--error-red); }
+
+/* Área Principal del Dashboard */
+.main-content {
+  padding: 40px;
+  overflow-y: auto;
+  position: relative;
+}

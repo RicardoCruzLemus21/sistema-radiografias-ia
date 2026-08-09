@@ -1,0 +1,65 @@
+<div class="login-layout">
+  
+  <!-- Lado Izquierdo: Formulario y Animaciones -->
+  <div class="login-left">
+    <div class="scanner-line"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <!-- Tarjeta central del formulario -->
+    <div class="glass-panel login-card">
+      
+      <!-- Encabezado -->
+      <div class="logo-container">
+        <svg viewBox="0 0 24 24" width="56" height="56" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+        <h2 class="title">RADIA-OS</h2>
+        <p class="subtitle">Universidad Mariano Gálvez</p>
+      </div>
+
+      <!-- Formulario -->
+      <div class="input-group">
+        <label>CORREO ELECTRÓNICO</label>
+        <div class="input-wrapper">
+          <input type="email" [(ngModel)]="correo" placeholder="ejemplo@umg.edu.gt" />
+          <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>CONTRASEÑA</label>
+        <div class="input-wrapper">
+          <input type="password" [(ngModel)]="contrasena" placeholder="••••••••" />
+          <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Mensaje de Error Dinámico -->
+      <div *ngIf="errorMensaje" class="error-msg">
+        {{ errorMensaje }}
+      </div>
+
+      <button class="btn-primary" (click)="iniciarSesion()">
+        ACCEDER AL SISTEMA
+      </button>
+    </div>
+  </div>
+
+  <!-- Lado Derecho: Imagen Ilustrativa de Alta Definición -->
+  <div class="login-right">
+    <div class="image-overlay">
+      <div class="hero-text">
+        <h3>Entrenamiento Clínico con IA</h3>
+        <p>Plataforma web educativa con Inteligencia Artificial para el entrenamiento de estudiantes de medicina en análisis de radiografías.</p>
+      </div>
+    </div>
+  </div>
+
+</div>

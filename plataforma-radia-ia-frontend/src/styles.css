@@ -1,0 +1,57 @@
+/* Variables Globales de Color (Basadas en tus capturas del Anexo) */
+:root {
+  --bg-dark-base: #0B0E14;      /* Fondo principal muy oscuro */
+  --bg-panel: rgba(20, 25, 35, 0.65); /* Fondo para tarjetas */
+  --accent-cyan: #00E5FF;       /* Acento principal (Botones y bordes) */
+  --accent-cyan-hover: #00B3CC; /* Hover del acento */
+  --text-main: #E0E6ED;         /* Texto principal claro */
+  --text-muted: #8A9AAC;        /* Texto secundario/deshabilitado */
+  --border-color: rgba(255, 255, 255, 0.08);
+  --error-red: #FF4D4D;
+  --success-green: #00E676;
+  
+  --font-family-base: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Reset y Modo Oscuro Global */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark-base);
+  color: var(--text-main);
+  font-family: var(--font-family-base);
+  height: 100vh;
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Clase maestra para el efecto Glassmorphism */
+.glass-panel {
+  background: var(--bg-panel);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Estilos de botones genéricos */
+.btn-primary {
+  background-color: var(--accent-cyan);
+  color: #000;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-cyan-hover);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+}
