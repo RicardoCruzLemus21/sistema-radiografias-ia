@@ -1,0 +1,205 @@
+.visor-layout {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 80px); /* Restamos el padding del layout padre */
+  gap: 20px;
+}
+
+/* HEADER */
+.visor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 25px;
+  border-radius: 12px;
+  background: rgba(11, 14, 20, 0.7);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-back:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.visor-header h2 { color: #fff; font-size: 16px; font-weight: normal; margin: 0; }
+.highlight { color: var(--accent-cyan); font-weight: bold; }
+.timer { color: #00ff88; font-family: monospace; font-size: 18px; font-weight: bold; }
+
+/* CUERPO DEL VISOR (Split Screen) */
+.visor-body {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Visor de Radiografía (Izquierda) */
+.xray-viewer {
+  flex: 1;
+  background: #000;
+  border-radius: 12px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.toolbar {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+.toolbar button {
+  background: rgba(11, 14, 20, 0.8);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  color: var(--accent-cyan);
+  border-radius: 6px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toolbar button:hover { background: var(--accent-cyan); color: #000; }
+
+.image-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.xray-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: grayscale(100%) contrast(1.2); /* Aspecto más radiológico */
+}
+
+/* Panel de Diagnóstico (Derecha) */
+.diagnostic-panel {
+  flex: 0 0 400px; /* Ancho fijo para el panel */
+  background: rgba(11, 14, 20, 0.7);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  overflow-y: auto;
+}
+
+.panel-section h3 {
+  color: var(--accent-cyan);
+  font-size: 14px;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.helper-text {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 15px;
+}
+
+/* Estilos de los Checkboxes Personalizados */
+.checkbox-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.checkbox-container {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #fff;
+  user-select: none;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.checkbox-container:hover input ~ .checkmark { background-color: rgba(0, 229, 255, 0.1); }
+.checkbox-container input:checked ~ .checkmark { background-color: var(--accent-cyan); border-color: var(--accent-cyan); }
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after { display: block; }
+.checkbox-container .checkmark:after {
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid #000;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Textarea */
+textarea {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+  outline: none;
+}
+
+textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 229, 255, 0.1); }
+
+/* Botón Final */
+.panel-actions { margin-top: auto; padding-top: 20px; }
+.btn-primary { width: 100%; padding: 15px; font-weight: bold; background: var(--accent-cyan); color: #000; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+.btn-primary:hover { background: #00c4db; box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3); }
