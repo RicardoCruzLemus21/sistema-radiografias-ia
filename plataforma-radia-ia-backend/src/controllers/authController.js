@@ -9,17 +9,16 @@ const registrar = async (req, res) => {
             data: nuevoUsuario
         });
     } catch (error) {
+        // Devuelve 400 Bad Request si faltan datos o el correo ya existe
         res.status(400).json({ status: 'error', message: error.message });
     }
 };
-
-//Funcion de login
 
 const login = async (req, res) => {
     try {
         const { correo_electronico, contrasena } = req.body;
         // Se captura la IP para la tabla de Auditoria_Accesos
-        const ip_address = req.ip || req.connection.remoteAddress; 
+        const ip_address = req.ip || req.connection.remoteAddress || '127.0.0.1'; 
         
         const acceso = await authService.loginUsuario(correo_electronico, contrasena, ip_address);
         
@@ -32,7 +31,6 @@ const login = async (req, res) => {
         res.status(401).json({ status: 'error', message: error.message });
     }
 };
-
 
 const listarRoles = async (req, res) => {
     try {
@@ -61,7 +59,6 @@ const listarAuditoria = async (req, res) => {
     }
 };
 
-// Exportar las nuevas funciones
 module.exports = {
     registrar,
     login,
@@ -69,4 +66,3 @@ module.exports = {
     listarUsuarios,
     listarAuditoria
 };
-
