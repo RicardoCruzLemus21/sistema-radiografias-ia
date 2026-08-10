@@ -1,111 +1,114 @@
 const pool = require('../config/database');
-const dict = require('../config/dbDictionary');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// 1. Servicio para Registrar un nuevo usuario
 const registrarUsuario = async (datosUsuario) => {
     const { id_rol, nombre_completo, correo_electronico, contrasena } = datosUsuario;
-    try {
-        const querySelect = `SELECT * FROM ${dict.TABLAS.USUARIOS} WHERE ${dict.COLUMNAS.CORREO} = ?`;
-        const [existentes] = await pool.query(querySelect, [correo_electronico]);
-        
-        if (existentes.length > 0) {
-            throw new Error('El correo electrónico ya está registrado.');
-        }
-        
-        const salt = await bcrypt.genSalt(10);
-        const contrasenaHash = await bcrypt.hash(contrasena, salt);
-        
-        const queryInsert = `
-            INSERT INTO ${dict.TABLAS.USUARIOS} 
-            (${dict.COLUMNAS.ID_ROL}, ${dict.COLUMNAS.NOMBRE_COMPLETO}, ${dict.COLUMNAS.CORREO}, ${dict.COLUMNAS.CONTRASENA}) 
-            VALUES (?, ?, ?, ?)
-        `;
-        const [resultado] = await pool.query(queryInsert, [id_rol, nombre_completo, correo_electronico, contrasenaHash]);
-        
-        return { id_usuario: resultado.insertId, nombre_completo, correo_electronico };
-    } catch (error) {
-        throw error;
+
+    // VALIDACIÓN ESTRICTA: Evita el error "Unknown column 'undefined'" rechazando peticiones incompletas
+    if (!id_rol || !nombre_completo || !correo_electronico || !contrasena) {
+        throw new Error('Faltan datos obligatorios (id_rol, nombre_completo, correo_electronico, contrasena).');
     }
+
+    // 1. Validar que el correo no exista previamente
+    const [existe] = await pool.query('SELECT id_usuario FROM Usuarios WHERE correo_electronico = ?', [correo_electronico]);
+    if (existe.length > 0) {
+        throw new Error('El correo electrónico ya se encuentra registrado.');
+    }
+
+    // 2. Generar el Hash con bcrypt
+    const contrasena_hash = bcrypt.hashSync(contrasena, 10);
+
+    // 3. Inserción segura usando texto plano para el nombre de las columnas (No usar dbDictionary aquí)
+    const [resultado] = await pool.query(
+        `INSERT INTO Usuarios (id_rol, nombre_completo, correo_electronico, contrasena_hash, estado)
+         VALUES (?, ?, ?, ?, 'Activo')`,
+        [id_rol, nombre_completo, correo_electronico, contrasena_hash]
+    );
+
+    return { id_usuario: resultado.insertId, nombre_completo, correo_electronico };
 };
 
-// 2. Servicio para Iniciar Sesión (Login)
-const loginUsuario = async (correo_electronico, contrasena, ip_address) => {
-    try {
-        const querySelect = `SELECT * FROM ${dict.TABLAS.USUARIOS} WHERE ${dict.COLUMNAS.CORREO} = ?`;
-        const [usuarios] = await pool.query(querySelect, [correo_electronico]);
-        
-        if (usuarios.length === 0) {
-            throw new Error('Credenciales inválidas.');
-        }
-        
-        const usuario = usuarios[0];
-        
-        // Comparamos usando la llave dinámica del diccionario
-        const esValida = await bcrypt.compare(contrasena, usuario[dict.COLUMNAS.CONTRASENA]);
-        
-        if (!esValida) {
-            throw new Error('Credenciales inválidas.');
-        }
-        
-        const token = jwt.sign(
-            { 
-                id_usuario: usuario[dict.COLUMNAS.ID_USUARIO], 
-                id_rol: usuario[dict.COLUMNAS.ID_ROL] 
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '8h' }
-        );
-        
-        const queryAudit = `
-            INSERT INTO ${dict.TABLAS.AUDITORIA} 
-            (${dict.COLUMNAS.ID_USUARIO}, ${dict.COLUMNAS.DIRECCION_IP}) 
-            VALUES (?, ?)
-        `;
-        // Hacemos el insert de la auditoría de forma asíncrona pero esperando su finalización por seguridad
-        await pool.query(queryAudit, [usuario[dict.COLUMNAS.ID_USUARIO], ip_address]);
-        
-        return {
-            token,
-            usuario: {
-                id_usuario: usuario[dict.COLUMNAS.ID_USUARIO],
-                nombre: usuario[dict.COLUMNAS.NOMBRE_COMPLETO],
-                rol: usuario[dict.COLUMNAS.ID_ROL]
-            }
-        };
-    } catch (error) {
-        throw error;
+const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) => {
+    if (!correo_electronico || !contrasena_plana) {
+        throw new Error('Correo y contraseña son requeridos.');
     }
+
+    // 1. Buscar al usuario en la base de datos
+    const [usuarios] = await pool.query(
+        `SELECT u.id_usuario, u.id_rol, u.nombre_completo, u.correo_electronico, u.contrasena_hash, u.estado, r.nombre_rol 
+         FROM Usuarios u 
+         INNER JOIN Roles r ON u.id_rol = r.id_rol 
+         WHERE u.correo_electronico = ?`,
+        [correo_electronico]
+    );
+
+    if (usuarios.length === 0) {
+        throw new Error('Credenciales inválidas.');
+    }
+
+    const usuario = usuarios[0];
+
+    // 2. Validar que la cuenta esté activa
+    if (usuario.estado !== 'Activo') {
+        throw new Error('La cuenta de usuario se encuentra inactiva.');
+    }
+
+    // 3. Comparar la contraseña
+    const esValida = bcrypt.compareSync(contrasena_plana, usuario.contrasena_hash);
+    if (!esValida) {
+        throw new Error('Credenciales inválidas.');
+    }
+
+    // 4. Generar el token JWT
+    const payload = {
+        id_usuario: usuario.id_usuario,
+        id_rol: usuario.id_rol,
+        nombre_rol: usuario.nombre_rol,
+        correo_electronico: usuario.correo_electronico
+    };
+
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
+
+    // 5. Registrar la actividad en la tabla Auditoria_Accesos
+    const direccion_ip_segura = ip_address || 'Desconocida';
+    await pool.query(
+        `INSERT INTO Auditoria_Accesos (id_usuario, direccion_ip) VALUES (?, ?)`,
+        [usuario.id_usuario, direccion_ip_segura]
+    );
+
+    return {
+        token,
+        usuario: {
+            id_usuario: usuario.id_usuario,
+            nombre_completo: usuario.nombre_completo,
+            correo_electronico: usuario.correo_electronico,
+            rol: usuario.nombre_rol
+        }
+    };
 };
 
-// 3. Obtener todos los roles
 const obtenerRoles = async () => {
-    const queryRoles = `SELECT ${dict.COLUMNAS.ID_ROL}, ${dict.COLUMNAS.NOMBRE_ROL}, descripcion FROM ${dict.TABLAS.ROLES}`;
-    const [roles] = await pool.query(queryRoles);
+    const [roles] = await pool.query('SELECT id_rol, nombre_rol, descripcion FROM Roles');
     return roles;
 };
 
-// 4. Obtener todos los usuarios (sin exponer contraseñas)
 const obtenerUsuarios = async () => {
-    const queryUsuarios = `
-        SELECT u.${dict.COLUMNAS.ID_USUARIO}, u.${dict.COLUMNAS.NOMBRE_COMPLETO}, u.${dict.COLUMNAS.CORREO}, u.${dict.COLUMNAS.ESTADO}, r.${dict.COLUMNAS.NOMBRE_ROL} 
-        FROM ${dict.TABLAS.USUARIOS} u
-        INNER JOIN ${dict.TABLAS.ROLES} r ON u.${dict.COLUMNAS.ID_ROL} = r.${dict.COLUMNAS.ID_ROL}
-    `;
-    const [usuarios] = await pool.query(queryUsuarios);
+    const [usuarios] = await pool.query(
+        `SELECT u.id_usuario, u.nombre_completo, u.correo_electronico, r.nombre_rol, u.estado, u.fecha_registro 
+         FROM Usuarios u 
+         INNER JOIN Roles r ON u.id_rol = r.id_rol`
+    );
     return usuarios;
 };
 
-// 5. Obtener los registros de auditoría
 const obtenerAuditoria = async () => {
-    const queryAuditoria = `
-        SELECT a.id_acceso, u.${dict.COLUMNAS.NOMBRE_COMPLETO}, a.fecha_hora_login, a.${dict.COLUMNAS.DIRECCION_IP} 
-        FROM ${dict.TABLAS.AUDITORIA} a
-        INNER JOIN ${dict.TABLAS.USUARIOS} u ON a.${dict.COLUMNAS.ID_USUARIO} = u.${dict.COLUMNAS.ID_USUARIO}
-        ORDER BY a.fecha_hora_login DESC
-    `;
-    const [auditoria] = await pool.query(queryAuditoria);
+    const [auditoria] = await pool.query(
+        `SELECT a.id_acceso, u.nombre_completo, a.fecha_hora_login, a.direccion_ip 
+         FROM Auditoria_Accesos a
+         INNER JOIN Usuarios u ON a.id_usuario = u.id_usuario
+         ORDER BY a.fecha_hora_login DESC LIMIT 50`
+    );
     return auditoria;
 };
 

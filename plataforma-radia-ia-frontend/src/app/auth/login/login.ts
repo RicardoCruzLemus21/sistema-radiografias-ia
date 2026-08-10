@@ -4,6 +4,9 @@ import { AuthService } from '../../services/auth';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+// 1. Importamos el enumerador de roles que creamos anteriormente
+import { SystemRoles } from '../roles.enum'; 
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -19,24 +22,29 @@ export class LoginComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   iniciarSesion() {
-    // ==========================================
-    // BYPASS TEMPORAL PARA MAQUETACIÓN DE UI
-    // ==========================================
-    // Nos saltamos la verificación del backend para poder ver el diseño del layout.
-    this.router.navigate(['/sistema/estudiante']); 
-    
-    /* 
-    // ESTA ES LA LÓGICA REAL (La descomentaremos cuando encendamos Node.js)
     this.authService.login(this.correo, this.contrasena).subscribe({
       next: (res) => {
         console.log('Login exitoso, token guardado');
-        this.router.navigate(['/sistema/estudiante']); 
+        
+        const rolUsuario = this.authService.getRolUsuario() || '';
+        
+        // DEPURACIÓN: Esto nos dirá exactamente qué llega de la tabla Roles
+        console.log('ROL RECIBIDO DESDE MYSQL:', rolUsuario); 
+
+        // Normalizamos el string a minúsculas para evitar fallos por tildes o mayúsculas
+        const rolNormalizado = rolUsuario.toLowerCase();
+
+        // Validación más flexible
+        if (rolNormalizado.includes('catedr') || rolNormalizado.includes('admin')) {
+          this.router.navigate(['/sistema/catedratico']);
+        } else {
+          this.router.navigate(['/sistema/estudiante']);
+        }
       },
       error: (err) => {
         this.errorMensaje = 'Credenciales inválidas. Verifica tu correo y contraseña.';
-        console.error(err);
+        console.error('Error en autenticación:', err);
       }
     });
-    */
   }
 }
