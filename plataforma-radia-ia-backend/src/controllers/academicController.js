@@ -51,7 +51,8 @@ const verDashboard = async (req, res) => {
 
 const verResumenGeneral = async (req, res) => {
     try {
-        const resumen = await academicService.obtenerResumenGeneral();
+        const id_catedratico = req.usuario.id_usuario;
+        const resumen = await academicService.obtenerResumenGeneral(id_catedratico);
         res.status(200).json({ status: 'success', data: resumen });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });
@@ -68,6 +69,27 @@ const verDetalleEstudiante = async (req, res) => {
     }
 };
 
+const editarEstudiante = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resultado = await academicService.editarEstudiante(id, req.body);
+        res.status(200).json({ status: 'success', data: resultado });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+const eliminarEstudiante = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const id_catedratico = req.usuario.id_usuario;
+        await academicService.eliminarEstudiante(id, id_catedratico);
+        res.status(200).json({ status: 'success', message: 'Estudiante eliminado de tus secciones correctamente.' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     crear,
     asignar,
@@ -75,5 +97,7 @@ module.exports = {
     listarEstudiantes,
     verDashboard,
     verResumenGeneral,
-    verDetalleEstudiante
+    verDetalleEstudiante,
+    editarEstudiante,
+    eliminarEstudiante
 };

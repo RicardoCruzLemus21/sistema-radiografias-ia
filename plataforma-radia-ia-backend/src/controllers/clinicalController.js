@@ -47,6 +47,8 @@ const subirImagenRad = async (req, res) => {
 // NUEVA FUNCIÓN: Obtener la Worklist para el estudiante usando el Diccionario de Datos
 const obtenerWorklist = async (req, res) => {
     try {
+        const id_estudiante = req.usuario.id_usuario;
+        
         // Hacemos un JOIN dinámico utilizando estrictamente el Diccionario de Datos
         const query = `
             SELECT 
@@ -58,9 +60,11 @@ const obtenerWorklist = async (req, res) => {
                 'Pendiente' AS estado
             FROM ${TABLAS.CASOS} c
             JOIN ${TABLAS.PACIENTES} p ON c.${COLUMNAS.ID_PACIENTE} = p.${COLUMNAS.ID_PACIENTE}
+            INNER JOIN ${TABLAS.ASIGNACIONES} ae ON c.${COLUMNAS.ID_CURSO} = ae.${COLUMNAS.ID_CURSO}
+            WHERE ae.${COLUMNAS.ID_ESTUDIANTE} = ?
         `;
         
-        const [rows] = await db.query(query);
+        const [rows] = await db.query(query, [id_estudiante]);
         res.json(rows);
     } catch (error) {
         console.error('Error obteniendo la Worklist:', error);
@@ -80,21 +84,26 @@ const crearCasoCompleto = async (req, res) => {
             ruta_imagen = req.body.ruta_imagen;
         }
 
+        const id_catedratico = req.usuario?.id_usuario || 1; // Fallback
         const datosCompletos = {
             ...req.body,
-            ruta_imagen
+            ruta_imagen,
+            id_catedratico
         };
 
         const resultado = await clinicalService.crearCasoCompleto(datosCompletos);
 
         // EXTRA: Auditoría y Notificaciones
-        const id_catedratico = req.usuario?.id_usuario || 1; // Fallback
         await auditService.registrarAccion(id_catedratico, 'CREAR_CASO', `Se creó el caso clínico: ${resultado.titulo_caso}`);
         
-        // Notificar a todos los estudiantes (asumiendo que los estudiantes tienen roles que no son 1)
-        // Por simplificación en demo, sacamos todos los usuarios que no sean el catedrático actual.
+        // Notificar solo a los estudiantes asignados al curso donde se subió el caso
         try {
-            const [estudiantes] = await db.query(`SELECT ${COLUMNAS.ID_USUARIO} FROM ${TABLAS.USUARIOS} WHERE id_rol = 2`);
+            const queryEstudiantes = `
+                SELECT ae.${COLUMNAS.ID_ESTUDIANTE} AS id_usuario
+                FROM ${TABLAS.ASIGNACIONES} ae
+                WHERE ae.${COLUMNAS.ID_CURSO} = ?
+            `;
+            const [estudiantes] = await db.query(queryEstudiantes, [resultado.id_curso]);
             if (estudiantes.length > 0) {
                 const ids = estudiantes.map(e => e.id_usuario);
                 await notificationService.enviarNotificacionMasiva(ids, 'Nuevo Caso Clínico', `El catedrático ha publicado el caso: ${resultado.titulo_caso}. Ingresa a tu Worklist para resolverlo.`);
@@ -112,7 +121,8 @@ const crearCasoCompleto = async (req, res) => {
 
 const listarCasosCatedratico = async (req, res) => {
     try {
-        const casos = await clinicalService.obtenerCasosDetallados();
+        const id_catedratico = req.usuario.id_usuario;
+        const casos = await clinicalService.obtenerCasosDetallados(id_catedratico);
         res.status(200).json({ status: 'success', data: casos });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });

@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const clinicalController = require('../controllers/clinicalController');
-// const { verificarToken } = require('../middlewares/authMiddleware');
+const { verificarToken } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware'); // Importamos Multer
 
 // Aseguramos todo el módulo temporalmente deshabilitado para pruebas
-// router.use(verificarToken);
+router.use(verificarToken);
 
 // === ESTE ES EL ENDPOINT QUE BUSCA POSTMAN Y ANGULAR ===
 router.get('/casos-clinicos', clinicalController.obtenerWorklist);

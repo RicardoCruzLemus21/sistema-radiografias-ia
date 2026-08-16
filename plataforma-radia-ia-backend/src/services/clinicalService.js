@@ -44,6 +44,7 @@ const crearCasoCompleto = async (datos) => {
         genero,
         antecedentes_medicos,
         id_curso,
+        id_catedratico,
         titulo_caso,
         motivo_consulta,
         nivel_dificultad,
@@ -69,17 +70,17 @@ const crearCasoCompleto = async (datos) => {
         ]);
         const id_paciente = resPaciente.insertId;
 
-        // B. Determinar Curso (si no viene, asociar al primer curso disponible o crear uno por defecto)
+        // B. Determinar Curso (si no viene, asociar al primer curso disponible del catedratico actual o crear uno por defecto)
         let cursoIdFinal = id_curso ? parseInt(id_curso, 10) : null;
         if (!cursoIdFinal) {
-            const [cursos] = await connection.query(`SELECT id_curso FROM ${dict.TABLAS.CURSOS} LIMIT 1`);
+            const [cursos] = await connection.query(`SELECT id_curso FROM ${dict.TABLAS.CURSOS} WHERE id_catedratico = ? LIMIT 1`, [id_catedratico || 1]);
             if (cursos.length > 0) {
                 cursoIdFinal = cursos[0].id_curso;
             } else {
                 // Crear curso base por defecto si no existe ninguno
                 const [nuevoCurso] = await connection.query(
                     `INSERT INTO ${dict.TABLAS.CURSOS} (id_catedratico, nombre_curso, semestre, anio) 
-                     VALUES (1, 'Radiología Clínica I', 'Primer Semestre', 2026)`
+                     VALUES (?, 'Radiología Clínica I', 'Primer Semestre', 2026)`, [id_catedratico || 1]
                 );
                 cursoIdFinal = nuevoCurso.insertId;
             }
@@ -118,6 +119,7 @@ const crearCasoCompleto = async (datos) => {
         return {
             id_caso,
             id_paciente,
+            id_curso: cursoIdFinal,
             id_radiografia: resRx.insertId,
             codigo_paciente,
             titulo_caso,
@@ -133,7 +135,7 @@ const crearCasoCompleto = async (datos) => {
 };
 
 // 5. Obtener todos los casos con información completa para gestión del catedrático
-const obtenerCasosDetallados = async () => {
+const obtenerCasosDetallados = async (id_catedratico) => {
     const query = `
         SELECT 
             c.${dict.COLUMNAS.ID_CASO} AS id,
@@ -153,9 +155,11 @@ const obtenerCasosDetallados = async () => {
         FROM ${dict.TABLAS.CASOS} c
         INNER JOIN ${dict.TABLAS.PACIENTES} p ON c.${dict.COLUMNAS.ID_PACIENTE} = p.${dict.COLUMNAS.ID_PACIENTE}
         LEFT JOIN ${dict.TABLAS.RADIOGRAFIAS} r ON c.${dict.COLUMNAS.ID_CASO} = r.${dict.COLUMNAS.ID_CASO}
+        INNER JOIN ${dict.TABLAS.CURSOS} cs ON c.${dict.COLUMNAS.ID_CURSO} = cs.${dict.COLUMNAS.ID_CURSO}
+        WHERE cs.${dict.COLUMNAS.ID_CATEDRATICO} = ?
         ORDER BY c.${dict.COLUMNAS.ID_CASO} DESC
     `;
-    const [casos] = await pool.query(query);
+    const [casos] = await pool.query(query, [id_catedratico]);
     return casos;
 };
 

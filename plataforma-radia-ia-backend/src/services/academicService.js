@@ -98,34 +98,48 @@ const obtenerEstadisticas = async (id_curso) => {
 };
 
 // 6. Obtener resumen general completo para el Dashboard del Catedrático
-const obtenerResumenGeneral = async () => {
+const obtenerResumenGeneral = async (id_catedratico) => {
     try {
-        // Total de casos asignados en el sistema
-        const [casosRows] = await pool.query(`SELECT COUNT(*) AS totalCasos FROM ${dict.TABLAS.CASOS}`);
+        // Total de casos asignados en los cursos de este catedrático
+        const [casosRows] = await pool.query(`
+            SELECT COUNT(*) AS totalCasos 
+            FROM ${dict.TABLAS.CASOS} c
+            INNER JOIN ${dict.TABLAS.CURSOS} cs ON c.${dict.COLUMNAS.ID_CURSO} = cs.${dict.COLUMNAS.ID_CURSO}
+            WHERE cs.${dict.COLUMNAS.ID_CATEDRATICO} = ?
+        `, [id_catedratico]);
         const totalCasosGlobal = casosRows[0]?.totalCasos || 0;
 
-        // Estudiantes registrados con rol Estudiante (id_rol = 2 o nombre_rol = 'Estudiante')
+        // Estudiantes registrados y matriculados en cursos de este catedrático
         const [estudiantesRows] = await pool.query(`
             SELECT 
                 u.${dict.COLUMNAS.ID_USUARIO} AS id,
                 u.${dict.COLUMNAS.NOMBRE_COMPLETO} AS nombre,
                 u.${dict.COLUMNAS.CORREO} AS correo,
-                COALESCE(ed.${dict.COLUMNAS.TOTAL_CASOS}, (
+                (
                     SELECT COUNT(DISTINCT ee.${dict.COLUMNAS.ID_CASO}) 
                     FROM ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} ee 
+                    INNER JOIN ${dict.TABLAS.CASOS} c2 ON ee.${dict.COLUMNAS.ID_CASO} = c2.${dict.COLUMNAS.ID_CASO}
+                    INNER JOIN ${dict.TABLAS.CURSOS} cs2 ON c2.${dict.COLUMNAS.ID_CURSO} = cs2.${dict.COLUMNAS.ID_CURSO}
                     WHERE ee.${dict.COLUMNAS.ID_ESTUDIANTE} = u.${dict.COLUMNAS.ID_USUARIO}
-                ), 0) AS casosResueltos,
-                COALESCE(ed.${dict.COLUMNAS.PROMEDIO_PRECISION}, (
+                    AND cs2.${dict.COLUMNAS.ID_CATEDRATICO} = ?
+                ) AS casosResueltos,
+                (
                     SELECT ROUND(AVG(cd.porcentaje_concordancia), 2)
                     FROM ${dict.TABLAS.CONCORDANCIA} cd
                     INNER JOIN ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} ee ON cd.id_evaluacion = ee.id_evaluacion
+                    INNER JOIN ${dict.TABLAS.CASOS} c2 ON ee.${dict.COLUMNAS.ID_CASO} = c2.${dict.COLUMNAS.ID_CASO}
+                    INNER JOIN ${dict.TABLAS.CURSOS} cs2 ON c2.${dict.COLUMNAS.ID_CURSO} = cs2.${dict.COLUMNAS.ID_CURSO}
                     WHERE ee.id_estudiante = u.${dict.COLUMNAS.ID_USUARIO}
-                ), 0.00) AS precision_promedio
+                    AND cs2.${dict.COLUMNAS.ID_CATEDRATICO} = ?
+                ) AS precision_promedio
             FROM ${dict.TABLAS.USUARIOS} u
             INNER JOIN ${dict.TABLAS.ROLES} r ON u.id_rol = r.id_rol
-            LEFT JOIN ${dict.TABLAS.ESTADISTICAS} ed ON u.${dict.COLUMNAS.ID_USUARIO} = ed.${dict.COLUMNAS.ID_ESTUDIANTE}
+            INNER JOIN ${dict.TABLAS.ASIGNACIONES} ae ON u.${dict.COLUMNAS.ID_USUARIO} = ae.${dict.COLUMNAS.ID_ESTUDIANTE}
+            INNER JOIN ${dict.TABLAS.CURSOS} cs ON ae.${dict.COLUMNAS.ID_CURSO} = cs.${dict.COLUMNAS.ID_CURSO}
             WHERE LOWER(r.nombre_rol) LIKE '%estud%'
-        `);
+            AND cs.${dict.COLUMNAS.ID_CATEDRATICO} = ?
+            GROUP BY u.${dict.COLUMNAS.ID_USUARIO}
+        `, [id_catedratico, id_catedratico, id_catedratico]);
 
         // Formatear estudiantes con estado y datos limpios
         const alumnosFormateados = estudiantesRows.map(est => {
@@ -213,6 +227,42 @@ const obtenerDetalleEstudiante = async (id_estudiante) => {
     }
 };
 
+// 8. Editar datos básicos de un estudiante
+const editarEstudiante = async (id_estudiante, datos) => {
+    try {
+        const { nombre_completo, correo_electronico } = datos;
+        const query = `
+            UPDATE ${dict.TABLAS.USUARIOS} 
+            SET ${dict.COLUMNAS.NOMBRE_COMPLETO} = ?, ${dict.COLUMNAS.CORREO} = ?
+            WHERE ${dict.COLUMNAS.ID_USUARIO} = ?
+        `;
+        await pool.query(query, [nombre_completo, correo_electronico, id_estudiante]);
+        return { id_estudiante, nombre_completo, correo_electronico };
+    } catch (error) {
+        console.error('Error al editar estudiante:', error);
+        throw error;
+    }
+};
+
+// 9. Eliminar (desasignar) estudiante de los cursos del catedrático
+const eliminarEstudiante = async (id_estudiante, id_catedratico) => {
+    try {
+        const query = `
+            DELETE ae FROM ${dict.TABLAS.ASIGNACIONES} ae
+            INNER JOIN ${dict.TABLAS.CURSOS} cs ON ae.${dict.COLUMNAS.ID_CURSO} = cs.${dict.COLUMNAS.ID_CURSO}
+            WHERE ae.${dict.COLUMNAS.ID_ESTUDIANTE} = ? AND cs.${dict.COLUMNAS.ID_CATEDRATICO} = ?
+        `;
+        const [resultado] = await pool.query(query, [id_estudiante, id_catedratico]);
+        if (resultado.affectedRows === 0) {
+            throw new Error('No se pudo eliminar al estudiante o no pertenece a tus secciones.');
+        }
+        return true;
+    } catch (error) {
+        console.error('Error al eliminar estudiante:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     crearCurso,
     asignarEstudiante,
@@ -220,5 +270,7 @@ module.exports = {
     obtenerEstudiantesPorCurso,
     obtenerEstadisticas,
     obtenerResumenGeneral,
-    obtenerDetalleEstudiante
+    obtenerDetalleEstudiante,
+    editarEstudiante,
+    eliminarEstudiante
 };

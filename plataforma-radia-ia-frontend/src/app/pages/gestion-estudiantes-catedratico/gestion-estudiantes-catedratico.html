@@ -1,0 +1,142 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="header-titles">
+      <h1>Gestión de Estudiantes</h1>
+      <p>Administración completa de los alumnos inscritos en tus secciones (Crear, Editar, Eliminar).</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary btn-icon" (click)="abrirModalRegistro()">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        Registrar Nuevo Alumno
+      </button>
+    </div>
+  </header>
+
+  <section class="controls-bar glass-panel">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" [(ngModel)]="filtroTexto" (ngModelChange)="aplicarFiltros()" placeholder="Buscar por nombre, carné o correo...">
+    </div>
+  </section>
+
+  <section class="students-section">
+    <div class="table-container glass-panel">
+      <table class="students-table">
+        <thead>
+          <tr>
+            <th>Carné / ID</th>
+            <th>Estudiante</th>
+            <th>Correo Electrónico</th>
+            <th>Estado en Curso</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let alumno of alumnosFiltrados">
+            <td class="text-muted">{{ alumno.id }}</td>
+            <td>
+              <div class="student-profile-cell">
+                <div class="mini-avatar">{{ alumno.nombre.charAt(0) | uppercase }}</div>
+                <span class="font-weight-bold">{{ alumno.nombre }}</span>
+              </div>
+            </td>
+            <td style="color: var(--text-muted); font-size: 13px;">{{ alumno.correo }}</td>
+            <td>
+              <span class="badge" [ngClass]="{'badge-good': alumno.estado === 'Sobresaliente', 'badge-avg': alumno.estado === 'Promedio', 'badge-bad': alumno.estado === 'En Riesgo'}">
+                {{ alumno.estado }}
+              </span>
+            </td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn-outline" style="border-color: #ffaa00; color: #ffaa00;" (click)="abrirModalEditar(alumno)">Editar</button>
+                <button class="btn-outline" style="border-color: #ff4d4d; color: #ff4d4d;" (click)="abrirModalEliminar(alumno)">Eliminar</button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="alumnosFiltrados.length === 0">
+            <td colspan="5" class="empty-state">No se encontraron alumnos registrados en tus secciones.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MODAL DE REGISTRO DE NUEVO ALUMNO -->
+  <div class="modal-backdrop" *ngIf="modalCrearAlumnoAbierto" (click)="cerrarModalRegistro()">
+    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Registrar Nuevo Estudiante</h3>
+        <button class="btn-close" (click)="cerrarModalRegistro()">×</button>
+      </div>
+      <div class="modal-body form-body">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="nuevoAlumno.nombre_completo" placeholder="Ej. Juan Pérez" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico (Usuario)</label>
+          <input type="email" [(ngModel)]="nuevoAlumno.correo_electronico" placeholder="juan.perez@estudiante.edu" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Contraseña Temporal</label>
+          <input type="password" [(ngModel)]="nuevoAlumno.contrasena" placeholder="Mínimo 6 caracteres" class="glass-input">
+        </div>
+        <div class="alert-box alert-error" *ngIf="mensajeRegistroError">{{ mensajeRegistroError }}</div>
+        <div class="alert-box alert-success" *ngIf="mensajeRegistroExito">{{ mensajeRegistroExito }}</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cerrarModalRegistro()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarNuevoAlumno()" [disabled]="guardandoAlumno">
+          {{ guardandoAlumno ? 'Registrando...' : 'Matricular Estudiante' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE EDICIÓN -->
+  <div class="modal-backdrop" *ngIf="modalEditarAbierto" (click)="cerrarModalEditar()">
+    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Datos del Estudiante</h3>
+        <button class="btn-close" (click)="cerrarModalEditar()">×</button>
+      </div>
+      <div class="modal-body form-body">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="alumnoEditando.nombre_completo" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" [(ngModel)]="alumnoEditando.correo_electronico" class="glass-input">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cerrarModalEditar()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarEdicion()" [disabled]="guardandoEdicion">
+          {{ guardandoEdicion ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE ELIMINACIÓN -->
+  <div class="modal-backdrop" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
+    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()" style="max-width: 450px;">
+      <div class="modal-header">
+        <h3 style="color: #ff4d4d;">Eliminar Estudiante</h3>
+        <button class="btn-close" (click)="cerrarModalEliminar()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #c4cdd5; font-size: 14px;">¿Estás seguro de que deseas eliminar a <strong>{{ alumnoAEliminar?.nombre }}</strong> de tus secciones?</p>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">El estudiante ya no podrá acceder a tus casos y no aparecerá en tus métricas de rendimiento.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" (click)="cerrarModalEliminar()">Cancelar</button>
+        <button class="btn-primary" style="background-color: #ff4d4d;" (click)="confirmarEliminar()" [disabled]="eliminando">
+          {{ eliminando ? 'Eliminando...' : 'Sí, Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
