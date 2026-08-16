@@ -250,23 +250,37 @@ export class DashboardCatedratico implements OnInit {
         const idNuevoUsuario = respAuth.data?.id_usuario;
         
         if (idNuevoUsuario) {
-          // 2. Asignarlo al curso 1 (Radiología Médica)
-          this.academicService.asignarEstudiante(1, idNuevoUsuario).subscribe({
-            next: () => {
-              this.guardandoAlumno = false;
-              this.mensajeRegistroExito = '¡Alumno registrado y asignado al curso exitosamente!';
-              
-              // Recargar la tabla para mostrar al nuevo alumno
-              this.cargarDatosReales();
+          // Obtener los cursos del catedrático para asignarlo a su primer curso
+          this.academicService.getMisCursos().subscribe({
+            next: (respCursos: any) => {
+              const cursos = respCursos.data || [];
+              const idCursoAsignar = cursos.length > 0 ? cursos[0].id_curso : 1; // Fallback al 1 si no tiene cursos
 
-              setTimeout(() => {
-                this.cerrarModalRegistro();
-              }, 1500);
+              // 2. Asignarlo al curso dinámicamente
+              this.academicService.asignarEstudiante(idCursoAsignar, idNuevoUsuario).subscribe({
+                next: () => {
+                  this.guardandoAlumno = false;
+                  this.mensajeRegistroExito = '¡Alumno registrado y asignado a tu sección exitosamente!';
+                  
+                  // Recargar la tabla para mostrar al nuevo alumno
+                  this.cargarDatosReales();
+
+                  setTimeout(() => {
+                    this.cerrarModalRegistro();
+                  }, 1500);
+                },
+                error: (err) => {
+                  this.guardandoAlumno = false;
+                  this.mensajeRegistroError = 'El alumno fue creado, pero ocurrió un error al asignarlo al curso.';
+                  console.error('Error asignando al curso:', err);
+                  this.cdr.detectChanges();
+                }
+              });
             },
             error: (err) => {
               this.guardandoAlumno = false;
-              this.mensajeRegistroError = 'El alumno fue creado, pero ocurrió un error al asignarlo al curso.';
-              console.error('Error asignando al curso:', err);
+              this.mensajeRegistroError = 'El alumno fue creado, pero no se pudo obtener tu sección para asignarlo.';
+              console.error('Error obteniendo cursos:', err);
               this.cdr.detectChanges();
             }
           });

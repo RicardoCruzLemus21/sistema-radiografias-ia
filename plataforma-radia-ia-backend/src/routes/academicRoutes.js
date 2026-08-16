@@ -17,4 +17,8 @@ router.get('/mis-cursos', academicController.listarMisCursos);
 router.get('/:id_curso/estudiantes', academicController.listarEstudiantes);
 router.get('/:id_curso/dashboard', academicController.verDashboard);
 
+// Endpoints de Edición y Eliminación de Estudiantes
+router.put('/estudiante/:id', academicController.editarEstudiante);
+router.delete('/estudiante/:id', academicController.eliminarEstudiante);
+
 module.exports = router;

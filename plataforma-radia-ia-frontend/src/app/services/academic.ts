@@ -15,6 +15,13 @@ export class AcademicService {
     private authService: AuthService
   ) {}
 
+  // Obtiene los cursos del catedrático
+  getMisCursos(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/mis-cursos`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   // Asigna un estudiante a un curso
   asignarEstudiante(id_curso: number, id_estudiante: number): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/asignar`, { id_curso, id_estudiante }, {
@@ -53,6 +60,20 @@ export class AcademicService {
   getResultadosLikert(): Observable<any> {
     const metricsUrl = `${environment.apiUrl}/api/metricas`;
     return this.http.get<any>(`${metricsUrl}/likert/resultados`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Edita los datos básicos de un estudiante
+  editarEstudiante(id_estudiante: string, datos: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/estudiante/${id_estudiante}`, datos, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Elimina un estudiante de las secciones del catedrático
+  eliminarEstudiante(id_estudiante: string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/estudiante/${id_estudiante}`, {
       headers: this.authService.getAuthHeaders()
     });
   }

@@ -10,10 +10,7 @@
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
           Métricas Likert
         </button>
-        <button class="btn-primary btn-icon" (click)="abrirModalRegistro()">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-          Registrar Nuevo Alumno
-        </button>
+
       </div>
   </header>
 
@@ -255,46 +252,6 @@
     </div>
   </div>
 
-  <!-- MODAL DE REGISTRO DE NUEVO ALUMNO -->
-  <div class="modal-backdrop" *ngIf="modalCrearAlumnoAbierto" (click)="cerrarModalRegistro()">
-    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Registrar Nuevo Estudiante</h3>
-        <button class="btn-close" (click)="cerrarModalRegistro()">×</button>
-      </div>
-      <div class="modal-body form-body">
-        <p class="text-muted" style="margin-top: 0; font-size: 13px;">Ingrese los datos del estudiante. El sistema le creará un acceso y lo matriculará automáticamente en el curso actual.</p>
-        
-        <div class="form-group">
-          <label>Nombre Completo</label>
-          <input type="text" [(ngModel)]="nuevoAlumno.nombre_completo" placeholder="Ej. Juan Pérez" class="form-input">
-        </div>
-
-        <div class="form-group">
-          <label>Correo Electrónico (Usuario)</label>
-          <input type="email" [(ngModel)]="nuevoAlumno.correo_electronico" placeholder="juan.perez@estudiante.edu" class="form-input">
-        </div>
-
-        <div class="form-group">
-          <label>Contraseña Temporal</label>
-          <input type="password" [(ngModel)]="nuevoAlumno.contrasena" placeholder="Mínimo 6 caracteres" class="form-input">
-        </div>
-
-        <div class="alert-box alert-error" *ngIf="mensajeRegistroError">
-          {{ mensajeRegistroError }}
-        </div>
-        <div class="alert-box alert-success" *ngIf="mensajeRegistroExito">
-          {{ mensajeRegistroExito }}
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="cerrarModalRegistro()">Cancelar</button>
-        <button class="btn-primary" (click)="guardarNuevoAlumno()" [disabled]="guardandoAlumno">
-          {{ guardandoAlumno ? 'Registrando...' : 'Matricular Estudiante' }}
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- MODAL: MÉTRICAS LIKERT -->
   <div class="modal-backdrop" *ngIf="modalLikertAbierto" (click)="cerrarModalLikert()">

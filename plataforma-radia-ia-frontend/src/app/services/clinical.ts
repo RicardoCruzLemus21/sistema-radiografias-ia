@@ -17,7 +17,9 @@ export class ClinicalService {
 
   // Obtiene la lista de casos para la Worklist del estudiante
   getWorklistEstudiante(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/casos-clinicos`);
+    return this.http.get<any[]>(`${this.apiUrl}/casos-clinicos`, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   // Obtiene la lista completa de casos y pacientes para el panel de gestión del Catedrático
@@ -29,7 +31,9 @@ export class ClinicalService {
 
   // Obtiene el detalle de un caso clínico específico
   getCasoPorId(id: string | number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/caso/${id}`);
+    return this.http.get<any>(`${this.apiUrl}/caso/${id}`, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
   // Crear caso completo con paciente y radiografía (multipart/form-data)
