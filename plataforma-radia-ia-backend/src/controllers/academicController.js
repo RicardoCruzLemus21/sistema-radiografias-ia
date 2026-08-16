@@ -90,6 +90,16 @@ const eliminarEstudiante = async (req, res) => {
     }
 };
 
+const verMiRendimiento = async (req, res) => {
+    try {
+        const id_estudiante = req.usuario.id_usuario;
+        const rendimiento = await academicService.obtenerMiRendimiento(id_estudiante);
+        res.status(200).json({ status: 'success', data: rendimiento });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     crear,
     asignar,
@@ -99,5 +109,6 @@ module.exports = {
     verResumenGeneral,
     verDetalleEstudiante,
     editarEstudiante,
-    eliminarEstudiante
+    eliminarEstudiante,
+    verMiRendimiento
 };

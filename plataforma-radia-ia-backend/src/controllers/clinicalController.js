@@ -139,6 +139,15 @@ const obtenerCasoPorId = async (req, res) => {
     }
 };
 
+const obtenerSiguienteCodigoPaciente = async (req, res) => {
+    try {
+        const codigo = await clinicalService.obtenerSiguienteCodigoPaciente();
+        res.status(200).json({ status: 'success', data: codigo });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     registrarPaciente,
     armarCaso,
@@ -146,5 +155,6 @@ module.exports = {
     obtenerWorklist,
     crearCasoCompleto,
     listarCasosCatedratico,
-    obtenerCasoPorId
+    obtenerCasoPorId,
+    obtenerSiguienteCodigoPaciente
 };

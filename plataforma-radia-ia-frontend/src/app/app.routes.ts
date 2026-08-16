@@ -7,6 +7,9 @@ import { GestionCasosCatedratico } from './pages/gestion-casos/gestion-casos';
 import { GestionEstudiantesCatedraticoComponent } from './pages/gestion-estudiantes-catedratico/gestion-estudiantes-catedratico';
 import { VisorDiagnostico } from './pages/visor-diagnostico/visor-diagnostico';
 import { RetroalimentacionIa } from './pages/retroalimentacion-ia/retroalimentacion-ia';
+import { RendimientoEstudiante } from './pages/rendimiento-estudiante/rendimiento-estudiante';
+import { BibliotecaPatologias } from './pages/biblioteca-patologias/biblioteca-patologias';
+import { Notificaciones } from './pages/notificaciones/notificaciones';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -20,6 +23,9 @@ export const routes: Routes = [
       { path: 'gestion-estudiantes', component: GestionEstudiantesCatedraticoComponent },
       { path: 'visor/:id', component: VisorDiagnostico }, 
       { path: 'resultado/:id', component: RetroalimentacionIa }, 
+      { path: 'mi-rendimiento', component: RendimientoEstudiante },
+      { path: 'biblioteca', component: BibliotecaPatologias },
+      { path: 'notificaciones', component: Notificaciones },
       { path: '', redirectTo: 'estudiante', pathMatch: 'full' }
     ]
   },

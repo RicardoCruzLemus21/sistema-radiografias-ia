@@ -47,6 +47,38 @@ const asignarEstudiante = async (datosAsignacion) => {
         `;
         const [resultado] = await pool.query(query, [id_curso, id_estudiante]);
 
+        // === NOTIFICACIÓN POR CORREO DINÁMICO ===
+        try {
+            // Extraer info necesaria para el correo
+            const [infoQuery] = await pool.query(`
+                SELECT 
+                    u.nombre_completo AS nombre_alumno,
+                    u.correo_electronico AS correo,
+                    c.nombre_curso,
+                    cat.nombre_completo AS nombre_catedratico
+                FROM ${dict.TABLAS.USUARIOS} u
+                JOIN ${dict.TABLAS.CURSOS} c ON c.id_curso = ?
+                JOIN ${dict.TABLAS.USUARIOS} cat ON c.id_catedratico = cat.id_usuario
+                WHERE u.id_usuario = ?
+            `, [id_curso, id_estudiante]);
+
+            if (infoQuery.length > 0) {
+                const info = infoQuery[0];
+                const emailService = require('./emailService');
+                // No esperamos con await para que no retrase la respuesta HTTP al cliente
+                emailService.enviarCorreoBienvenida(
+                    info.correo, 
+                    info.nombre_alumno, 
+                    info.nombre_catedratico, 
+                    info.nombre_curso,
+                    datosAsignacion.contrasena_temporal || 'Contacta a tu catedrático',
+                    `${process.env.FRONTEND_URL || 'http://localhost:4200'}/login`
+                );
+            }
+        } catch (mailError) {
+            console.error('Error al intentar disparar el correo:', mailError);
+        }
+
         return { 
             id_asignacion: resultado.insertId, 
             id_curso, 
@@ -144,9 +176,13 @@ const obtenerResumenGeneral = async (id_catedratico) => {
         // Formatear estudiantes con estado y datos limpios
         const alumnosFormateados = estudiantesRows.map(est => {
             const prec = parseFloat(est.precision_promedio) || 0;
-            let estado = 'En Riesgo';
-            if (prec >= 80) estado = 'Sobresaliente';
-            else if (prec >= 60 || (est.casosResueltos > 0 && prec >= 50)) estado = 'Promedio';
+            
+            let estado = 'Sin Evaluar';
+            if (est.casosResueltos > 0) {
+                if (prec >= 80) estado = 'Sobresaliente';
+                else if (prec >= 50) estado = 'Promedio';
+                else estado = 'En Riesgo';
+            }
 
             return {
                 id: `EST-${String(est.id).padStart(4, '0')}`,
@@ -263,6 +299,57 @@ const eliminarEstudiante = async (id_estudiante, id_catedratico) => {
     }
 };
 
+// 10. Obtener el rendimiento propio del estudiante
+const obtenerMiRendimiento = async (id_estudiante) => {
+    try {
+        const [usuario] = await pool.query(
+            `SELECT id_usuario, nombre_completo, correo_electronico FROM ${dict.TABLAS.USUARIOS} WHERE id_usuario = ?`,
+            [id_estudiante]
+        );
+
+        if (usuario.length === 0) {
+            throw new Error('Estudiante no encontrado');
+        }
+
+        const [evaluaciones] = await pool.query(`
+            SELECT 
+                ee.id_evaluacion,
+                c.id_caso,
+                c.titulo_caso,
+                c.nivel_dificultad,
+                ee.fecha_evaluacion,
+                COALESCE(cd.porcentaje_concordancia, 0) AS concordancia_ia,
+                COALESCE(cd.nivel_precision, 'Pendiente') AS nivel_precision
+            FROM ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} ee
+            INNER JOIN ${dict.TABLAS.CASOS} c ON ee.id_caso = c.id_caso
+            LEFT JOIN ${dict.TABLAS.CONCORDANCIA} cd ON ee.id_evaluacion = cd.id_evaluacion
+            WHERE ee.id_estudiante = ?
+            ORDER BY ee.fecha_evaluacion DESC
+        `, [id_estudiante]);
+
+        const [estadisticas] = await pool.query(`
+            SELECT 
+                COUNT(DISTINCT ee.id_caso) AS total_casos,
+                ROUND(AVG(cd.porcentaje_concordancia), 2) AS precision_promedio
+            FROM ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} ee
+            LEFT JOIN ${dict.TABLAS.CONCORDANCIA} cd ON ee.id_evaluacion = cd.id_evaluacion
+            WHERE ee.id_estudiante = ?
+        `, [id_estudiante]);
+
+        return {
+            estudiante: usuario[0],
+            estadisticas: {
+                total_casos: estadisticas[0].total_casos || 0,
+                precision_promedio: estadisticas[0].precision_promedio || 0
+            },
+            historial: evaluaciones
+        };
+    } catch (error) {
+        console.error('Error al obtener mi rendimiento:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     crearCurso,
     asignarEstudiante,
@@ -272,5 +359,6 @@ module.exports = {
     obtenerResumenGeneral,
     obtenerDetalleEstudiante,
     editarEstudiante,
-    eliminarEstudiante
+    eliminarEstudiante,
+    obtenerMiRendimiento
 };

@@ -110,7 +110,7 @@ export class GestionCasosCatedratico implements OnInit {
     this.mensajeExito = '';
     this.mensajeError = '';
     this.nuevoCaso = {
-      codigo_paciente: `PAC-00${this.casos.length + 1}`,
+      codigo_paciente: 'Cargando...',
       edad: 38,
       genero: 'M',
       antecedentes_medicos: '',
@@ -120,6 +120,20 @@ export class GestionCasosCatedratico implements OnInit {
       tipo_proyeccion: 'Tórax PA (Posteroanterior)',
       id_curso: 1
     };
+    
+    this.clinicalService.getNextPacienteCode().subscribe({
+      next: (resp) => {
+        if (resp.data) {
+          this.nuevoCaso.codigo_paciente = resp.data;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.error('Error obteniendo siguiente código', err);
+        this.nuevoCaso.codigo_paciente = `PAC-${Date.now()}`; // Fallback si el backend falla
+        this.cdr.detectChanges();
+      }
+    });
     this.imagenPreviewUrl = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80';
     this.archivoSeleccionado = null;
     this.nombreArchivoSeleccionado = '';
@@ -165,7 +179,7 @@ export class GestionCasosCatedratico implements OnInit {
     formData.append('nivel_dificultad', this.nuevoCaso.nivel_dificultad);
     formData.append('motivo_consulta', this.nuevoCaso.motivo_consulta);
     formData.append('tipo_proyeccion', this.nuevoCaso.tipo_proyeccion);
-    formData.append('id_curso', this.nuevoCaso.id_curso.toString());
+    // id_curso se determina dinámicamente en el backend
     
     if (this.archivoSeleccionado) {
       formData.append('imagen_rx', this.archivoSeleccionado);

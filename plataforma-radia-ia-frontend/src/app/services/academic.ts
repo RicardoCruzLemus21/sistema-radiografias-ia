@@ -23,8 +23,8 @@ export class AcademicService {
   }
 
   // Asigna un estudiante a un curso
-  asignarEstudiante(id_curso: number, id_estudiante: number): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/asignar`, { id_curso, id_estudiante }, {
+  asignarEstudiante(id_curso: number, id_estudiante: number, contrasena_temporal?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/asignar`, { id_curso, id_estudiante, contrasena_temporal }, {
       headers: this.authService.getAuthHeaders()
     });
   }
@@ -74,6 +74,13 @@ export class AcademicService {
   // Elimina un estudiante de las secciones del catedrático
   eliminarEstudiante(id_estudiante: string): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/estudiante/${id_estudiante}`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Obtiene el rendimiento personal del estudiante
+  getMiRendimiento(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/mi-rendimiento`, {
       headers: this.authService.getAuthHeaders()
     });
   }

@@ -1,0 +1,23 @@
+<div class="biblioteca-container glass-panel">
+  <div class="header-section">
+    <h2>BIBLIOTECA DE PATOLOGÍAS</h2>
+    <p class="subtitle">Material de consulta rápida para identificación de hallazgos radiológicos.</p>
+  </div>
+
+  <div *ngIf="cargando" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando biblioteca...</p>
+  </div>
+
+  <div *ngIf="!cargando && patologias.length > 0" class="patologias-grid">
+    <div *ngFor="let p of patologias" class="patologia-card">
+      <div class="patologia-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+      </div>
+      <div class="patologia-content">
+        <h3>{{ p.nombre }}</h3>
+        <p>{{ p.descripcion_breve || p.descripcion || 'Sin descripción disponible' }}</p>
+      </div>
+    </div>
+  </div>
+</div>

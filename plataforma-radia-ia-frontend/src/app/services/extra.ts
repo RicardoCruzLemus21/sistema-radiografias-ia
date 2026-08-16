@@ -8,7 +8,7 @@ import { AuthService } from './auth';
   providedIn: 'root'
 })
 export class ExtraService {
-  private apiUrl = environment.apiUrl + '/extra';
+  private apiUrl = environment.apiUrl + '/api/extra';
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

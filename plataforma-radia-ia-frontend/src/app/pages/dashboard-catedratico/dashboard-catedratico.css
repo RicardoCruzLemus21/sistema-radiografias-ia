@@ -214,6 +214,7 @@
 .badge-good { background: rgba(0, 255, 136, 0.12); color: #00ff88; border: 1px solid rgba(0, 255, 136, 0.25); }
 .badge-avg { background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
 .badge-bad { background: rgba(255, 77, 77, 0.12); color: #ff4d4d; border: 1px solid rgba(255, 77, 77, 0.25); }
+.badge-none { background: rgba(255, 255, 255, 0.1); color: #c4cdd5; border: 1px solid rgba(255, 255, 255, 0.2); }
 
 .btn-outline {
   display: inline-flex;

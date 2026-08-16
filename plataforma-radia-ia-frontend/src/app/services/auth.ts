@@ -15,10 +15,30 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/api/auth/login`, { correo_electronico, contrasena })
       .pipe(
         tap(respuesta => {
-          if (respuesta.data && respuesta.data.token) {
+          if (respuesta.data && respuesta.data.token && !respuesta.data.requiere_cambio_clave) {
             localStorage.setItem('token', respuesta.data.token);
             localStorage.setItem('usuario', JSON.stringify(respuesta.data.usuario));
+          } else if (respuesta.data && respuesta.data.token && respuesta.data.requiere_cambio_clave) {
+            // Guardamos temporalmente el token para poder hacer la peticion de cambio
+            localStorage.setItem('token_temporal', respuesta.data.token);
+            localStorage.setItem('usuario_temporal', JSON.stringify(respuesta.data.usuario));
           }
+        })
+      );
+  }
+
+  cambiarClaveInicial(nueva_contrasena: string) {
+    // Usamos el token temporal para autorizar el cambio
+    const token = localStorage.getItem('token_temporal');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    return this.http.post<any>(`${this.apiUrl}/api/auth/cambiar-clave-inicial`, { nueva_contrasena }, { headers })
+      .pipe(
+        tap(() => {
+          // Si es exitoso, promovemos el token temporal a definitivo
+          localStorage.setItem('token', token!);
+          localStorage.setItem('usuario', localStorage.getItem('usuario_temporal')!);
+          localStorage.removeItem('token_temporal');
+          localStorage.removeItem('usuario_temporal');
         })
       );
   }

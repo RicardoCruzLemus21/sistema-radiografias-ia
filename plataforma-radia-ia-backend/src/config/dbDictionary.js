@@ -37,7 +37,9 @@ module.exports = {
         // Módulo Extra: Empresarial
         AUDITORIA_ACCIONES: 'Auditoria_Acciones',
         NOTIFICACIONES: 'Notificaciones',
-        COMENTARIOS: 'Comentarios_Catedratico'
+        COMENTARIOS: 'Comentarios_Catedratico',
+        CONFIG_CORREOS: 'Configuracion_Correos',
+        PLANTILLAS_CORREOS: 'Plantillas_Correos'
     },
     COLUMNAS: {
         // Módulo 2

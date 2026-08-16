@@ -21,8 +21,8 @@ const registrarUsuario = async (datosUsuario) => {
 
     // 3. Inserción segura usando texto plano para el nombre de las columnas (No usar dbDictionary aquí)
     const [resultado] = await pool.query(
-        `INSERT INTO Usuarios (id_rol, nombre_completo, correo_electronico, contrasena_hash, estado)
-         VALUES (?, ?, ?, ?, 'Activo')`,
+        `INSERT INTO Usuarios (id_rol, nombre_completo, correo_electronico, contrasena_hash, estado, debe_cambiar_contrasena)
+         VALUES (?, ?, ?, ?, 'Activo', TRUE)`,
         [id_rol, nombre_completo, correo_electronico, contrasena_hash]
     );
 
@@ -36,7 +36,7 @@ const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) =>
 
     // 1. Buscar al usuario en la base de datos
     const [usuarios] = await pool.query(
-        `SELECT u.id_usuario, u.id_rol, u.nombre_completo, u.correo_electronico, u.contrasena_hash, u.estado, r.nombre_rol 
+        `SELECT u.id_usuario, u.id_rol, u.nombre_completo, u.correo_electronico, u.contrasena_hash, u.estado, u.debe_cambiar_contrasena, r.nombre_rol 
          FROM Usuarios u 
          INNER JOIN Roles r ON u.id_rol = r.id_rol 
          WHERE u.correo_electronico = ?`,
@@ -79,6 +79,7 @@ const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) =>
 
     return {
         token,
+        requiere_cambio_clave: !!usuario.debe_cambiar_contrasena,
         usuario: {
             id_usuario: usuario.id_usuario,
             nombre_completo: usuario.nombre_completo,
@@ -86,6 +87,18 @@ const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) =>
             rol: usuario.nombre_rol
         }
     };
+};
+
+const cambiarClaveInicial = async (id_usuario, nueva_contrasena) => {
+    if (!nueva_contrasena || nueva_contrasena.length < 6) {
+        throw new Error('La nueva contraseña debe tener al menos 6 caracteres.');
+    }
+    const contrasena_hash = bcrypt.hashSync(nueva_contrasena, 10);
+    await pool.query(
+        `UPDATE Usuarios SET contrasena_hash = ?, debe_cambiar_contrasena = FALSE WHERE id_usuario = ?`,
+        [contrasena_hash, id_usuario]
+    );
+    return true;
 };
 
 const obtenerRoles = async () => {
@@ -115,6 +128,7 @@ const obtenerAuditoria = async () => {
 module.exports = {
     registrarUsuario,
     loginUsuario,
+    cambiarClaveInicial,
     obtenerRoles,
     obtenerUsuarios,
     obtenerAuditoria

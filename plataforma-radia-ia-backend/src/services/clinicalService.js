@@ -189,11 +189,35 @@ const obtenerDetalleCaso = async (id_caso) => {
     return casos[0];
 };
 
+// 7. Obtener el siguiente código secuencial para Paciente
+const obtenerSiguienteCodigoPaciente = async () => {
+    // Buscar todos los códigos actuales que sigan el formato PAC-%
+    const query = `
+        SELECT codigo_paciente 
+        FROM ${dict.TABLAS.PACIENTES} 
+        WHERE codigo_paciente LIKE 'PAC-%'
+    `;
+    const [rows] = await pool.query(query);
+    
+    let maxNum = 0;
+    for (const row of rows) {
+        const numPart = row.codigo_paciente.replace('PAC-', '');
+        const num = parseInt(numPart, 10);
+        if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+        }
+    }
+    
+    const nextNum = maxNum + 1;
+    return 'PAC-' + nextNum.toString().padStart(3, '0');
+};
+
 module.exports = {
     crearPaciente,
     crearCaso,
     guardarRadiografia,
     crearCasoCompleto,
     obtenerCasosDetallados,
-    obtenerDetalleCaso
+    obtenerDetalleCaso,
+    obtenerSiguienteCodigoPaciente
 };

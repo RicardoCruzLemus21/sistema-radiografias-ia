@@ -18,6 +18,10 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
   patologias: any[] = [];
   justificacionClinica: string = '';
   
+  // Variables para la imagen
+  imagenUrl: string = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80';
+  fullscreenAbierto: boolean = false;
+  
   // Variables para calcular el tiempo dinámicamente
   horaInicioAnalisis: number = 0;
 
@@ -53,6 +57,14 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
 
   volverAlDashboard() {
     this.router.navigate(['/sistema/estudiante']);
+  }
+
+  abrirFullscreen() {
+    this.fullscreenAbierto = true;
+  }
+
+  cerrarFullscreen() {
+    this.fullscreenAbierto = false;
   }
 
   enviarDiagnostico() {
