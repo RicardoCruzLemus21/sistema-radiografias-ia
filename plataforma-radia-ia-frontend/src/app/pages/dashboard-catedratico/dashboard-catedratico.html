@@ -6,12 +6,15 @@
       <p>Monitoreo continuo de competencias diagnósticas y concordancia con IA de los estudiantes.</p>
     </div>
     <div class="header-actions">
-      <span class="badge-tag"><span class="pulse-dot"></span> Supervisión en Tiempo Real</span>
-      <button class="btn-primary btn-action" (click)="abrirModalRegistro()">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Registrar Alumno
-      </button>
-    </div>
+        <button class="btn-primary btn-icon" (click)="abrirModalLikert()">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+          Métricas Likert
+        </button>
+        <button class="btn-primary btn-icon" (click)="abrirModalRegistro()">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+          Registrar Nuevo Alumno
+        </button>
+      </div>
   </header>
 
   <!-- Tarjetas Globales del Catedrático -->
@@ -177,29 +180,67 @@
           </div>
         </div>
 
-        <h4 class="modal-section-title">HISTORIAL DE EVALUACIONES DIAGNÓSTICAS</h4>
-        
-        <div class="eval-list" *ngIf="estudianteSeleccionado?.evaluaciones?.length > 0">
-          <div class="eval-item glass-panel" *ngFor="let ev of estudianteSeleccionado.evaluaciones">
-            <div class="eval-header-row">
-              <div>
-                <strong>{{ ev.caso }}</strong>
-                <span class="badge-diff">{{ ev.dificultad }}</span>
+        <!-- Evaluaciones Detalle -->
+        <div class="evaluaciones-list">
+          <h3 class="section-title">Historial de Evaluaciones Clínicas</h3>
+          
+          <div *ngIf="!estudianteSeleccionado.evaluaciones || estudianteSeleccionado.evaluaciones.length === 0" class="no-data">
+            Este alumno aún no ha resuelto ningún caso clínico.
+          </div>
+
+          <div *ngFor="let eval of estudianteSeleccionado.evaluaciones" class="eval-card">
+            <div class="eval-header">
+              <h4>{{ eval.caso }}</h4>
+              <span class="badge badge-diff">{{ eval.dificultad }}</span>
+            </div>
+            
+            <div class="eval-metrics">
+              <div class="metric">
+                <span class="label">Precisión IA:</span>
+                <span class="value success">{{ eval.precision_ia }}%</span>
               </div>
-              <div class="eval-score">
-                <span>Concordancia IA:</span>
-                <strong class="score-tag">{{ ev.precision_ia }}%</strong>
+              <div class="metric">
+                <span class="label">Tiempo de Análisis:</span>
+                <span class="value">{{ eval.tiempo }}</span>
+              </div>
+              <div class="metric">
+                <span class="label">Fecha:</span>
+                <span class="value">{{ eval.fecha }}</span>
               </div>
             </div>
 
-            <div class="eval-detail-row">
-              <span class="eval-time" *ngIf="ev.tiempo">⏱ Tiempo análisis: {{ ev.tiempo }}</span>
-              <span class="eval-date" *ngIf="ev.fecha">📅 Fecha: {{ ev.fecha }}</span>
+            <div class="eval-justification">
+              <strong>Justificación Clínica:</strong>
+              <p>{{ eval.justificacion }}</p>
             </div>
 
-            <div class="eval-justification" *ngIf="ev.justificacion">
-              <p><strong>Justificación Clínica emitida:</strong> <em>"{{ ev.justificacion }}"</em></p>
+            <!-- Sección de Comentarios (NUEVO) -->
+            <div class="eval-comments" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+              <strong>Retroalimentación del Catedrático:</strong>
+              
+              <div *ngIf="eval.comentarios && eval.comentarios.length > 0" style="margin-top: 10px;">
+                <div *ngFor="let c of eval.comentarios" style="background: rgba(0, 255, 136, 0.05); border-left: 3px solid #00ff88; padding: 10px; margin-bottom: 5px; border-radius: 4px;">
+                  <span style="font-size: 12px; color: #00ff88;">{{ c.catedratico }} - {{ c.fecha_comentario | date:'shortDate' }}:</span>
+                  <p style="margin: 5px 0 0 0; font-size: 14px; color: var(--text-light);">{{ c.comentario }}</p>
+                </div>
+              </div>
+
+              <div *ngIf="!eval.comentarios || eval.comentarios.length === 0" style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">
+                Sin comentarios aún.
+              </div>
+
+              <!-- Input para nuevo comentario -->
+              <div style="margin-top: 10px;" *ngIf="evaluacionComentarioActiva !== eval">
+                <button (click)="activarComentario(eval)" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Añadir Comentario</button>
+              </div>
+
+              <div *ngIf="evaluacionComentarioActiva === eval" style="margin-top: 10px; display: flex; gap: 10px;">
+                <input type="text" [(ngModel)]="nuevoComentarioTexto" placeholder="Escribe un consejo o corrección..." style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white;">
+                <button (click)="enviarComentario()" [disabled]="guardandoComentario" style="background: var(--accent-blue); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Guardar</button>
+                <button (click)="evaluacionComentarioActiva = null" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer;">Cancelar</button>
+              </div>
             </div>
+
           </div>
         </div>
 
@@ -216,47 +257,89 @@
 
   <!-- MODAL DE REGISTRO DE NUEVO ALUMNO -->
   <div class="modal-backdrop" *ngIf="modalCrearAlumnoAbierto" (click)="cerrarModalRegistro()">
-    <div class="modal-card glass-panel form-modal" (click)="$event.stopPropagation()">
+    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <div class="modal-user-header">
-          <div class="avatar-lg" style="background: rgba(0,229,255,0.2); color: var(--accent-cyan);"><svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
-          <div>
-            <h3>Registrar Nuevo Alumno</h3>
-            <p class="text-muted">Creación de cuenta y asignación a Radiología Médica</p>
-          </div>
-        </div>
-        <button class="btn-close" (click)="cerrarModalRegistro()">&times;</button>
+        <h3>Registrar Nuevo Estudiante</h3>
+        <button class="btn-close" (click)="cerrarModalRegistro()">×</button>
       </div>
-
-      <div class="modal-body">
-        <div class="form-group">
-          <label>Nombre Completo</label>
-          <input type="text" [(ngModel)]="nuevoAlumno.nombre_completo" class="glass-input" placeholder="Ej. Ana Lucía Morales" />
-        </div>
+      <div class="modal-body form-body">
+        <p class="text-muted" style="margin-top: 0; font-size: 13px;">Ingrese los datos del estudiante. El sistema le creará un acceso y lo matriculará automáticamente en el curso actual.</p>
         
         <div class="form-group">
-          <label>Correo Electrónico Institucional</label>
-          <input type="email" [(ngModel)]="nuevoAlumno.correo_electronico" class="glass-input" placeholder="ejemplo@miumg.edu.gt" />
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="nuevoAlumno.nombre_completo" placeholder="Ej. Juan Pérez" class="form-input">
+        </div>
+
+        <div class="form-group">
+          <label>Correo Electrónico (Usuario)</label>
+          <input type="email" [(ngModel)]="nuevoAlumno.correo_electronico" placeholder="juan.perez@estudiante.edu" class="form-input">
         </div>
 
         <div class="form-group">
           <label>Contraseña Temporal</label>
-          <input type="password" [(ngModel)]="nuevoAlumno.contrasena" class="glass-input" placeholder="Mínimo 6 caracteres" />
+          <input type="password" [(ngModel)]="nuevoAlumno.contrasena" placeholder="Mínimo 6 caracteres" class="form-input">
         </div>
 
-        <div *ngIf="mensajeRegistroError" class="alert-box alert-error">
+        <div class="alert-box alert-error" *ngIf="mensajeRegistroError">
           {{ mensajeRegistroError }}
         </div>
-        <div *ngIf="mensajeRegistroExito" class="alert-box alert-success">
+        <div class="alert-box alert-success" *ngIf="mensajeRegistroExito">
           {{ mensajeRegistroExito }}
         </div>
       </div>
-
       <div class="modal-footer">
-        <button class="btn-outline" (click)="cerrarModalRegistro()" [disabled]="guardandoAlumno">Cancelar</button>
+        <button class="btn-secondary" (click)="cerrarModalRegistro()">Cancelar</button>
         <button class="btn-primary" (click)="guardarNuevoAlumno()" [disabled]="guardandoAlumno">
-          {{ guardandoAlumno ? 'Registrando...' : 'Registrar y Asignar' }}
+          {{ guardandoAlumno ? 'Registrando...' : 'Matricular Estudiante' }}
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MÉTRICAS LIKERT -->
+  <div class="modal-backdrop" *ngIf="modalLikertAbierto" (click)="cerrarModalLikert()">
+    <div class="modal-card likert-stats-modal glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Métricas de Percepción y Usabilidad</h3>
+        <button class="btn-close" (click)="cerrarModalLikert()">×</button>
+      </div>
+      
+      <div class="modal-body" style="padding: 30px;">
+        <div class="loading-state" *ngIf="cargandoLikert">
+          <div class="spinner"></div>
+          <p>Calculando promedios...</p>
+        </div>
+
+        <div class="likert-content" *ngIf="!cargandoLikert">
+          
+          <div class="likert-summary">
+            <div class="global-score">
+              <h2>{{ promedioGlobalLikert }}<span style="font-size: 20px; color: var(--text-muted);">/5.0</span></h2>
+              <p>Promedio Global del Sistema</p>
+            </div>
+            <p class="helper-text" style="text-align: center; margin-top: 10px;">
+              Basado en las encuestas de percepción llenadas por los estudiantes tras utilizar la Inferencia de IA.
+            </p>
+          </div>
+
+          <div class="likert-bars" style="margin-top: 30px;">
+            <div class="likert-bar-item" *ngFor="let m of metricasLikert">
+              <div class="bar-labels">
+                <span class="bar-dimension">{{ m.dimension }}</span>
+                <span class="bar-score">{{ m.promedio }} / 5.0 ({{ m.total_respuestas }} votos)</span>
+              </div>
+              <div class="bar-track">
+                <!-- Se calcula el porcentaje en base a 5: ej. (4.5 / 5) * 100 -->
+                <div class="bar-fill" [style.width]="(m.promedio / 5) * 100 + '%'"></div>
+              </div>
+            </div>
+            
+            <div *ngIf="metricasLikert.length === 0" class="no-data">
+              No hay suficientes datos. Los estudiantes aún no han respondido la encuesta Likert.
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   </div>

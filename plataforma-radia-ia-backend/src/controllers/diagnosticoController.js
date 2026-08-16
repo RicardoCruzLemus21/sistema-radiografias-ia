@@ -2,11 +2,29 @@ const diagnosticoService = require('../services/diagnosticoService');
 const db = require('../config/database'); // Importamos la conexión a la base de datos
 const { TABLAS, COLUMNAS } = require('../config/dbDictionary'); // Importamos tu Diccionario de Datos
 
+const auditService = require('../services/auditService');
+const notificationService = require('../services/notificationService');
+
 const registrarEvaluacion = async (req, res) => {
     try {
         // req.body ya vendrá parseado como JSON gracias a Express
         const resultado = await diagnosticoService.guardarEvaluacionEstudiante(req.body);
         
+        // EXTRA: Auditoría y Notificaciones
+        const id_estudiante = req.body.id_estudiante || 2;
+        await auditService.registrarAccion(id_estudiante, 'EVALUACION_COMPLETADA', `El estudiante completó la evaluación del caso ${req.body.id_caso}`);
+        
+        // Notificar a los catedráticos
+        try {
+            const [catedraticos] = await db.query(`SELECT ${COLUMNAS.ID_USUARIO} FROM ${TABLAS.USUARIOS} WHERE id_rol = 1`);
+            if (catedraticos.length > 0) {
+                const ids = catedraticos.map(c => c.id_usuario);
+                await notificationService.enviarNotificacionMasiva(ids, 'Nueva Evaluación', `Un estudiante ha completado el diagnóstico del caso ${req.body.id_caso}.`);
+            }
+        } catch (e) {
+            console.error("Error notificando catedráticos:", e);
+        }
+
         // Respondemos con status 201 (Created)
         res.status(201).json({
             status: 'success',

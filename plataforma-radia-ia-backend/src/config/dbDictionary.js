@@ -32,7 +32,12 @@ module.exports = {
         RUBRICAS: 'Rubricas_Definicion',
         CALIFICACIONES: 'Calificaciones_Rubrica',
         CUESTIONARIOS: 'Cuestionarios_Percepcion',
-        RESPUESTAS_LIKERT: 'Respuestas_Likert'
+        RESPUESTAS_LIKERT: 'Respuestas_Likert',
+
+        // Módulo Extra: Empresarial
+        AUDITORIA_ACCIONES: 'Auditoria_Acciones',
+        NOTIFICACIONES: 'Notificaciones',
+        COMENTARIOS: 'Comentarios_Catedratico'
     },
     COLUMNAS: {
         // Módulo 2
@@ -91,6 +96,21 @@ module.exports = {
         PUNTAJE_OBTENIDO: 'puntaje_obtenido',
         ID_CUESTIONARIO: 'id_cuestionario',
         DIMENSION_EVALUADA: 'dimension_evaluada',
-        PUNTAJE_LIKERT: 'puntaje'
+        PUNTAJE_LIKERT: 'puntaje',
+
+        // Módulo Extra
+        ID_AUDITORIA: 'id_auditoria',
+        ACCION: 'accion',
+        DETALLE: 'detalle',
+        FECHA_ACCION: 'fecha_accion',
+        ID_NOTIFICACION: 'id_notificacion',
+        ID_USUARIO_DESTINO: 'id_usuario_destino',
+        TITULO: 'titulo',
+        MENSAJE: 'mensaje',
+        LEIDA: 'leida',
+        FECHA_CREACION: 'fecha_creacion',
+        ID_COMENTARIO: 'id_comentario',
+        COMENTARIO: 'comentario',
+        FECHA_COMENTARIO: 'fecha_comentario'
     }
 };

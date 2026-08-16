@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicService } from '../../services/academic';
 import { AuthService } from '../../services/auth';
+import { ExtraService } from '../../services/extra';
 
 @Component({
   selector: 'app-dashboard-catedratico',
@@ -30,6 +31,11 @@ export class DashboardCatedratico implements OnInit {
   modalAbierto: boolean = false;
   estudianteSeleccionado: any = null;
   cargandoDetalle: boolean = false;
+  
+  // Comentarios
+  nuevoComentarioTexto: string = '';
+  evaluacionComentarioActiva: any = null;
+  guardandoComentario: boolean = false;
 
   // Estado para el Modal de Registrar Alumno
   modalCrearAlumnoAbierto: boolean = false;
@@ -42,9 +48,16 @@ export class DashboardCatedratico implements OnInit {
     contrasena: ''
   };
 
+  // Estado para el Modal de Métricas Likert
+  modalLikertAbierto: boolean = false;
+  cargandoLikert: boolean = false;
+  metricasLikert: any[] = [];
+  promedioGlobalLikert: number = 0;
+
   constructor(
     private academicService: AcademicService,
     private authService: AuthService,
+    private extraService: ExtraService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -124,14 +137,28 @@ export class DashboardCatedratico implements OnInit {
         next: (resp: any) => {
           if (resp && resp.data && resp.data.evaluaciones && resp.data.evaluaciones.length > 0) {
             this.estudianteSeleccionado.evaluaciones = resp.data.evaluaciones.map((e: any) => ({
+              id_evaluacion: e.id_evaluacion,
               caso: e.titulo_caso,
               dificultad: e.nivel_dificultad,
               precision_ia: e.concordancia_ia || alumno.precision,
               tiempo: `${e.tiempo_analisis_segundos || 45}s`,
               justificacion: e.justificacion_clinica || 'Sin justificación registrada',
               fecha: e.fecha_evaluacion ? e.fecha_evaluacion.split('T')[0] : '2026-08-15',
-              hallazgos: e.hallazgos_seleccionados
+              hallazgos: e.hallazgos_seleccionados,
+              comentarios: []
             }));
+            
+            // Cargar comentarios para cada evaluación
+            this.estudianteSeleccionado.evaluaciones.forEach((ev: any) => {
+               if(ev.id_evaluacion) {
+                 this.extraService.getComentariosEvaluacion(ev.id_evaluacion).subscribe({
+                    next: (res: any) => {
+                      if(res.data) ev.comentarios = res.data;
+                      this.cdr.detectChanges();
+                    }
+                 });
+               }
+            });
           }
           this.cargandoDetalle = false;
           this.cdr.detectChanges();
@@ -149,6 +176,38 @@ export class DashboardCatedratico implements OnInit {
   cerrarModal(): void {
     this.modalAbierto = false;
     this.estudianteSeleccionado = null;
+    this.evaluacionComentarioActiva = null;
+  }
+  
+  // --- MÉTODOS PARA COMENTARIOS ---
+  activarComentario(evaluacion: any) {
+    this.evaluacionComentarioActiva = evaluacion;
+    this.nuevoComentarioTexto = '';
+  }
+
+  enviarComentario() {
+    if(!this.nuevoComentarioTexto.trim() || !this.evaluacionComentarioActiva) return;
+    
+    this.guardandoComentario = true;
+    this.extraService.agregarComentario(this.evaluacionComentarioActiva.id_evaluacion, this.nuevoComentarioTexto).subscribe({
+      next: (res) => {
+        if(res.data) {
+           this.evaluacionComentarioActiva.comentarios.push({
+             comentario: this.nuevoComentarioTexto,
+             catedratico: 'Tú', // Visualmente local
+             fecha_comentario: new Date().toISOString()
+           });
+        }
+        this.nuevoComentarioTexto = '';
+        this.guardandoComentario = false;
+        this.evaluacionComentarioActiva = null;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error("Error al guardar comentario:", err);
+        this.guardandoComentario = false;
+      }
+    });
   }
 
   // --- MÉTODOS PARA REGISTRAR ALUMNO ---
@@ -220,5 +279,36 @@ export class DashboardCatedratico implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  // --- MÉTODOS PARA MÉTRICAS LIKERT ---
+  
+  abrirModalLikert(): void {
+    this.modalLikertAbierto = true;
+    this.cargandoLikert = true;
+    
+    this.academicService.getResultadosLikert().subscribe({
+      next: (resp: any) => {
+        if (resp.data && resp.data.length > 0) {
+          this.metricasLikert = resp.data;
+          const sumaPromedios = this.metricasLikert.reduce((acc, curr) => acc + parseFloat(curr.promedio), 0);
+          this.promedioGlobalLikert = (sumaPromedios / this.metricasLikert.length).toFixed(1) as unknown as number;
+        } else {
+          this.metricasLikert = [];
+          this.promedioGlobalLikert = 0;
+        }
+        this.cargandoLikert = false;
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al cargar métricas Likert:', err);
+        this.cargandoLikert = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cerrarModalLikert(): void {
+    this.modalLikertAbierto = false;
   }
 }

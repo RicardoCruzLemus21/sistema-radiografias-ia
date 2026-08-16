@@ -68,6 +68,9 @@ const obtenerWorklist = async (req, res) => {
     }
 };
 
+const auditService = require('../services/auditService');
+const notificationService = require('../services/notificationService');
+
 const crearCasoCompleto = async (req, res) => {
     try {
         let ruta_imagen = '/uploads/radiografias/rx-default.jpg';
@@ -83,6 +86,23 @@ const crearCasoCompleto = async (req, res) => {
         };
 
         const resultado = await clinicalService.crearCasoCompleto(datosCompletos);
+
+        // EXTRA: Auditoría y Notificaciones
+        const id_catedratico = req.usuario?.id_usuario || 1; // Fallback
+        await auditService.registrarAccion(id_catedratico, 'CREAR_CASO', `Se creó el caso clínico: ${resultado.titulo_caso}`);
+        
+        // Notificar a todos los estudiantes (asumiendo que los estudiantes tienen roles que no son 1)
+        // Por simplificación en demo, sacamos todos los usuarios que no sean el catedrático actual.
+        try {
+            const [estudiantes] = await db.query(`SELECT ${COLUMNAS.ID_USUARIO} FROM ${TABLAS.USUARIOS} WHERE id_rol = 2`);
+            if (estudiantes.length > 0) {
+                const ids = estudiantes.map(e => e.id_usuario);
+                await notificationService.enviarNotificacionMasiva(ids, 'Nuevo Caso Clínico', `El catedrático ha publicado el caso: ${resultado.titulo_caso}. Ingresa a tu Worklist para resolverlo.`);
+            }
+        } catch (e) {
+            console.error("Error notificando estudiantes:", e);
+        }
+
         res.status(201).json({ status: 'success', data: resultado });
     } catch (error) {
         console.error('Error al crear caso completo:', error);

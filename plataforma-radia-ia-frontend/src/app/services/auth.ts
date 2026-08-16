@@ -72,6 +72,17 @@ export class AuthService {
     return 'Usuario';
   }
 
+  getIdUsuario(): number {
+    const usuarioStr = localStorage.getItem('usuario');
+    if (usuarioStr) {
+      try {
+        const u = JSON.parse(usuarioStr);
+        if (u.id_usuario) return u.id_usuario;
+      } catch (e) {}
+    }
+    return 0; // O un ID por defecto si es necesario
+  }
+
   isCatedratico(): boolean {
     const rol = this.getRolUsuario().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     return rol.includes('catedr') || rol.includes('admin') || rol.includes('docente');
