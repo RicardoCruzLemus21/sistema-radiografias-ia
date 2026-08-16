@@ -52,6 +52,8 @@ export class VisorDiagnostico implements OnInit {
       patologias: this.patologias.filter(p => p.seleccionada),
       justificacion: this.justificacionClinica
     });
-    // Aquí conectaremos el guardado en el siguiente paso
+    
+    // Navegar al módulo de retroalimentación de la IA con Grad-CAM
+    this.router.navigate(['/sistema/resultado', this.idCasoActual]);
   }
 }

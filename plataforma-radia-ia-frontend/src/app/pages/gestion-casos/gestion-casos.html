@@ -1,0 +1,310 @@
+<div class="gestion-container">
+  
+  <header class="gestion-header">
+    <div class="header-titles">
+      <h1>Banco de Casos Clínicos y Radiografías</h1>
+      <p>Repositorio de pacientes simulados y estudios diagnósticos para el entrenamiento estudiantil.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary-glow" (click)="abrirModalCrear()">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Registrar Nuevo Caso Clínico
+      </button>
+    </div>
+  </header>
+
+  <!-- Métricas Rápidas del Repositorio -->
+  <section class="quick-stats">
+    <div class="mini-card glass-panel">
+      <div class="mini-icon" style="color: var(--accent-cyan);">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      </div>
+      <div>
+        <h4>{{ casos.length }}</h4>
+        <span>Casos Clínicos Activos</span>
+      </div>
+    </div>
+
+    <div class="mini-card glass-panel">
+      <div class="mini-icon" style="color: #00ff88;">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+      </div>
+      <div>
+        <h4>100%</h4>
+        <span>Radiografías Digitalizadas</span>
+      </div>
+    </div>
+
+    <div class="mini-card glass-panel">
+      <div class="mini-icon" style="color: #ffaa00;">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+      </div>
+      <div>
+        <h4>Pacientes Simulados</h4>
+        <span>Norma DICOM / Web</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Barra de Filtros -->
+  <section class="controls-bar glass-panel">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input 
+        type="text" 
+        [(ngModel)]="filtroTexto" 
+        (ngModelChange)="aplicarFiltros()" 
+        placeholder="Buscar caso por título, código o cuadro clínico...">
+    </div>
+
+    <div class="filter-chips">
+      <button [class.active]="filtroDificultad === 'TODAS'" (click)="setFiltroDificultad('TODAS')">Todas</button>
+      <button [class.active]="filtroDificultad === 'BÁSICO'" (click)="setFiltroDificultad('BÁSICO')">Básico</button>
+      <button [class.active]="filtroDificultad === 'INTERMEDIO'" (click)="setFiltroDificultad('INTERMEDIO')">Intermedio</button>
+      <button [class.active]="filtroDificultad === 'AVANZADO'" (click)="setFiltroDificultad('AVANZADO')">Avanzado</button>
+    </div>
+  </section>
+
+  <!-- Grid de Casos Clínicos para Catedrático (SIN BOTÓN DE EVALUAR) -->
+  <section class="cases-grid">
+    <div class="case-card glass-panel" *ngFor="let caso of casosFiltrados">
+      
+      <div class="case-card-img-wrapper" (click)="abrirDetalleCaso(caso)">
+        <img [src]="caso.ruta_imagen || 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80'" alt="Radiografía del caso" class="case-img">
+        <div class="img-badge-overlay">{{ caso.proyeccion || 'Tórax PA' }}</div>
+        <div class="hover-overlay">
+          <span><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Ver Radiografía</span>
+        </div>
+      </div>
+
+      <div class="case-card-content">
+        <div class="case-meta-top">
+          <span class="patient-code">{{ caso.paciente }}</span>
+          <span class="difficulty-pill" [ngClass]="{
+            'diff-basico': (caso.nivel_dificultad || '').toLowerCase().includes('b'),
+            'diff-intermedio': (caso.nivel_dificultad || '').toLowerCase().includes('i'),
+            'diff-avanzado': (caso.nivel_dificultad || '').toLowerCase().includes('a')
+          }">
+            {{ caso.nivel_dificultad || 'Intermedio' }}
+          </span>
+        </div>
+
+        <h3 class="case-title">{{ caso.titulo }}</h3>
+        
+        <div class="patient-details">
+          <span><strong>Edad:</strong> {{ caso.edad }} años</span>
+          <span><strong>Género:</strong> {{ caso.genero === 'M' ? 'Masculino' : caso.genero === 'F' ? 'Femenino' : 'Otro' }}</span>
+        </div>
+
+        <p class="case-summary">{{ caso.motivo_consulta }}</p>
+
+        <div class="case-footer">
+          <span class="eval-count">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            {{ caso.total_evaluaciones || 0 }} intentos de estudiantes
+          </span>
+          <button class="btn-inspect" (click)="abrirDetalleCaso(caso)">
+            Ver Ficha
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="empty-cases glass-panel" *ngIf="casosFiltrados.length === 0">
+      <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--text-muted)" stroke-width="1.5" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      <p>No se encontraron casos clínicos con los filtros aplicados.</p>
+      <button class="btn-primary-glow" (click)="abrirModalCrear()">+ Registrar Primer Caso</button>
+    </div>
+  </section>
+
+  <!-- MODAL: REGISTRAR NUEVO CASO CLÍNICO & PACIENTE (CATEDRÁTICO) -->
+  <div class="modal-backdrop" *ngIf="modalCrearAbierto" (click)="cerrarModalCrear()">
+    <div class="modal-card modal-lg glass-panel" (click)="$event.stopPropagation()">
+      
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon-badge">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--accent-cyan)" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </div>
+          <div>
+            <h3>Nuevo Caso Clínico y Paciente Simulado</h3>
+            <p class="text-muted">Creación de reactivo radiológico para la plataforma educativa RADIA-IA</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="cerrarModalCrear()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        
+        <div class="alert-success" *ngIf="mensajeExito">
+          ✅ {{ mensajeExito }}
+        </div>
+        <div class="alert-error" *ngIf="mensajeError">
+          ⚠️ {{ mensajeError }}
+        </div>
+
+        <form class="create-case-form" (ngSubmit)="guardarNuevoCaso()">
+          
+          <!-- SECCIÓN 1: DATOS DEL PACIENTE -->
+          <div class="form-section">
+            <h4 class="form-section-title">1. PACIENTE SIMULADO</h4>
+            <div class="form-grid-3">
+              <div class="form-group">
+                <label>Código del Paciente *</label>
+                <input type="text" [(ngModel)]="nuevoCaso.codigo_paciente" name="codigo_paciente" placeholder="Ej: PAC-004" required>
+              </div>
+
+              <div class="form-group">
+                <label>Edad (años) *</label>
+                <input type="number" [(ngModel)]="nuevoCaso.edad" name="edad" min="1" max="120" required>
+              </div>
+
+              <div class="form-group">
+                <label>Género *</label>
+                <select [(ngModel)]="nuevoCaso.genero" name="genero">
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Antecedentes Médicos Relevantes</label>
+              <textarea [(ngModel)]="nuevoCaso.antecedentes_medicos" name="antecedentes_medicos" placeholder="Ej: Tabaquismo activo por 15 años, hipertensión arterial grado I..." rows="2"></textarea>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 2: DETALLES DEL CASO CLÍNICO -->
+          <div class="form-section">
+            <h4 class="form-section-title">2. CASO CLÍNICO & ESTUDIO</h4>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Título del Caso / Diagnóstico Referencial *</label>
+                <input type="text" [(ngModel)]="nuevoCaso.titulo_caso" name="titulo_caso" placeholder="Ej: Neumonía Lobar Inferior Derecha" required>
+              </div>
+
+              <div class="form-group">
+                <label>Nivel de Dificultad *</label>
+                <select [(ngModel)]="nuevoCaso.nivel_dificultad" name="nivel_dificultad">
+                  <option value="Básico">Básico</option>
+                  <option value="Intermedio">Intermedio</option>
+                  <option value="Avanzado">Avanzado</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Motivo de Consulta y Cuadro Clínico *</label>
+              <textarea [(ngModel)]="nuevoCaso.motivo_consulta" name="motivo_consulta" placeholder="Ej: Paciente acude a urgencias por presentar fiebre cuantificada en 39°C, tos con expectoración mucopurulenta y dolor en punta de costado derecho..." rows="3" required></textarea>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 3: RADIOGRAFÍA -->
+          <div class="form-section">
+            <h4 class="form-section-title">3. MATRIZ RADIOGRÁFICA</h4>
+            
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Tipo de Proyección Radiográfica</label>
+                <select [(ngModel)]="nuevoCaso.tipo_proyeccion" name="tipo_proyeccion">
+                  <option value="Tórax PA (Posteroanterior)">Tórax PA (Posteroanterior)</option>
+                  <option value="Tórax AP (Anteroposterior)">Tórax AP (Anteroposterior)</option>
+                  <option value="Tórax Lateral">Tórax Lateral</option>
+                  <option value="Columna Lumbar AP">Columna Lumbar AP</option>
+                  <option value="Mano Derecha">Mano Derecha</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Subir Archivo de Imagen (PNG, JPG, DICOM)</label>
+                <input type="file" (change)="onArchivoSeleccionado($event)" accept="image/*" class="file-input">
+              </div>
+            </div>
+
+            <!-- Vista Previa de la Imagen -->
+            <div class="preview-box">
+              <span>Vista Previa de Radiografía:</span>
+              <div class="preview-img-container">
+                <img [src]="imagenPreviewUrl" alt="Vista previa de radiografía" class="preview-img">
+              </div>
+            </div>
+          </div>
+
+        </form>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-cancel" (click)="cerrarModalCrear()">Cancelar</button>
+        <button type="button" class="btn-primary-glow" (click)="guardarNuevoCaso()" [disabled]="guardandoCaso">
+          <span *ngIf="!guardandoCaso">Guardar Caso en Base de Datos</span>
+          <span *ngIf="guardandoCaso">Guardando en MySQL...</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: VER FICHA DEL CASO / RADIOGRAFÍA DETALLADA -->
+  <div class="modal-backdrop" *ngIf="modalDetalleAbierto" (click)="cerrarDetalleCaso()">
+    <div class="modal-card modal-lg glass-panel" (click)="$event.stopPropagation()">
+      
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <div class="modal-icon-badge">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--accent-cyan)" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          </div>
+          <div>
+            <h3>Ficha Clínica: {{ casoSeleccionado?.titulo }}</h3>
+            <p class="text-muted">ID Caso #{{ casoSeleccionado?.id }} &bull; {{ casoSeleccionado?.paciente }}</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="cerrarDetalleCaso()">&times;</button>
+      </div>
+
+      <div class="modal-body modal-split">
+        <div class="split-left">
+          <div class="rx-viewer-box">
+            <img [src]="casoSeleccionado?.ruta_imagen || 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80'" alt="Radiografía del caso" class="rx-full-img">
+            <span class="proyeccion-tag">{{ casoSeleccionado?.proyeccion }}</span>
+          </div>
+        </div>
+
+        <div class="split-right">
+          <div class="info-group">
+            <label>Paciente Simulado</label>
+            <p><strong>Código:</strong> {{ casoSeleccionado?.paciente }} &bull; <strong>Edad:</strong> {{ casoSeleccionado?.edad }} años &bull; <strong>Género:</strong> {{ casoSeleccionado?.genero === 'M' ? 'Masculino' : casoSeleccionado?.genero === 'F' ? 'Femenino' : 'Otro' }}</p>
+          </div>
+
+          <div class="info-group">
+            <label>Nivel de Dificultad</label>
+            <span class="difficulty-pill diff-intermedio">{{ casoSeleccionado?.nivel_dificultad || 'Intermedio' }}</span>
+          </div>
+
+          <div class="info-group">
+            <label>Motivo de Consulta y Cuadro Clínico</label>
+            <p class="clinical-box">{{ casoSeleccionado?.motivo_consulta }}</p>
+          </div>
+
+          <div class="info-group">
+            <label>Antecedentes Médicos</label>
+            <p class="clinical-box">{{ casoSeleccionado?.antecedentes || 'Sin antecedentes reportados' }}</p>
+          </div>
+
+          <div class="info-group">
+            <label>Evaluaciones de Alumnos Registradas</label>
+            <p class="text-highlight"><strong>{{ casoSeleccionado?.total_evaluaciones || 0 }}</strong> evaluaciones completadas por estudiantes en este caso.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-primary" (click)="cerrarDetalleCaso()">Cerrar Ficha</button>
+      </div>
+
+    </div>
+  </div>
+
+</div>

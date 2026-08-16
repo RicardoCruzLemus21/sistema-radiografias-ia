@@ -1,5 +1,6 @@
 export enum SystemRoles { 
   ADMINISTRADOR = 'Administrador', 
-  CATEDRATICO = 'Catedratico', 
+  CATEDRATICO = 'Catedrático', 
+  CATEDRATICO_ALT = 'Catedratico',
   ESTUDIANTE = 'Estudiante' 
 } 

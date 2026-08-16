@@ -1,8 +1,17 @@
 <div class="dashboard-container">
   
   <header class="dashboard-header">
-    <h1>Gestión Académica y Monitoreo</h1>
-    <p>Supervisión del rendimiento clínico de los estudiantes asignados a la sección.</p>
+    <div class="header-titles">
+      <h1>Panel de Rendimiento y Gestión Académica</h1>
+      <p>Monitoreo continuo de competencias diagnósticas y concordancia con IA de los estudiantes.</p>
+    </div>
+    <div class="header-actions">
+      <span class="badge-tag"><span class="pulse-dot"></span> Supervisión en Tiempo Real</span>
+      <button class="btn-primary btn-action" (click)="abrirModalRegistro()">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Registrar Alumno
+      </button>
+    </div>
   </header>
 
   <!-- Tarjetas Globales del Catedrático -->
@@ -18,6 +27,16 @@
     </div>
 
     <div class="stat-card glass-panel">
+      <div class="stat-icon" style="color: #00e5ff;">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      </div>
+      <div class="stat-info">
+        <h3>{{ estadisticasGlobales.casosAsignados }}</h3>
+        <p>Casos en Banco Clínico</p>
+      </div>
+    </div>
+
+    <div class="stat-card glass-panel">
       <div class="stat-icon" style="color: #00ff88;">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
       </div>
@@ -26,31 +45,71 @@
         <p>Precisión Diagnóstica Grupal</p>
       </div>
     </div>
+
+    <div class="stat-card glass-panel">
+      <div class="stat-icon" style="color: #ffaa00;">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      </div>
+      <div class="stat-info">
+        <h3>{{ estadisticasGlobales.casosCompletadosTotales }}</h3>
+        <p>Evaluaciones Realizadas</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filtros y Búsqueda -->
+  <section class="controls-bar glass-panel">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input 
+        type="text" 
+        [(ngModel)]="filtroTexto" 
+        (ngModelChange)="aplicarFiltros()" 
+        placeholder="Buscar por nombre, carné o correo...">
+    </div>
+
+    <div class="filter-chips">
+      <button [class.active]="filtroEstado === 'TODOS'" (click)="setFiltroEstado('TODOS')">Todos</button>
+      <button [class.active]="filtroEstado === 'SOBRESALIENTE'" (click)="setFiltroEstado('SOBRESALIENTE')">Sobresaliente</button>
+      <button [class.active]="filtroEstado === 'PROMEDIO'" (click)="setFiltroEstado('PROMEDIO')">Promedio</button>
+      <button [class.active]="filtroEstado === 'EN RIESGO'" (click)="setFiltroEstado('EN RIESGO')">En Riesgo</button>
+    </div>
   </section>
 
   <!-- Tabla de Rendimiento Estudiantil -->
   <section class="students-section">
     <div class="section-header">
-      <h2>RENDIMIENTO POR ESTUDIANTE</h2>
+      <h2>SUPERVISIÓN INDIVIDUAL DE ALUMNOS ({{ alumnosFiltrados.length }})</h2>
+      <span class="badge-sub">Evaluación por Rúbrica & IA</span>
     </div>
 
     <div class="table-container glass-panel">
       <table class="students-table">
         <thead>
           <tr>
-            <th>Carné</th>
-            <th>Nombre del Estudiante</th>
-            <th>Avance (Casos)</th>
-            <th>Precisión IA</th>
-            <th>Estado</th>
+            <th>Carné / ID</th>
+            <th>Estudiante</th>
+            <th>Avance en Casos</th>
+            <th>Concordancia IA</th>
+            <th>Desempeño</th>
             <th>Acción</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let alumno of alumnos">
+          <tr *ngFor="let alumno of alumnosFiltrados">
             <td class="text-muted">{{ alumno.id }}</td>
-            <td class="font-weight-bold">{{ alumno.nombre }}</td>
-            <td>{{ alumno.casosResueltos }} / {{ estadisticasGlobales.casosAsignados }}</td>
+            <td>
+              <div class="student-profile-cell">
+                <div class="mini-avatar">{{ alumno.nombre.charAt(0) | uppercase }}</div>
+                <div class="student-info-col">
+                  <span class="font-weight-bold">{{ alumno.nombre }}</span>
+                  <span class="student-email">{{ alumno.correo }}</span>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge-cases">{{ alumno.casosResueltos }} / {{ estadisticasGlobales.casosAsignados }} completados</span>
+            </td>
             <td class="progress-cell">
               <div class="progress-bar-bg">
                 <div class="progress-bar-fill" 
@@ -58,7 +117,9 @@
                      [ngClass]="{'bg-success': alumno.precision >= 85, 'bg-warning': alumno.precision < 85 && alumno.precision >= 65, 'bg-danger': alumno.precision < 65}">
                 </div>
               </div>
-              <span class="precision-text">{{ alumno.precision }}%</span>
+              <span class="precision-text" [ngClass]="{'text-success': alumno.precision >= 85, 'text-warning': alumno.precision < 85 && alumno.precision >= 65, 'text-danger': alumno.precision < 65}">
+                {{ alumno.precision }}%
+              </span>
             </td>
             <td>
               <span class="badge" 
@@ -67,12 +128,137 @@
               </span>
             </td>
             <td>
-              <button class="btn-outline">Ver Detalle</button>
+              <button class="btn-outline" (click)="abrirDetalleEstudiante(alumno)">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                Ver Detalle
+              </button>
+            </td>
+          </tr>
+
+          <tr *ngIf="alumnosFiltrados.length === 0">
+            <td colspan="6" class="empty-state">
+              No se encontraron alumnos con los criterios de búsqueda seleccionados.
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </section>
+
+  <!-- MODAL DE DETALLE / EXPEDIENTE CLÍNICO DEL ALUMNO -->
+  <div class="modal-backdrop" *ngIf="modalAbierto" (click)="cerrarModal()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-user-header">
+          <div class="avatar-lg">{{ estudianteSeleccionado?.nombre?.charAt(0) | uppercase }}</div>
+          <div>
+            <h3>{{ estudianteSeleccionado?.nombre }}</h3>
+            <p class="text-muted">{{ estudianteSeleccionado?.id }} &bull; {{ estudianteSeleccionado?.correo }}</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="cerrarModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-kpis">
+          <div class="mini-kpi">
+            <span>Precisión Promedio</span>
+            <strong class="text-highlight">{{ estudianteSeleccionado?.precision }}%</strong>
+          </div>
+          <div class="mini-kpi">
+            <span>Casos Resueltos</span>
+            <strong>{{ estudianteSeleccionado?.casosResueltos }} de {{ estadisticasGlobales.casosAsignados }}</strong>
+          </div>
+          <div class="mini-kpi">
+            <span>Estado Académico</span>
+            <span class="badge" [ngClass]="{'badge-good': estudianteSeleccionado?.estado === 'Sobresaliente', 'badge-avg': estudianteSeleccionado?.estado === 'Promedio', 'badge-bad': estudianteSeleccionado?.estado === 'En Riesgo'}">
+              {{ estudianteSeleccionado?.estado }}
+            </span>
+          </div>
+        </div>
+
+        <h4 class="modal-section-title">HISTORIAL DE EVALUACIONES DIAGNÓSTICAS</h4>
+        
+        <div class="eval-list" *ngIf="estudianteSeleccionado?.evaluaciones?.length > 0">
+          <div class="eval-item glass-panel" *ngFor="let ev of estudianteSeleccionado.evaluaciones">
+            <div class="eval-header-row">
+              <div>
+                <strong>{{ ev.caso }}</strong>
+                <span class="badge-diff">{{ ev.dificultad }}</span>
+              </div>
+              <div class="eval-score">
+                <span>Concordancia IA:</span>
+                <strong class="score-tag">{{ ev.precision_ia }}%</strong>
+              </div>
+            </div>
+
+            <div class="eval-detail-row">
+              <span class="eval-time" *ngIf="ev.tiempo">⏱ Tiempo análisis: {{ ev.tiempo }}</span>
+              <span class="eval-date" *ngIf="ev.fecha">📅 Fecha: {{ ev.fecha }}</span>
+            </div>
+
+            <div class="eval-justification" *ngIf="ev.justificacion">
+              <p><strong>Justificación Clínica emitida:</strong> <em>"{{ ev.justificacion }}"</em></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-evals" *ngIf="!estudianteSeleccionado?.evaluaciones || estudianteSeleccionado.evaluaciones.length === 0">
+          <p>El estudiante aún no registra evaluaciones diagnósticas completadas.</p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-primary" (click)="cerrarModal()">Cerrar Expediente</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE REGISTRO DE NUEVO ALUMNO -->
+  <div class="modal-backdrop" *ngIf="modalCrearAlumnoAbierto" (click)="cerrarModalRegistro()">
+    <div class="modal-card glass-panel form-modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-user-header">
+          <div class="avatar-lg" style="background: rgba(0,229,255,0.2); color: var(--accent-cyan);"><svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
+          <div>
+            <h3>Registrar Nuevo Alumno</h3>
+            <p class="text-muted">Creación de cuenta y asignación a Radiología Médica</p>
+          </div>
+        </div>
+        <button class="btn-close" (click)="cerrarModalRegistro()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="nuevoAlumno.nombre_completo" class="glass-input" placeholder="Ej. Ana Lucía Morales" />
+        </div>
+        
+        <div class="form-group">
+          <label>Correo Electrónico Institucional</label>
+          <input type="email" [(ngModel)]="nuevoAlumno.correo_electronico" class="glass-input" placeholder="ejemplo@miumg.edu.gt" />
+        </div>
+
+        <div class="form-group">
+          <label>Contraseña Temporal</label>
+          <input type="password" [(ngModel)]="nuevoAlumno.contrasena" class="glass-input" placeholder="Mínimo 6 caracteres" />
+        </div>
+
+        <div *ngIf="mensajeRegistroError" class="alert-box alert-error">
+          {{ mensajeRegistroError }}
+        </div>
+        <div *ngIf="mensajeRegistroExito" class="alert-box alert-success">
+          {{ mensajeRegistroExito }}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-outline" (click)="cerrarModalRegistro()" [disabled]="guardandoAlumno">Cancelar</button>
+        <button class="btn-primary" (click)="guardarNuevoAlumno()" [disabled]="guardandoAlumno">
+          {{ guardandoAlumno ? 'Registrando...' : 'Registrar y Asignar' }}
+        </button>
+      </div>
+    </div>
+  </div>
 
 </div>

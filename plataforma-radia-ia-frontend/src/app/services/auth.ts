@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { tap } from 'rxjs/operators';
 
@@ -7,60 +7,94 @@ import { tap } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class AuthService {
-  // Tu configuración actual, libre de código quemado
   private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
-  // Tu método original intacto
-  // Tu método login corregido
   login(correo_electronico: string, contrasena: string) {
     return this.http.post<any>(`${this.apiUrl}/api/auth/login`, { correo_electronico, contrasena })
       .pipe(
         tap(respuesta => {
-          // CORRECCIÓN: Accedemos a respuesta.data porque así lo envía el backend en Node.js
           if (respuesta.data && respuesta.data.token) {
             localStorage.setItem('token', respuesta.data.token);
-            // Guardamos el objeto usuario que viene dentro de 'data'
             localStorage.setItem('usuario', JSON.stringify(respuesta.data.usuario));
           }
         })
       );
   }
 
-  // --- NUEVOS MÉTODOS PARA EL LAYOUT (MENÚ DINÁMICO) ---
+  registrarEstudiante(datos: any) {
+    return this.http.post<any>(`${this.apiUrl}/api/auth/registrar`, datos);
+  }
 
-  // 1. Obtener el token almacenado
   getToken(): string | null {
     return localStorage.getItem('token');
   }
 
-  // 2. Extraer y decodificar el payload del JWT
-  getRolUsuario(): string {
+  getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
-    
-    if (!token) {
-      return '';
+    return new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+  }
+
+  getRolUsuario(): string {
+    const usuarioStr = localStorage.getItem('usuario');
+    if (usuarioStr) {
+      try {
+        const u = JSON.parse(usuarioStr);
+        if (u.rol) return this.limpiarTexto(u.rol);
+      } catch (e) {}
     }
 
+    const token = this.getToken();
+    if (!token) return '';
+
     try {
-      // El JWT estándar tiene 3 partes. El payload (datos) es la segunda parte (índice 1).
       const payloadBase64 = token.split('.')[1];
       const payloadDecoded = atob(payloadBase64); 
       const payloadJson = JSON.parse(payloadDecoded);
-
-      // Retornamos la variable 'nombre_rol' que viene desde tu authController.js del backend
-      return payloadJson.nombre_rol || '';
-      
+      return this.limpiarTexto(payloadJson.nombre_rol || '');
     } catch (error) {
       console.error('Error al decodificar el token de seguridad:', error);
       return '';
     }
   }
 
-  // 3. Limpiar credenciales al cerrar sesión
+  getNombreUsuario(): string {
+    const usuarioStr = localStorage.getItem('usuario');
+    if (usuarioStr) {
+      try {
+        const u = JSON.parse(usuarioStr);
+        if (u.nombre_completo) return u.nombre_completo;
+      } catch (e) {}
+    }
+    return 'Usuario';
+  }
+
+  isCatedratico(): boolean {
+    const rol = this.getRolUsuario().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return rol.includes('catedr') || rol.includes('admin') || rol.includes('docente');
+  }
+
+  isEstudiante(): boolean {
+    const rol = this.getRolUsuario().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return rol.includes('estud') || (!this.isCatedratico() && rol.length > 0);
+  }
+
+  limpiarTexto(texto: string): string {
+    if (!texto) return '';
+    return texto
+      .replace(/Ã¡/g, 'á')
+      .replace(/Ã©/g, 'é')
+      .replace(/Ã­/g, 'í')
+      .replace(/Ã³/g, 'ó')
+      .replace(/Ãº/g, 'ú')
+      .replace(/Ã/g, 'Á');
+  }
+
   logout(): void {
     localStorage.removeItem('token');
-    localStorage.removeItem('usuario'); // Limpiamos ambas variables que guardas en el login
+    localStorage.removeItem('usuario');
   }
 }

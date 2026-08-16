@@ -1,24 +1,51 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { AuthService } from './auth';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AcademicService {
-  // Esta es la URL base de tu backend local
-  private apiUrl = 'http://localhost:3000/api'; 
+  private apiUrl = `${environment.apiUrl}/api/academico`;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {}
 
-  // Método para obtener la lista de alumnos desde MySQL
-  // Asegúrate de que la ruta '/alumnos' coincida con la que creaste en tu academicRoutes.js
-  getAlumnos(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/alumnos`);
+  // Asigna un estudiante a un curso
+  asignarEstudiante(id_curso: number, id_estudiante: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/asignar`, { id_curso, id_estudiante }, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 
-  // Método para obtener las estadísticas globales
+  // Obtiene el resumen general de la cátedra con métricas globales y lista de estudiantes
+  getResumenGeneral(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/resumen-general`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Obtiene el expediente detallado de un estudiante
+  getDetalleEstudiante(idEstudiante: number | string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/estudiante/${idEstudiante}/detalle`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Métodos retrocompatibles
+  getAlumnos(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/resumen-general`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   getEstadisticasGlobales(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/estadisticas-globales`);
+    return this.http.get<any>(`${this.apiUrl}/resumen-general`, {
+      headers: this.authService.getAuthHeaders()
+    });
   }
 }

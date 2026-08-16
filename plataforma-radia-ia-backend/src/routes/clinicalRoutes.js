@@ -9,14 +9,16 @@ const upload = require('../middlewares/uploadMiddleware'); // Importamos Multer
 
 // === ESTE ES EL ENDPOINT QUE BUSCA POSTMAN Y ANGULAR ===
 router.get('/casos-clinicos', clinicalController.obtenerWorklist);
+router.get('/casos-admin', clinicalController.listarCasosCatedratico);
+router.get('/caso/:id', clinicalController.obtenerCasoPorId);
 // =========================================================
 
-// Endpoints POST
+// Endpoints POST individuales
 router.post('/paciente', clinicalController.registrarPaciente);
 router.post('/caso', clinicalController.armarCaso);
-
-// Presta atención a "upload.single('imagen')". 
-// 'imagen' es la llave que deberás usar en Postman en la pestaña form-data.
 router.post('/radiografia', upload.single('imagen'), clinicalController.subirImagenRad);
+
+// Endpoint POST Maestro: Crear Paciente + Caso + Subir Rx en un solo paso
+router.post('/crear-completo', upload.single('imagen_rx'), clinicalController.crearCasoCompleto);
 
 module.exports = router;
