@@ -49,10 +49,31 @@ const verDashboard = async (req, res) => {
     }
 };
 
+const verResumenGeneral = async (req, res) => {
+    try {
+        const resumen = await academicService.obtenerResumenGeneral();
+        res.status(200).json({ status: 'success', data: resumen });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+const verDetalleEstudiante = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const detalle = await academicService.obtenerDetalleEstudiante(id);
+        res.status(200).json({ status: 'success', data: detalle });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     crear,
     asignar,
     listarMisCursos,
     listarEstudiantes,
-    verDashboard
+    verDashboard,
+    verResumenGeneral,
+    verDetalleEstudiante
 };

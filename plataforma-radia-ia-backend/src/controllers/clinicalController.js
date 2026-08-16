@@ -68,9 +68,53 @@ const obtenerWorklist = async (req, res) => {
     }
 };
 
+const crearCasoCompleto = async (req, res) => {
+    try {
+        let ruta_imagen = '/uploads/radiografias/rx-default.jpg';
+        if (req.file) {
+            ruta_imagen = `/uploads/radiografias/${req.file.filename}`;
+        } else if (req.body.ruta_imagen) {
+            ruta_imagen = req.body.ruta_imagen;
+        }
+
+        const datosCompletos = {
+            ...req.body,
+            ruta_imagen
+        };
+
+        const resultado = await clinicalService.crearCasoCompleto(datosCompletos);
+        res.status(201).json({ status: 'success', data: resultado });
+    } catch (error) {
+        console.error('Error al crear caso completo:', error);
+        res.status(400).json({ status: 'error', message: error.message });
+    }
+};
+
+const listarCasosCatedratico = async (req, res) => {
+    try {
+        const casos = await clinicalService.obtenerCasosDetallados();
+        res.status(200).json({ status: 'success', data: casos });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+const obtenerCasoPorId = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const caso = await clinicalService.obtenerDetalleCaso(id);
+        res.status(200).json({ status: 'success', data: caso });
+    } catch (error) {
+        res.status(404).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     registrarPaciente,
     armarCaso,
     subirImagenRad,
-    obtenerWorklist // <-- No olvides exportar la nueva función aquí
+    obtenerWorklist,
+    crearCasoCompleto,
+    listarCasosCatedratico,
+    obtenerCasoPorId
 };
