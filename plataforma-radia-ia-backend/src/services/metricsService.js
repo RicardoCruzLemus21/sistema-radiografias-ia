@@ -83,8 +83,29 @@ const obtenerCatalogosMetricas = async () => {
     }
 };
 
+const obtenerResultadosLikert = async () => {
+    const connection = await pool.getConnection();
+    try {
+        const query = `
+            SELECT 
+                ${dict.COLUMNAS.DIMENSION_EVALUADA} AS dimension, 
+                COUNT(*) AS total_respuestas,
+                ROUND(AVG(${dict.COLUMNAS.PUNTAJE_LIKERT}), 1) AS promedio
+            FROM ${dict.TABLAS.RESPUESTAS_LIKERT}
+            GROUP BY ${dict.COLUMNAS.DIMENSION_EVALUADA}
+        `;
+        const [resultados] = await connection.query(query);
+        connection.release();
+        return resultados;
+    } catch (error) {
+        connection.release();
+        throw error;
+    }
+};
+
 module.exports = {
     guardarCalificacionRubrica,
     guardarRespuestasLikert,
-    obtenerCatalogosMetricas
+    obtenerCatalogosMetricas,
+    obtenerResultadosLikert
 };

@@ -37,3 +37,30 @@
 .panel-actions { margin-top: auto; padding-top: 20px; }
 .btn-secondary { width: 100%; padding: 15px; font-weight: bold; background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
 .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.btn-primary { width: 100%; padding: 15px; font-weight: bold; background: linear-gradient(135deg, #00e5ff 0%, #0088ff 100%); color: #000; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); }
+
+/* Pantalla de Carga */
+.loading-view { display: flex; justify-content: center; align-items: center; width: 100%; }
+.loading-content { display: flex; flex-direction: column; align-items: center; padding: 40px; border-radius: 12px; border: 1px solid rgba(0, 229, 255, 0.2); background: rgba(11, 14, 20, 0.8); text-align: center; max-width: 500px; gap: 15px; }
+.loading-content h3 { color: #fff; margin: 0; }
+.spinner { width: 50px; height: 50px; border: 4px solid rgba(0, 229, 255, 0.2); border-top-color: var(--accent-cyan); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Alertas dinámicas */
+.alert-success { background: rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88; color: #00ff88; padding: 15px; border-radius: 4px; font-size: 13px; font-weight: 600; line-height: 1.4; }
+.alert-error { background: rgba(255, 51, 102, 0.1); border-left: 4px solid #ff3366; color: #ff3366; padding: 15px; border-radius: 4px; font-size: 13px; font-weight: 600; line-height: 1.4; }
+
+/* Modal Likert */
+.modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+.likert-modal { width: 100%; max-width: 600px; background: #0d121c; border-radius: 12px; border: 1px solid rgba(0, 229, 255, 0.3); display: flex; flex-direction: column; max-height: 90vh; overflow-y: auto; }
+.modal-header { padding: 20px 25px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.modal-header h3 { color: #fff; margin: 0 0 5px 0; font-size: 18px; }
+.modal-body { padding: 25px; display: flex; flex-direction: column; gap: 20px; }
+.likert-item { display: flex; flex-direction: column; gap: 10px; background: rgba(255, 255, 255, 0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); }
+.likert-question { margin: 0; color: #fff; font-size: 14px; font-weight: 500; }
+.likert-options { display: flex; justify-content: space-between; gap: 10px; margin-top: 5px; }
+.btn-likert { flex: 1; padding: 10px 0; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all 0.2s; font-weight: bold; }
+.btn-likert:hover { background: rgba(0, 229, 255, 0.1); color: #fff; border-color: rgba(0, 229, 255, 0.3); }
+.btn-likert.active { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 229, 255, 0.4); }
+.modal-footer { padding: 20px 25px; border-top: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: flex-end; }

@@ -21,6 +21,7 @@ const radiografiaRoutes = require('./src/routes/radiografiaRoutes');
 const diagnosticoRoutes = require('./src/routes/diagnosticoRoutes');
 const iaRoutes = require('./src/routes/iaRoutes');
 const metricsRoutes = require('./src/routes/metricsRoutes');
+const extraRoutes = require('./src/routes/extraRoutes');
 
 // ==========================================
 // REGISTRO DE ENDPOINTS REST
@@ -32,6 +33,7 @@ app.use('/api/radiografias', radiografiaRoutes); // MÓDULO 3: Subida y Gestión
 app.use('/api/diagnostico', diagnosticoRoutes); // MÓDULO 4: Diagnóstico y Catálogos
 app.use('/api/ia', iaRoutes); // MÓDULO 5: Inferencia IA y Concordancia
 app.use('/api/metrics', metricsRoutes); // MÓDULO 6 & 7: Rúbricas y Medición Científica (Likert)
+app.use('/api/extra', extraRoutes); // MÓDULO EXTRA: Auditoría, Notificaciones, Comentarios
 
 const PORT = process.env.PORT || 3000;
 

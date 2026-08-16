@@ -30,8 +30,19 @@ const listarCatalogosMetricas = async (req, res) => {
     }
 };
 
+const obtenerResultadosLikert = async (req, res) => {
+    try {
+        const resultados = await metricsService.obtenerResultadosLikert();
+        res.status(200).json({ status: 'success', data: resultados });
+    } catch (error) {
+        console.error("Error al obtener resultados Likert:", error);
+        res.status(500).json({ status: 'error', message: "Error interno al cargar los resultados de Likert." });
+    }
+};
+
 module.exports = {
     registrarRubrica,
     registrarLikert,
-    listarCatalogosMetricas
+    listarCatalogosMetricas,
+    obtenerResultadosLikert
 };

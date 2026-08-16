@@ -38,6 +38,7 @@ export class GestionCasosCatedratico implements OnInit {
   };
 
   archivoSeleccionado: File | null = null;
+  nombreArchivoSeleccionado: string = '';
   imagenPreviewUrl: string = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80';
 
   // Estado para el modal de Ver Detalle
@@ -121,6 +122,7 @@ export class GestionCasosCatedratico implements OnInit {
     };
     this.imagenPreviewUrl = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80';
     this.archivoSeleccionado = null;
+    this.nombreArchivoSeleccionado = '';
     this.modalCrearAbierto = true;
   }
 
@@ -132,12 +134,15 @@ export class GestionCasosCatedratico implements OnInit {
     const file = event.target.files[0];
     if (file) {
       this.archivoSeleccionado = file;
+      this.nombreArchivoSeleccionado = file.name;
       const reader = new FileReader();
       reader.onload = (e: any) => {
         this.imagenPreviewUrl = e.target.result;
         this.cdr.detectChanges();
       };
       reader.readAsDataURL(file);
+    } else {
+      this.nombreArchivoSeleccionado = '';
     }
   }
 

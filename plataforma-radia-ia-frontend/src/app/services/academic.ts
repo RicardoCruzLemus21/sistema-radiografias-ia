@@ -48,4 +48,12 @@ export class AcademicService {
       headers: this.authService.getAuthHeaders()
     });
   }
+
+  // Obtiene los resultados promediados de Likert desde el módulo de métricas
+  getResultadosLikert(): Observable<any> {
+    const metricsUrl = `${environment.apiUrl}/api/metricas`;
+    return this.http.get<any>(`${metricsUrl}/likert/resultados`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
 }

@@ -219,7 +219,11 @@
 
               <div class="form-group">
                 <label>Subir Archivo de Imagen (PNG, JPG, DICOM)</label>
-                <input type="file" (change)="onArchivoSeleccionado($event)" accept="image/*" class="file-input">
+                <input type="file" id="rx-upload" (change)="onArchivoSeleccionado($event)" accept="image/*" class="hidden-file-input">
+                <label for="rx-upload" class="custom-file-upload">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <span>{{ nombreArchivoSeleccionado ? nombreArchivoSeleccionado : 'Seleccionar archivo o arrastrar aquí...' }}</span>
+                </label>
               </div>
             </div>
 
