@@ -59,10 +59,22 @@ const listarAuditoria = async (req, res) => {
     }
 };
 
+const cambiarClaveInicial = async (req, res) => {
+    try {
+        const id_usuario = req.usuario.id_usuario;
+        const { nueva_contrasena } = req.body;
+        await authService.cambiarClaveInicial(id_usuario, nueva_contrasena);
+        res.status(200).json({ status: 'success', message: 'Contraseña cambiada exitosamente' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     registrar,
     login,
     listarRoles,
     listarUsuarios,
-    listarAuditoria
+    listarAuditoria,
+    cambiarClaveInicial
 };

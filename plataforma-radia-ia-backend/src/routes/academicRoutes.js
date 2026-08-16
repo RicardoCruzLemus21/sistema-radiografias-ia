@@ -11,6 +11,7 @@ router.post('/crear', academicController.crear);
 router.post('/asignar', academicController.asignar);
 
 // Endpoints de Lectura (GET) para cubrir las 3 tablas y Dashboards
+router.get('/mi-rendimiento', academicController.verMiRendimiento);
 router.get('/resumen-general', academicController.verResumenGeneral);
 router.get('/estudiante/:id/detalle', academicController.verDetalleEstudiante);
 router.get('/mis-cursos', academicController.listarMisCursos);

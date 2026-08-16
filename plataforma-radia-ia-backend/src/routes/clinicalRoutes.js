@@ -11,6 +11,7 @@ router.use(verificarToken);
 router.get('/casos-clinicos', clinicalController.obtenerWorklist);
 router.get('/casos-admin', clinicalController.listarCasosCatedratico);
 router.get('/caso/:id', clinicalController.obtenerCasoPorId);
+router.get('/next-paciente', clinicalController.obtenerSiguienteCodigoPaciente);
 // =========================================================
 
 // Endpoints POST individuales

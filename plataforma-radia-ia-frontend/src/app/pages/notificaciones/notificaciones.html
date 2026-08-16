@@ -1,0 +1,41 @@
+<div class="notificaciones-container glass-panel">
+  <div class="header-section">
+    <h2>CENTRO DE NOTIFICACIONES</h2>
+    <p class="subtitle">Mantente al tanto de nuevos casos y retroalimentación de tus catedráticos.</p>
+  </div>
+
+  <div *ngIf="cargando" class="loading-state">
+    <div class="spinner"></div>
+    <p>Cargando notificaciones...</p>
+  </div>
+
+  <div *ngIf="!cargando && notificaciones.length === 0" class="empty-state">
+    <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
+    <p>No tienes notificaciones en este momento.</p>
+  </div>
+
+  <div *ngIf="!cargando && notificaciones.length > 0" class="notificaciones-list">
+    <div *ngFor="let notif of notificaciones" 
+         class="notificacion-item" 
+         [ngClass]="{'no-leida': !notif.leida}">
+      
+      <div class="notificacion-icon">
+        <svg *ngIf="!notif.leida" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
+        <svg *ngIf="notif.leida" viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+
+      <div class="notificacion-content">
+        <div class="notificacion-header">
+          <h3>{{ notif.titulo }}</h3>
+          <span class="fecha">{{ notif.fecha_creacion | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <p>{{ notif.mensaje }}</p>
+      </div>
+
+      <div class="notificacion-actions" *ngIf="!notif.leida">
+        <button class="btn-leida" (click)="marcarComoLeida(notif.id_notificacion)">Marcar como leída</button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -42,4 +42,10 @@ export class ClinicalService {
       headers: this.authService.getAuthHeaders()
     });
   }
+
+  getNextPacienteCode(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/next-paciente`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
 }

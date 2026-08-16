@@ -114,22 +114,25 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
             next: (respCursos: any) => {
               const cursos = respCursos.data || [];
               const idCursoAsignar = cursos.length > 0 ? cursos[0].id_curso : 1;
-              this.academicService.asignarEstudiante(idCursoAsignar, idNuevoUsuario).subscribe({
+              this.academicService.asignarEstudiante(idCursoAsignar, idNuevoUsuario, this.nuevoAlumno.contrasena).subscribe({
                 next: () => {
                   this.guardandoAlumno = false;
                   this.mensajeRegistroExito = 'Alumno registrado exitosamente.';
+                  this.cdr.detectChanges();
                   this.cargarDatos();
                   setTimeout(() => this.cerrarModalRegistro(), 1500);
                 },
                 error: (err) => {
                   this.guardandoAlumno = false;
                   this.mensajeRegistroError = 'Error al asignar sección.';
+                  this.cdr.detectChanges();
                 }
               });
             },
             error: () => {
               this.guardandoAlumno = false;
               this.mensajeRegistroError = 'Error obteniendo cursos.';
+              this.cdr.detectChanges();
             }
           });
         }
@@ -137,6 +140,7 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
       error: (err) => {
         this.guardandoAlumno = false;
         this.mensajeRegistroError = err.error?.message || 'Error al registrar (correo duplicado).';
+        this.cdr.detectChanges();
       }
     });
   }

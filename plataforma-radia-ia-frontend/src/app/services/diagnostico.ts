@@ -2,14 +2,15 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DiagnosticoService {
-  private apiUrl = 'http://localhost:3000/api/diagnostico';
-  private iaUrl = 'http://localhost:3000/api/ia';
-  private metricsUrl = 'http://localhost:3000/api/metricas';
+  private apiUrl = `${environment.apiUrl}/api/diagnostico`;
+  private iaUrl = `${environment.apiUrl}/api/ia`;
+  private metricsUrl = `${environment.apiUrl}/api/metrics`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 

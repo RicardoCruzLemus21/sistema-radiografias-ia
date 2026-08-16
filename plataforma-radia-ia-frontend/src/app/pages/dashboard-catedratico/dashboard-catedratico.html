@@ -121,10 +121,9 @@
                 {{ alumno.precision }}%
               </span>
             </td>
-            <td>
-              <span class="badge" 
-                    [ngClass]="{'badge-good': alumno.estado === 'Sobresaliente', 'badge-avg': alumno.estado === 'Promedio', 'badge-bad': alumno.estado === 'En Riesgo'}">
-                {{ alumno.estado }}
+            <td class="text-center">
+              <span class="badge" [ngClass]="{'badge-good': alumno.estado === 'Sobresaliente', 'badge-avg': alumno.estado === 'Promedio', 'badge-bad': alumno.estado === 'En Riesgo', 'badge-none': alumno.estado === 'Sin Evaluar'}">
+                {{ alumno.estado | uppercase }}
               </span>
             </td>
             <td>
