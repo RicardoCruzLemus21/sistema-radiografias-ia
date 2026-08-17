@@ -1,16 +1,21 @@
-/* Variables Globales de Color (Basadas en tus capturas del Anexo) */
+/* Variables Globales de Color y Estilos Premium */
 :root {
-  --bg-dark-base: #0B0E14;      /* Fondo principal muy oscuro */
-  --bg-panel: rgba(20, 25, 35, 0.65); /* Fondo para tarjetas */
-  --accent-cyan: #00E5FF;       /* Acento principal (Botones y bordes) */
-  --accent-cyan-hover: #00B3CC; /* Hover del acento */
-  --text-main: #E0E6ED;         /* Texto principal claro */
-  --text-muted: #8A9AAC;        /* Texto secundario/deshabilitado */
-  --border-color: rgba(255, 255, 255, 0.08);
-  --error-red: #FF4D4D;
-  --success-green: #00E676;
+  --bg-dark-base: #0f172a;      /* Slate 900 - Fondo profundo y profesional */
+  --bg-panel: rgba(30, 41, 59, 0.7); /* Slate 800 semi-transparente para paneles */
+  --accent-cyan: #06b6d4;       /* Cyan 500 - Acento elegante */
+  --accent-cyan-hover: #0891b2; /* Cyan 600 - Hover del acento */
+  --text-main: #f8fafc;         /* Slate 50 - Texto principal claro y nítido */
+  --text-muted: #94a3b8;        /* Slate 400 - Texto secundario/deshabilitado */
+  --border-color: rgba(255, 255, 255, 0.1); /* Borde sutil para glassmorphism */
+  --border-highlight: rgba(6, 182, 212, 0.3); /* Borde brillante para elementos activos */
+  --error-red: #ef4444;         /* Red 500 */
+  --success-green: #10b981;     /* Emerald 500 */
+  --warning-yellow: #f59e0b;    /* Amber 500 */
   
-  --font-family-base: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Reset y Modo Oscuro Global */
@@ -27,48 +32,167 @@ body {
   height: 100vh;
   width: 100vw;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Clase maestra para el efecto Glassmorphism */
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark-base);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* Clase maestra para el efecto Glassmorphism refinado */
 .glass-panel {
   background: var(--bg-panel);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
-/* Estilos de botones genéricos */
+/* Efecto hover suave para tarjetas glassmorphism interactivas */
+.glass-panel-interactive:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+  border-color: var(--border-highlight);
+}
+
+/* Estilos de botones genéricos con micro-animaciones */
 .btn-primary {
-  background-color: var(--accent-cyan);
-  color: #000;
+  background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-hover) 100%);
+  color: #ffffff;
   border: none;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: bold;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
+  box-shadow: 0 4px 12px rgba(6, 182, 212, 0.25);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-primary:hover {
-  background-color: var(--accent-cyan-hover);
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(6, 182, 212, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.25);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  background: var(--text-muted);
 }
 
 .btn-secondary {
   background-color: transparent;
   color: var(--text-muted);
   border: 1px solid var(--border-color);
-  padding: 10px 20px;
-  border-radius: 4px;
+  padding: 10px 24px;
+  border-radius: 8px;
   font-weight: 500;
+  font-size: 14px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-secondary:hover {
   background-color: rgba(255, 255, 255, 0.05);
   color: var(--text-main);
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Animaciones utilitarias */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Skeleton Loading Animation */
+@keyframes skeleton-loading {
+  0% { background-color: rgba(255,255,255, 0.05); }
+  100% { background-color: rgba(255,255,255, 0.15); }
+}
+
+.skeleton {
+  animation: skeleton-loading 1s linear infinite alternate;
+  border-radius: 6px;
+}
+
+/* --- ESTILOS DE IMPRESIÓN (PDF Export) --- */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .glass-panel {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+  }
+  .btn-primary, .btn-secondary, .btn-back, .toolbar, .panel-actions, .modal-backdrop {
+    display: none !important;
+  }
+  .visor-layout {
+    height: auto !important;
+  }
+  .visor-body {
+    flex-direction: column !important;
+  }
+  .xray-viewer {
+    border: none !important;
+  }
+  .diagnostic-panel {
+    border: 1px solid #ccc !important;
+  }
+  .alert-box, .highlight-box {
+    background: #f0f0f0 !important;
+    border: 1px solid #999 !important;
+    color: #000 !important;
+  }
+  .percentage {
+    color: #000 !important;
+    text-shadow: none !important;
+  }
+  * {
+    color: #000 !important;
+    text-shadow: none !important;
+  }
 }

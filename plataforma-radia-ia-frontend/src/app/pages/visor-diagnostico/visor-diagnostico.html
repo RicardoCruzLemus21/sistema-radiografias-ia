@@ -10,7 +10,7 @@
       <h2>EVALUACIÓN CLÍNICA: <span class="highlight">{{ idCasoActual }}</span></h2>
     </div>
     <div class="header-right">
-      <span class="timer">00:00:00</span>
+      <span class="timer">{{ tiempoDisplay }}</span>
     </div>
   </header>
 
@@ -21,14 +21,21 @@
     <section class="xray-viewer">
       <div class="toolbar">
         <button title="Pantalla Completa" (click)="abrirFullscreen()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></button>
-        <button title="Ajustar Brillo/Contraste"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
-        <button title="Zoom"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg></button>
-        <button title="Invertir Colores"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
+        <button title="Ajustar Brillo/Contraste" (click)="ajustarContraste()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
+        <button title="Zoom" (click)="hacerZoom()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg></button>
+        <button title="Invertir Colores" (click)="toggleInvert()" [ngClass]="{'active': isInverted}"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
       </div>
       
-      <div class="image-container">
-        <!-- Usamos una imagen de muestra de alta resolución simulando el caso -->
-        <img [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image">
+      <div class="image-container" style="position: relative;">
+        <!-- Metadatos Clínicos Dinámicos (Estilo DICOM) -->
+        <div class="dicom-metadata" *ngIf="casoDetalle" style="position: absolute; top: 10px; left: 10px; color: #00ff88; font-family: monospace; font-size: 11px; z-index: 5; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">
+          <div>P: {{ casoDetalle.codigo_paciente || idCasoActual }} / RADIA-OS</div>
+          <div>Edad: {{ casoDetalle.edad || 'N/A' }} años / M</div>
+          <div>Mod: CR / {{ casoDetalle.tipo_proyeccion || 'Tórax AP' }}</div>
+          <div>kVp: 120 / mAs: 3.5</div>
+        </div>
+
+        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image" [ngStyle]="{'transform': 'scale(' + zoomLevel + ')', 'filter': (isInverted ? 'invert(1) ' : 'grayscale(100%) ') + 'brightness(' + brightness + ') contrast(' + contrast + ')'}" style="transition: transform 0.3s ease, filter 0.3s ease;">
       </div>
     </section>
 

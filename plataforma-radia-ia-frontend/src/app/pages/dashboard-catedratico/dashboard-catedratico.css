@@ -47,8 +47,7 @@
 
 /* Tarjetas Globales */
 .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
-.stat-card { display: flex; align-items: center; gap: 18px; padding: 20px 22px; border-radius: 12px; background: rgba(11, 14, 20, 0.7); border: 1px solid rgba(0, 229, 255, 0.15); transition: transform 0.25s ease, border-color 0.25s; }
-.stat-card:hover { transform: translateY(-3px); border-color: rgba(0, 229, 255, 0.4); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4); }
+.stat-card { display: flex; align-items: center; gap: 18px; padding: 20px 22px; transition: all var(--transition-normal); }
 .stat-icon { background: rgba(0, 0, 0, 0.6); padding: 14px; border-radius: 10px; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255, 255, 255, 0.05); }
 .stat-info h3 { color: #ffffff; font-size: 26px; font-weight: 700; margin: 0 0 2px 0; }
 .stat-info p { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; margin: 0; }
@@ -60,9 +59,6 @@
   align-items: center;
   gap: 16px;
   padding: 12px 18px;
-  border-radius: 10px;
-  background: rgba(11, 14, 20, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.06);
   flex-wrap: wrap;
 }
 
@@ -183,7 +179,7 @@
 .section-header h2 { color: var(--accent-cyan); font-size: 13px; letter-spacing: 1.5px; font-weight: 700; margin: 0; }
 .badge-sub { font-size: 11px; color: var(--text-muted); background: rgba(0, 0, 0, 0.3); padding: 4px 10px; border-radius: 6px; }
 
-.table-container { padding: 0; overflow-x: auto; border-radius: 12px; background: rgba(11, 14, 20, 0.6); border: 1px solid rgba(0, 229, 255, 0.12); }
+.table-container { padding: 0; overflow-x: auto; margin-top: 10px; }
 .students-table { width: 100%; border-collapse: collapse; text-align: left; }
 .students-table th { background: rgba(0, 0, 0, 0.5); color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; padding: 14px 18px; font-weight: 600; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
 .students-table td { padding: 14px 18px; color: #fff; font-size: 13px; border-bottom: 1px solid rgba(255, 255, 255, 0.03); vertical-align: middle; }
