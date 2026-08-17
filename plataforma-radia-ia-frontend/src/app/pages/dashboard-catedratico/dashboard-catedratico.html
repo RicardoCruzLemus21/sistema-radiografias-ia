@@ -84,7 +84,34 @@
     </div>
 
     <div class="table-container glass-panel">
-      <table class="students-table">
+      <!-- Estado de Carga -->
+      <div *ngIf="cargando" style="padding: 50px 20px; text-align: center;">
+        <div class="spinner" style="margin: 0 auto; border-color: rgba(0, 229, 255, 0.2); border-top-color: var(--accent-cyan); border-width: 3px; width: 40px; height: 40px;"></div>
+        <p style="color: var(--text-muted); margin-top: 15px;">Cargando lista de estudiantes...</p>
+      </div>
+
+      <!-- Empty State (No hay estudiantes registrados) -->
+      <div *ngIf="!cargando && alumnos.length === 0" class="empty-state" style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
+        <svg viewBox="0 0 24 24" width="64" height="64" stroke="currentColor" stroke-width="1.5" fill="none" style="margin-bottom: 15px; opacity: 0.5;">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+        <h3 style="color: #fff; margin: 0 0 10px 0; font-size: 18px;">Aún no tienes estudiantes</h3>
+        <p style="margin: 0; font-size: 14px;">No hay alumnos matriculados en tus cursos asignados.</p>
+      </div>
+
+      <!-- Empty State (Filtros no dieron resultados pero si hay estudiantes) -->
+      <div *ngIf="!cargando && alumnos.length > 0 && alumnosFiltrados.length === 0" class="empty-state" style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
+        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" style="margin-bottom: 15px; opacity: 0.5;">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <p style="margin: 0; font-size: 14px;">No se encontraron alumnos con los criterios de búsqueda seleccionados.</p>
+      </div>
+
+      <table class="students-table" *ngIf="!cargando && alumnosFiltrados.length > 0">
         <thead>
           <tr>
             <th>Carné / ID</th>
@@ -131,12 +158,6 @@
                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                 Ver Detalle
               </button>
-            </td>
-          </tr>
-
-          <tr *ngIf="alumnosFiltrados.length === 0">
-            <td colspan="6" class="empty-state">
-              No se encontraron alumnos con los criterios de búsqueda seleccionados.
             </td>
           </tr>
         </tbody>

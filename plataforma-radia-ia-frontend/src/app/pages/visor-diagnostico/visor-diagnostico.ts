@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DiagnosticoService } from '../../services/diagnostico';
 import { AuthService } from '../../services/auth';
+import { ClinicalService } from '../../services/clinical';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-visor-diagnostico',
@@ -18,17 +20,28 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
   patologias: any[] = [];
   justificacionClinica: string = '';
   
-  // Variables para la imagen
-  imagenUrl: string = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80';
+  // Variables para la imagen y herramientas
+  imagenUrl: string = '';
   fullscreenAbierto: boolean = false;
   
+  zoomLevel: number = 1;
+  isInverted: boolean = false;
+  brightness: number = 1;
+  contrast: number = 1.2;
+
+  // Variables de datos clínicos
+  casoDetalle: any = null;
+
   // Variables para calcular el tiempo dinámicamente
   horaInicioAnalisis: number = 0;
+  tiempoDisplay: string = '00:00:00';
+  private timerInterval: any;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private diagnosticoService: DiagnosticoService,
+    private clinicalService: ClinicalService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -36,11 +49,68 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.idCasoActual = this.route.snapshot.paramMap.get('id') || '1';
     this.horaInicioAnalisis = Date.now();
+    this.iniciarTemporizador();
+    this.cargarDatosCaso();
     this.cargarPatologias();
   }
 
+  cargarDatosCaso() {
+    this.clinicalService.getCasoPorId(this.idCasoActual).subscribe({
+      next: (res) => {
+        if (res.data) {
+          this.casoDetalle = res.data;
+          // Construimos la URL completa para la imagen
+          if (this.casoDetalle.ruta_imagen && !this.casoDetalle.ruta_imagen.startsWith('http')) {
+            this.imagenUrl = `${environment.apiUrl}${this.casoDetalle.ruta_imagen}`;
+          } else {
+            this.imagenUrl = this.casoDetalle.ruta_imagen || 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80';
+          }
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => {
+        console.error('Error al cargar datos del caso:', err);
+      }
+    });
+  }
+
   ngOnDestroy(): void {
-    // Limpieza si es necesaria
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
+  }
+
+  iniciarTemporizador() {
+    this.timerInterval = setInterval(() => {
+      const transcurrido = Math.floor((Date.now() - this.horaInicioAnalisis) / 1000);
+      const horas = Math.floor(transcurrido / 3600).toString().padStart(2, '0');
+      const minutos = Math.floor((transcurrido % 3600) / 60).toString().padStart(2, '0');
+      const segundos = (transcurrido % 60).toString().padStart(2, '0');
+      this.tiempoDisplay = `${horas}:${minutos}:${segundos}`;
+    }, 1000);
+  }
+
+  // Herramientas del Visor
+  toggleInvert() {
+    this.isInverted = !this.isInverted;
+  }
+
+  ajustarContraste() {
+    // Cicla entre valores básicos de brillo/contraste para simular windowing
+    if (this.contrast === 1.2) {
+      this.contrast = 1.5;
+      this.brightness = 1.1;
+    } else if (this.contrast === 1.5) {
+      this.contrast = 2.0;
+      this.brightness = 0.9;
+    } else {
+      this.contrast = 1.2;
+      this.brightness = 1.0;
+    }
+  }
+
+  hacerZoom() {
+    this.zoomLevel = this.zoomLevel >= 2 ? 1 : this.zoomLevel + 0.5;
   }
 
   cargarPatologias() {

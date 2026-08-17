@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth'; 
+import { ExtraService } from '../../services/extra';
 
 @Component({
   selector: 'app-layout',
@@ -15,9 +16,11 @@ export class LayoutComponent implements OnInit {
   rolUsuarioActual: string = '';
   isCatedratico: boolean = false;
   isEstudiante: boolean = false;
+  notificacionesNoLeidas: number = 0;
 
   constructor(
     private authService: AuthService,
+    private extraService: ExtraService,
     private router: Router
   ) {}
 
@@ -30,6 +33,22 @@ export class LayoutComponent implements OnInit {
     this.nombreUsuarioActual = this.authService.getNombreUsuario();
     this.isCatedratico = this.authService.isCatedratico();
     this.isEstudiante = this.authService.isEstudiante();
+
+    if (this.isEstudiante) {
+      this.cargarNotificaciones();
+    }
+  }
+
+  cargarNotificaciones(): void {
+    this.extraService.getNotificaciones().subscribe({
+      next: (res: any) => {
+        if (res && res.data) {
+          const noLeidas = res.data.filter((n: any) => !n.leida);
+          this.notificacionesNoLeidas = noLeidas.length;
+        }
+      },
+      error: (err) => console.error("Error al cargar notificaciones globales:", err)
+    });
   }
 
   cerrarSesion(): void {

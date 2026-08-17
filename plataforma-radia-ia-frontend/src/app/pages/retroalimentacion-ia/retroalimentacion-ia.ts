@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DiagnosticoService } from '../../services/diagnostico';
 import { AuthService } from '../../services/auth';
+import { ClinicalService } from '../../services/clinical';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-retroalimentacion-ia',
@@ -31,17 +33,44 @@ export class RetroalimentacionIa implements OnInit {
   ];
   
   resultadoIA: any = null;
+  patologiasCatalogo: any[] = [];
+  imagenOriginal: string = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80';
 
   constructor(
     private route: ActivatedRoute, 
     private router: Router,
     private diagnosticoService: DiagnosticoService,
+    private clinicalService: ClinicalService,
     private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.idCasoActual = this.route.snapshot.paramMap.get('id');
+    
+    // Cargar catálogos dinámicos e imagen del caso antes de simular
+    this.diagnosticoService.getCatalogos().subscribe({
+      next: (res) => {
+        this.patologiasCatalogo = res.data;
+        if (this.idCasoActual) {
+          this.clinicalService.getCasoPorId(this.idCasoActual).subscribe(casoRes => {
+            if (casoRes.data && casoRes.data.ruta_imagen) {
+              this.imagenOriginal = casoRes.data.ruta_imagen.startsWith('http') ? casoRes.data.ruta_imagen : `${environment.apiUrl}${casoRes.data.ruta_imagen}`;
+            }
+            this.inicializarSimulacion();
+          });
+        } else {
+          this.inicializarSimulacion();
+        }
+      },
+      error: (err) => {
+        console.error('Error cargando catálogos:', err);
+        this.inicializarSimulacion();
+      }
+    });
+  }
+
+  inicializarSimulacion() {
     this.route.queryParams.subscribe(params => {
       this.idEvaluacion = params['eval'];
       this.patologiasEstudiante = params['pat'] || '1'; // Capturamos las seleccionadas
@@ -68,16 +97,16 @@ export class RetroalimentacionIa implements OnInit {
         id_radiografia: this.idCasoActual, 
         id_patologia_detectada: idPatologiaSimulada,
         probabilidad_porcentaje: (Math.random() * (99 - 85) + 85).toFixed(2), // 85% a 99%
-        ruta_mapa_calor: 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80' // Img base
+        ruta_mapa_calor: this.imagenOriginal
       };
 
       this.diagnosticoService.procesarInferencia(payloadIA).subscribe({
         next: (res) => {
           this.cargandoIA = false;
           
-          // Mapear el ID de la patología a un texto visual
-          const nombresPatologias: {[key: number]: string} = {1: 'Neumonía', 2: 'Tuberculosis', 3: 'Derrame Pleural'};
-          const nombrePatologia = nombresPatologias[idPatologiaSimulada] || 'Patología Indeterminada';
+          // Mapear el ID de la patología dinámicamente desde el catálogo DB
+          const patEncontrada = this.patologiasCatalogo.find(p => p.id == idPatologiaSimulada);
+          const nombrePatologia = patEncontrada ? patEncontrada.nombre : 'Patología Indeterminada';
 
           this.resultadoIA = {
             patologia: nombrePatologia,
@@ -101,6 +130,11 @@ export class RetroalimentacionIa implements OnInit {
 
   abrirLikert() {
     this.mostrarLikert = true;
+  }
+
+  descargarInforme() {
+    // Utiliza la funcionalidad nativa de impresión del navegador para exportar a PDF
+    window.print();
   }
 
   cerrarLikert() {
