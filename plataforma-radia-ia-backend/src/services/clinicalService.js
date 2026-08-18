@@ -212,6 +212,48 @@ const obtenerSiguienteCodigoPaciente = async () => {
     return 'PAC-' + nextNum.toString().padStart(3, '0');
 };
 
+// 8. Editar Caso y Paciente
+const editarCaso = async (id_caso, datos) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const { titulo_caso, motivo_consulta, nivel_dificultad, id_paciente, edad, genero, antecedentes_medicos } = datos;
+
+        // Actualizar Caso
+        await connection.query(
+            `UPDATE ${dict.TABLAS.CASOS} SET ${dict.COLUMNAS.TITULO_CASO} = ?, ${dict.COLUMNAS.MOTIVO_CONSULTA} = ?, ${dict.COLUMNAS.NIVEL_DIFICULTAD} = ? WHERE ${dict.COLUMNAS.ID_CASO} = ?`,
+            [titulo_caso, motivo_consulta, nivel_dificultad, id_caso]
+        );
+
+        // Actualizar Paciente
+        if (id_paciente) {
+            await connection.query(
+                `UPDATE ${dict.TABLAS.PACIENTES} SET ${dict.COLUMNAS.EDAD} = ?, ${dict.COLUMNAS.GENERO} = ?, ${dict.COLUMNAS.ANTECEDENTES} = ? WHERE ${dict.COLUMNAS.ID_PACIENTE} = ?`,
+                [edad, genero, antecedentes_medicos, id_paciente]
+            );
+        }
+
+        await connection.commit();
+        connection.release();
+        return true;
+    } catch (error) {
+        await connection.rollback();
+        connection.release();
+        throw error;
+    }
+};
+
+// 9. Eliminar Caso
+const eliminarCaso = async (id_caso) => {
+    try {
+        await pool.query(`DELETE FROM ${dict.TABLAS.CASOS} WHERE ${dict.COLUMNAS.ID_CASO} = ?`, [id_caso]);
+        return true;
+    } catch (error) {
+        throw new Error('No se puede eliminar el caso porque ya tiene evaluaciones asociadas.');
+    }
+};
+
 module.exports = {
     crearPaciente,
     crearCaso,
@@ -219,5 +261,7 @@ module.exports = {
     crearCasoCompleto,
     obtenerCasosDetallados,
     obtenerDetalleCaso,
-    obtenerSiguienteCodigoPaciente
+    obtenerSiguienteCodigoPaciente,
+    editarCaso,
+    eliminarCaso
 };

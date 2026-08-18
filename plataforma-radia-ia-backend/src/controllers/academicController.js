@@ -100,6 +100,27 @@ const verMiRendimiento = async (req, res) => {
     }
 };
 
+const editarCurso = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const resultado = await academicService.editarCurso(id, req.body);
+        res.status(200).json({ status: 'success', data: resultado });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+const eliminarCurso = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const id_catedratico = req.usuario.id_usuario;
+        await academicService.eliminarCurso(id, id_catedratico);
+        res.status(200).json({ status: 'success', message: 'Curso eliminado correctamente.' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     crear,
     asignar,
@@ -110,5 +131,7 @@ module.exports = {
     verDetalleEstudiante,
     editarEstudiante,
     eliminarEstudiante,
-    verMiRendimiento
+    verMiRendimiento,
+    editarCurso,
+    eliminarCurso
 };

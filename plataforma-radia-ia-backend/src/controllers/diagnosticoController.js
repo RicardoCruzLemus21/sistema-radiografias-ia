@@ -67,7 +67,80 @@ const listarCatalogos = async (req, res) => {
     }
 };
 
+const editarPatologia = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre_patologia, descripcion } = req.body;
+        
+        await db.query(
+            `UPDATE ${TABLAS.CATALOGO_PATOLOGIAS} SET ${COLUMNAS.NOMBRE_PATOLOGIA} = ?, descripcion = ? WHERE ${COLUMNAS.ID_PATOLOGIA} = ?`,
+            [nombre_patologia, descripcion, id]
+        );
+        
+        res.status(200).json({ status: 'success', message: 'Patología actualizada correctamente' });
+    } catch (error) {
+        console.error("Error al editar patología:", error);
+        res.status(500).json({ status: 'error', message: 'Error al actualizar la patología' });
+    }
+};
+
+const eliminarPatologia = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.query(`DELETE FROM ${TABLAS.CATALOGO_PATOLOGIAS} WHERE ${COLUMNAS.ID_PATOLOGIA} = ?`, [id]);
+        res.status(200).json({ status: 'success', message: 'Patología eliminada correctamente' });
+    } catch (error) {
+        console.error("Error al eliminar patología:", error);
+        res.status(500).json({ status: 'error', message: 'No se puede eliminar la patología porque está en uso por evaluaciones existentes.' });
+    }
+};
+
+const obtenerEvaluacionesPorCurso = async (req, res) => {
+    try {
+        const { id_curso } = req.params;
+        const evaluaciones = await diagnosticoService.obtenerEvaluacionesPorCurso(id_curso);
+        res.status(200).json({ status: 'success', data: evaluaciones });
+    } catch (error) {
+        console.error("Error al obtener evaluaciones:", error);
+        res.status(500).json({ status: 'error', message: 'Error al obtener evaluaciones' });
+    }
+};
+
+const agregarFeedback = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { feedback } = req.body;
+        await diagnosticoService.agregarFeedback(id, feedback);
+
+        const id_admin = req.usuario?.id_usuario || 1;
+        await auditService.registrarAccion(id_admin, 'EVALUAR_DIAGNOSTICO', `Se agregó retroalimentación manual a la evaluación ID: ${id}`);
+
+        res.status(200).json({ status: 'success', message: 'Feedback agregado correctamente' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'Error al agregar feedback' });
+    }
+};
+
+const invalidarEvaluacion = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await diagnosticoService.invalidarEvaluacion(id);
+
+        const id_admin = req.usuario?.id_usuario || 1;
+        await auditService.registrarAccion(id_admin, 'ELIMINAR_EVALUACION', `Se invalidó la evaluación ID: ${id}`);
+
+        res.status(200).json({ status: 'success', message: 'Evaluación invalidada' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     registrarEvaluacion,
-    listarCatalogos
+    listarCatalogos,
+    editarPatologia,
+    eliminarPatologia,
+    obtenerEvaluacionesPorCurso,
+    agregarFeedback,
+    invalidarEvaluacion
 };

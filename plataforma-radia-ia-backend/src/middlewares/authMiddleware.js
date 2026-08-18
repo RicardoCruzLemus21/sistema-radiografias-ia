@@ -27,4 +27,22 @@ const verificarToken = (req, res, next) => {
     }
 };
 
-module.exports = { verificarToken };
+const verificarRol = (rolesPermitidos) => {
+    return (req, res, next) => {
+        if (!req.usuario || !req.usuario.nombre_rol) {
+            return res.status(403).json({ status: 'error', message: 'Acceso denegado. No se encontró información de rol.' });
+        }
+        
+        // Convertimos todo a minúsculas y eliminamos tildes para comparar correctamente
+        const rolUsuario = req.usuario.nombre_rol.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const rolesPermitidosNormalizados = rolesPermitidos.map(r => r.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""));
+
+        if (!rolesPermitidosNormalizados.includes(rolUsuario)) {
+            return res.status(403).json({ status: 'error', message: 'No tienes permisos para realizar esta acción.' });
+        }
+        
+        next();
+    };
+};
+
+module.exports = { verificarToken, verificarRol };

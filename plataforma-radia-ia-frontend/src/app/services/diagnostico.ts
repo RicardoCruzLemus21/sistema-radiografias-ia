@@ -29,6 +29,22 @@ export class DiagnosticoService {
     return this.http.post<any>(`${this.iaUrl}/inferencia`, datos, { headers });
   }
 
+  guardarEvaluacion(data: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/evaluar`, data, { headers: this.authService.getAuthHeaders() });
+  }
+
+  getEvaluacionesPorCurso(id_curso: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/evaluaciones/curso/${id_curso}`, { headers: this.authService.getAuthHeaders() });
+  }
+
+  agregarFeedback(id_evaluacion: number, feedback: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/evaluacion/${id_evaluacion}`, { feedback }, { headers: this.authService.getAuthHeaders() });
+  }
+
+  invalidarEvaluacion(id_evaluacion: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/evaluacion/${id_evaluacion}`, { headers: this.authService.getAuthHeaders() });
+  }
+
   // Guardar Encuesta Likert
   guardarLikert(datos: any): Observable<any> {
     const headers = this.authService.getAuthHeaders();

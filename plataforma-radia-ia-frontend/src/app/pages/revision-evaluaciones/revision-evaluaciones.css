@@ -1,0 +1,141 @@
+.rev-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.rev-header {
+  margin-bottom: 30px;
+}
+
+.header-titles h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  background: linear-gradient(90deg, #fff, #a5d8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-titles p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.eval-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.eval-card {
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.eval-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.eval-student {
+  font-weight: 600;
+  color: #fff;
+  font-size: 16px;
+}
+
+.eval-date {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.eval-case {
+  margin-bottom: 15px;
+  color: var(--accent-cyan);
+  font-size: 14px;
+}
+
+.eval-justification, .eval-feedback {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.eval-feedback {
+  background: rgba(0, 255, 136, 0.05);
+  border: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.eval-justification label, .eval-feedback label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.eval-feedback label {
+  color: #00ff88;
+}
+
+.eval-justification p, .eval-feedback p {
+  font-size: 14px;
+  color: #ddd;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.eval-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-danger {
+  background: rgba(255, 68, 68, 0.1);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  flex: 1;
+  transition: all 0.2s;
+}
+
+.btn-danger:hover {
+  background: rgba(255, 68, 68, 0.2);
+}
+
+.mt-3 {
+  margin-top: 15px;
+}
+
+.modal-subtitle {
+  color: #ccc;
+  font-size: 14px;
+}
+
+textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: inherit;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+}

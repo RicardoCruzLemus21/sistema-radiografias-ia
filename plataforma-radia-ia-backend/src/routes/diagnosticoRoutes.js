@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router(); // <-- ¡Esta es la línea que faltaba y que Node.js estaba pidiendo!
 const diagnosticoController = require('../controllers/diagnosticoController');
-// const { verificarToken } = require('../middlewares/authMiddleware'); 
+const { verificarToken, verificarRol } = require('../middlewares/authMiddleware');
 
 // =========================================================
 // BYPASS TEMPORAL: Quitamos "verificarToken" de la ejecución
@@ -11,7 +11,15 @@ const diagnosticoController = require('../controllers/diagnosticoController');
 // Endpoint: POST /api/diagnostico/evaluar
 router.post('/evaluar', /* verificarToken, */ diagnosticoController.registrarEvaluacion);
 
-// Endpoint: GET /api/diagnostico/catalogos (El que consultará Angular)
-router.get('/catalogos', /* verificarToken, */ diagnosticoController.listarCatalogos);
+// Endpoints CRUD para Patologías (Catálogo)
+// Módulo de Catálogos
+router.get('/catalogos', diagnosticoController.listarCatalogos);
+router.put('/patologia/:id', verificarToken, verificarRol(['catedratico', 'admin']), diagnosticoController.editarPatologia);
+router.delete('/patologia/:id', verificarToken, verificarRol(['catedratico', 'admin']), diagnosticoController.eliminarPatologia);
+
+// Módulo Human-in-the-Loop (Gestión de Evaluaciones)
+router.get('/evaluaciones/curso/:id_curso', verificarToken, verificarRol(['catedratico', 'admin']), diagnosticoController.obtenerEvaluacionesPorCurso);
+router.put('/evaluacion/:id', verificarToken, verificarRol(['catedratico', 'admin']), diagnosticoController.agregarFeedback);
+router.delete('/evaluacion/:id', verificarToken, verificarRol(['catedratico', 'admin']), diagnosticoController.invalidarEvaluacion);
 
 module.exports = router;

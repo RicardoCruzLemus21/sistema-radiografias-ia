@@ -22,4 +22,8 @@ router.post('/radiografia', upload.single('imagen'), clinicalController.subirIma
 // Endpoint POST Maestro: Crear Paciente + Caso + Subir Rx en un solo paso
 router.post('/crear-completo', upload.single('imagen_rx'), clinicalController.crearCasoCompleto);
 
+// Endpoints CRUD adicionales (Editar y Eliminar)
+router.put('/caso/:id', clinicalController.editarCaso);
+router.delete('/caso/:id', clinicalController.eliminarCaso);
+
 module.exports = router;

@@ -1,0 +1,95 @@
+<div class="users-container">
+  <header class="users-header">
+    <div class="header-titles">
+      <h1>Control de Accesos y Usuarios</h1>
+      <p>Gestión administrativa de los roles y cuentas en la plataforma.</p>
+    </div>
+  </header>
+
+  <div class="spinner" *ngIf="cargando">Cargando usuarios...</div>
+
+  <div class="table-card glass-panel" *ngIf="!cargando">
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre Completo</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of usuarios">
+          <td>#{{ u.id }}</td>
+          <td><strong>{{ u.nombre }}</strong></td>
+          <td>{{ u.email }}</td>
+          <td>
+            <span class="role-badge" [ngClass]="{'badge-admin': u.id_rol === 1, 'badge-student': u.id_rol === 2}">
+              {{ u.rol | uppercase }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
+            <button class="btn-delete" (click)="abrirModalEliminar(u)" [disabled]="u.id_rol === 1 && usuarios.length > 1">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- MODAL: EDITAR USUARIO -->
+  <div class="modal-backdrop" *ngIf="modalEditarAbierto" (click)="cerrarModalEditar()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Usuario</h3>
+        <button class="btn-close" (click)="cerrarModalEditar()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="usuarioEditando.nombre_completo">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="usuarioEditando.email">
+        </div>
+        <div class="form-group">
+          <label>Nueva Contraseña (Opcional)</label>
+          <input type="password" [(ngModel)]="usuarioEditando.password" placeholder="Dejar en blanco para mantener la actual">
+        </div>
+        <div class="form-group">
+          <label>Rol de Usuario</label>
+          <select [(ngModel)]="usuarioEditando.id_rol">
+            <option [ngValue]="1">Catedrático / Administrador</option>
+            <option [ngValue]="2">Estudiante</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalEditar()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarEdicion()" [disabled]="guardandoEdicion">
+          {{ guardandoEdicion ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ELIMINAR USUARIO -->
+  <div class="modal-backdrop" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
+    <div class="modal-card modal-sm glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Eliminar Cuenta</h3>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro que deseas eliminar el acceso a <strong>{{ usuarioAEliminar?.nombre }}</strong>?</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalEliminar()">Cancelar</button>
+        <button class="btn-delete" (click)="confirmarEliminar()" [disabled]="eliminandoUsuario">
+          {{ eliminandoUsuario ? 'Eliminando...' : 'Sí, Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -17,6 +17,7 @@ export class LayoutComponent implements OnInit {
   isCatedratico: boolean = false;
   isEstudiante: boolean = false;
   notificacionesNoLeidas: number = 0;
+  temaActual: string = 'cyan';
 
   constructor(
     private authService: AuthService,
@@ -26,6 +27,7 @@ export class LayoutComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarDatosUsuario();
+    this.cargarTema();
   }
 
   cargarDatosUsuario(): void {
@@ -49,6 +51,18 @@ export class LayoutComponent implements OnInit {
       },
       error: (err) => console.error("Error al cargar notificaciones globales:", err)
     });
+  }
+
+  cargarTema(): void {
+    const temaGuardado = localStorage.getItem('tema-radia') || 'cyan';
+    this.temaActual = temaGuardado;
+    document.documentElement.setAttribute('data-theme', temaGuardado);
+  }
+
+  cambiarTema(tema: string): void {
+    this.temaActual = tema;
+    document.documentElement.setAttribute('data-theme', tema);
+    localStorage.setItem('tema-radia', tema);
   }
 
   cerrarSesion(): void {

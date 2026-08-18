@@ -304,10 +304,91 @@
         </div>
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" style="justify-content: space-between;">
+        <div>
+          <button class="btn-cancel" (click)="abrirModalEliminar(casoSeleccionado)" style="background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); margin-right: 10px;">Eliminar</button>
+          <button class="btn-cancel" (click)="abrirModalEditar(casoSeleccionado)" style="background: rgba(0,229,255,0.1); color: var(--accent-cyan); border: 1px solid rgba(0,229,255,0.3);">Editar Datos</button>
+        </div>
         <button class="btn-primary" (click)="cerrarDetalleCaso()">Cerrar Ficha</button>
       </div>
 
+  <!-- MODAL: EDITAR CASO -->
+  <div class="modal-backdrop" *ngIf="modalEditarAbierto" (click)="cerrarModalEditar()">
+    <div class="modal-card modal-lg glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title-box">
+          <h3>Editar Caso Clínico</h3>
+        </div>
+        <button class="btn-close" (click)="cerrarModalEditar()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form class="create-case-form" (ngSubmit)="guardarEdicionCaso()">
+          <div class="form-section">
+            <h4 class="form-section-title">Datos del Paciente</h4>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Edad</label>
+                <input type="number" [(ngModel)]="casoEditando.edad" name="edad" required>
+              </div>
+              <div class="form-group">
+                <label>Género</label>
+                <select [(ngModel)]="casoEditando.genero" name="genero">
+                  <option value="M">Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Antecedentes Médicos</label>
+              <textarea [(ngModel)]="casoEditando.antecedentes" name="antecedentes" rows="2"></textarea>
+            </div>
+          </div>
+          <div class="form-section">
+            <h4 class="form-section-title">Caso Clínico</h4>
+            <div class="form-group">
+              <label>Título del Caso</label>
+              <input type="text" [(ngModel)]="casoEditando.titulo_caso" name="titulo_caso" required>
+            </div>
+            <div class="form-group">
+              <label>Motivo de Consulta</label>
+              <textarea [(ngModel)]="casoEditando.motivo_consulta" name="motivo_consulta" rows="3" required></textarea>
+            </div>
+            <div class="form-group">
+              <label>Nivel de Dificultad</label>
+              <select [(ngModel)]="casoEditando.nivel_dificultad" name="nivel_dificultad">
+                <option value="Básico">Básico</option>
+                <option value="Intermedio">Intermedio</option>
+                <option value="Avanzado">Avanzado</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalEditar()">Cancelar</button>
+        <button class="btn-primary-glow" (click)="guardarEdicionCaso()" [disabled]="guardandoEdicion">
+          {{ guardandoEdicion ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ELIMINAR CASO -->
+  <div class="modal-backdrop" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
+    <div class="modal-card modal-sm glass-panel" style="max-width: 400px;" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirmar Eliminación</h3>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que deseas eliminar permanentemente el caso clínico <strong>{{ casoAEliminar?.titulo }}</strong>? Esta acción no se puede deshacer y fallará si ya hay evaluaciones de estudiantes en este caso.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalEliminar()">Cancelar</button>
+        <button class="btn-primary" (click)="confirmarEliminarCaso()" style="background: #ff4444;" [disabled]="eliminandoCaso">
+          {{ eliminandoCaso ? 'Eliminando...' : 'Sí, Eliminar' }}
+        </button>
+      </div>
     </div>
   </div>
 

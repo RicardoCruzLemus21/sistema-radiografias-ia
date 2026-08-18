@@ -22,4 +22,8 @@ router.get('/:id_curso/dashboard', academicController.verDashboard);
 router.put('/estudiante/:id', academicController.editarEstudiante);
 router.delete('/estudiante/:id', academicController.eliminarEstudiante);
 
+// Endpoints de Edición y Eliminación de Cursos
+router.put('/curso/:id', academicController.editarCurso);
+router.delete('/curso/:id', academicController.eliminarCurso);
+
 module.exports = router;
