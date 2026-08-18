@@ -10,6 +10,9 @@ import { RetroalimentacionIa } from './pages/retroalimentacion-ia/retroalimentac
 import { RendimientoEstudiante } from './pages/rendimiento-estudiante/rendimiento-estudiante';
 import { BibliotecaPatologias } from './pages/biblioteca-patologias/biblioteca-patologias';
 import { Notificaciones } from './pages/notificaciones/notificaciones';
+import { AuditoriaLogsComponent } from './pages/auditoria-logs/auditoria-logs';
+import { GestionUsuariosComponent } from './pages/gestion-usuarios/gestion-usuarios';
+import { RevisionEvaluacionesComponent } from './pages/revision-evaluaciones/revision-evaluaciones';
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 
@@ -24,6 +27,9 @@ export const routes: Routes = [
       { path: 'catedratico', component: DashboardCatedratico, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'gestion-casos', component: GestionCasosCatedratico, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'gestion-estudiantes', component: GestionEstudiantesCatedraticoComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
+      { path: 'gestion-admin-usuarios', component: GestionUsuariosComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
+      { path: 'revision-evaluaciones', component: RevisionEvaluacionesComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
+      { path: 'auditoria', component: AuditoriaLogsComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'visor/:id', component: VisorDiagnostico, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } }, 
       { path: 'resultado/:id', component: RetroalimentacionIa, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } }, 
       { path: 'mi-rendimiento', component: RendimientoEstudiante, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },

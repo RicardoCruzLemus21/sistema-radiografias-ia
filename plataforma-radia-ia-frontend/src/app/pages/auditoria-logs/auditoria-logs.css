@@ -1,0 +1,117 @@
+.audit-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.audit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header-titles h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  background: linear-gradient(90deg, #fff, #a5d8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-titles p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.timeline-container {
+  padding: 20px;
+  position: relative;
+}
+
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  top: 30px;
+  bottom: 30px;
+  left: 40px;
+  width: 2px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.timeline-item {
+  display: flex;
+  margin-bottom: 25px;
+  position: relative;
+  z-index: 1;
+}
+
+.timeline-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  flex-shrink: 0;
+  background: #1a1f2b;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.log-login { border-color: #00ff88; color: #00ff88; }
+.log-create { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+.log-delete { border-color: #ff4444; color: #ff4444; }
+.log-eval { border-color: #ffaa00; color: #ffaa00; }
+.log-default { border-color: #888; color: #888; }
+
+.timeline-content {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 15px 20px;
+  flex: 1;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.timeline-header strong {
+  color: #fff;
+}
+
+.timeline-action {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ddd;
+}
+
+.timeline-time {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.timeline-detail {
+  color: #aaa;
+  font-size: 14px;
+  margin: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state svg {
+  margin-bottom: 15px;
+  opacity: 0.5;
+}

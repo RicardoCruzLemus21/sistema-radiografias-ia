@@ -350,6 +350,41 @@ const obtenerMiRendimiento = async (id_estudiante) => {
     }
 };
 
+// 11. Editar Curso
+const editarCurso = async (id_curso, datos) => {
+    try {
+        const { nombre_curso, semestre, anio } = datos;
+        const query = `
+            UPDATE ${dict.TABLAS.CURSOS} 
+            SET ${dict.COLUMNAS.NOMBRE_CURSO} = ?, ${dict.COLUMNAS.SEMESTRE} = ?, ${dict.COLUMNAS.ANIO} = ?
+            WHERE ${dict.COLUMNAS.ID_CURSO} = ?
+        `;
+        await pool.query(query, [nombre_curso, semestre, anio, id_curso]);
+        return { id_curso, nombre_curso, semestre, anio };
+    } catch (error) {
+        console.error('Error al editar curso:', error);
+        throw error;
+    }
+};
+
+// 12. Eliminar Curso
+const eliminarCurso = async (id_curso, id_catedratico) => {
+    try {
+        const query = `
+            DELETE FROM ${dict.TABLAS.CURSOS} 
+            WHERE ${dict.COLUMNAS.ID_CURSO} = ? AND ${dict.COLUMNAS.ID_CATEDRATICO} = ?
+        `;
+        const [resultado] = await pool.query(query, [id_curso, id_catedratico]);
+        if (resultado.affectedRows === 0) {
+            throw new Error('No se pudo eliminar el curso o no tienes permisos.');
+        }
+        return true;
+    } catch (error) {
+        console.error('Error al eliminar curso:', error);
+        throw new Error('No se puede eliminar el curso porque ya tiene estudiantes o casos asociados.');
+    }
+};
+
 module.exports = {
     crearCurso,
     asignarEstudiante,
@@ -360,5 +395,7 @@ module.exports = {
     obtenerDetalleEstudiante,
     editarEstudiante,
     eliminarEstudiante,
-    obtenerMiRendimiento
+    obtenerMiRendimiento,
+    editarCurso,
+    eliminarCurso
 };

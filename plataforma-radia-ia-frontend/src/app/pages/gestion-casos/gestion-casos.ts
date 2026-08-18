@@ -45,6 +45,25 @@ export class GestionCasosCatedratico implements OnInit {
   modalDetalleAbierto: boolean = false;
   casoSeleccionado: any = null;
 
+  // Estado para Editar Caso
+  modalEditarAbierto: boolean = false;
+  guardandoEdicion: boolean = false;
+  casoEditando: any = {
+    id: null,
+    id_paciente: null,
+    edad: null,
+    genero: '',
+    antecedentes: '',
+    titulo_caso: '',
+    motivo_consulta: '',
+    nivel_dificultad: ''
+  };
+
+  // Estado para Eliminar Caso
+  modalEliminarAbierto: boolean = false;
+  eliminandoCaso: boolean = false;
+  casoAEliminar: any = null;
+
   constructor(
     private clinicalService: ClinicalService,
     private cdr: ChangeDetectorRef
@@ -250,5 +269,68 @@ export class GestionCasosCatedratico implements OnInit {
   cerrarDetalleCaso(): void {
     this.modalDetalleAbierto = false;
     this.casoSeleccionado = null;
+  }
+
+  // --- EDITAR CASO ---
+  abrirModalEditar(caso: any): void {
+    this.casoEditando = {
+      id: caso.id,
+      id_paciente: caso.id_paciente,
+      edad: caso.edad,
+      genero: caso.genero,
+      antecedentes: caso.antecedentes,
+      titulo_caso: caso.titulo,
+      motivo_consulta: caso.motivo_consulta,
+      nivel_dificultad: caso.nivel_dificultad
+    };
+    this.cerrarDetalleCaso();
+    this.modalEditarAbierto = true;
+  }
+
+  cerrarModalEditar(): void {
+    this.modalEditarAbierto = false;
+  }
+
+  guardarEdicionCaso(): void {
+    this.guardandoEdicion = true;
+    this.clinicalService.editarCaso(this.casoEditando.id, this.casoEditando).subscribe({
+      next: () => {
+        this.guardandoEdicion = false;
+        this.cerrarModalEditar();
+        this.cargarCasos(); // Recargar la lista
+      },
+      error: (err) => {
+        console.error('Error al editar caso:', err);
+        this.guardandoEdicion = false;
+      }
+    });
+  }
+
+  // --- ELIMINAR CASO ---
+  abrirModalEliminar(caso: any): void {
+    this.casoAEliminar = caso;
+    this.cerrarDetalleCaso();
+    this.modalEliminarAbierto = true;
+  }
+
+  cerrarModalEliminar(): void {
+    this.modalEliminarAbierto = false;
+    this.casoAEliminar = null;
+  }
+
+  confirmarEliminarCaso(): void {
+    this.eliminandoCaso = true;
+    this.clinicalService.eliminarCaso(this.casoAEliminar.id).subscribe({
+      next: () => {
+        this.eliminandoCaso = false;
+        this.cerrarModalEliminar();
+        this.cargarCasos(); // Recargar la lista
+      },
+      error: (err) => {
+        console.error('Error al eliminar caso:', err);
+        this.eliminandoCaso = false;
+        alert(err.error?.message || 'Error al eliminar el caso clínico. Verifica si tiene evaluaciones asociadas.');
+      }
+    });
   }
 }

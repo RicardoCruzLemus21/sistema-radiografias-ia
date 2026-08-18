@@ -48,4 +48,16 @@ export class ClinicalService {
       headers: this.authService.getAuthHeaders()
     });
   }
+
+  editarCaso(id: number | string, datos: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/caso/${id}`, datos, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  eliminarCaso(id: number | string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/caso/${id}`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
 }

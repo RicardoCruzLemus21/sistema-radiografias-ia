@@ -1,0 +1,112 @@
+.users-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.users-header {
+  margin-bottom: 30px;
+}
+
+.header-titles h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 5px;
+  background: linear-gradient(90deg, #fff, #a5d8ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.header-titles p {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.table-card {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #ddd;
+}
+
+.users-table th {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px 20px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-muted);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.users-table td {
+  padding: 15px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 14px;
+}
+
+.users-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.role-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.badge-admin {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.badge-student {
+  background: rgba(0, 229, 255, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+}
+
+.actions-cell {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-edit {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-delete {
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff4444;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-delete:hover:not([disabled]) {
+  background: rgba(255, 68, 68, 0.2);
+}
+
+.btn-delete[disabled] {
+  opacity: 0.3;
+  cursor: not-allowed;
+}

@@ -94,7 +94,48 @@ const obtenerCatalogos = async () => {
     }
 };
 
+const obtenerEvaluacionesPorCurso = async (id_curso) => {
+    // Aseguramos que la columna exista
+    try {
+        await pool.query(`ALTER TABLE ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} ADD COLUMN feedback_profesor TEXT;`);
+    } catch(e) {} // Ya existe
+
+    const query = `
+        SELECT e.${dict.COLUMNAS.ID_EVALUACION} AS id, 
+               u.${dict.COLUMNAS.NOMBRE_COMPLETO} AS estudiante, 
+               c.${dict.COLUMNAS.TITULO_CASO} AS caso, 
+               e.${dict.COLUMNAS.FECHA_EVALUACION} AS fecha, 
+               e.${dict.COLUMNAS.JUSTIFICACION} AS justificacion,
+               e.feedback_profesor
+        FROM ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} e
+        INNER JOIN ${dict.TABLAS.USUARIOS} u ON e.${dict.COLUMNAS.ID_ESTUDIANTE} = u.${dict.COLUMNAS.ID_USUARIO}
+        INNER JOIN ${dict.TABLAS.CASOS} c ON e.${dict.COLUMNAS.ID_CASO} = c.${dict.COLUMNAS.ID_CASO}
+        WHERE c.${dict.COLUMNAS.ID_CURSO} = ?
+        ORDER BY e.${dict.COLUMNAS.FECHA_EVALUACION} DESC
+    `;
+    const [evaluaciones] = await pool.query(query, [id_curso]);
+    return evaluaciones;
+};
+
+const agregarFeedback = async (id_evaluacion, feedback) => {
+    const query = `UPDATE ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} SET feedback_profesor = ? WHERE ${dict.COLUMNAS.ID_EVALUACION} = ?`;
+    await pool.query(query, [feedback, id_evaluacion]);
+    return true;
+};
+
+const invalidarEvaluacion = async (id_evaluacion) => {
+    try {
+        await pool.query(`DELETE FROM ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} WHERE ${dict.COLUMNAS.ID_EVALUACION} = ?`, [id_evaluacion]);
+        return true;
+    } catch (error) {
+        throw new Error('Error al invalidar evaluación.');
+    }
+};
+
 module.exports = {
     guardarEvaluacionEstudiante,
-    obtenerCatalogos
+    obtenerCatalogos,
+    obtenerEvaluacionesPorCurso,
+    agregarFeedback,
+    invalidarEvaluacion
 };

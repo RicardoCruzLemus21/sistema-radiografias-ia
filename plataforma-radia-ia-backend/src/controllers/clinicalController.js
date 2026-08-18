@@ -148,6 +148,26 @@ const obtenerSiguienteCodigoPaciente = async (req, res) => {
     }
 };
 
+const editarCaso = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await clinicalService.editarCaso(id, req.body);
+        res.status(200).json({ status: 'success', message: 'Caso clínico actualizado correctamente' });
+    } catch (error) {
+        res.status(400).json({ status: 'error', message: error.message });
+    }
+};
+
+const eliminarCaso = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await clinicalService.eliminarCaso(id);
+        res.status(200).json({ status: 'success', message: 'Caso clínico eliminado correctamente' });
+    } catch (error) {
+        res.status(400).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     registrarPaciente,
     armarCaso,
@@ -156,5 +176,7 @@ module.exports = {
     crearCasoCompleto,
     listarCasosCatedratico,
     obtenerCasoPorId,
-    obtenerSiguienteCodigoPaciente
+    obtenerSiguienteCodigoPaciente,
+    editarCaso,
+    eliminarCaso
 };
