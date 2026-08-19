@@ -17,27 +17,6 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
   filtroTexto: string = '';
   cargando: boolean = false;
 
-  // Registrar Alumno
-  modalCrearAlumnoAbierto: boolean = false;
-  guardandoAlumno: boolean = false;
-  mensajeRegistroExito: string = '';
-  mensajeRegistroError: string = '';
-  nuevoAlumno = {
-    nombre_completo: '',
-    correo_electronico: '',
-    contrasena: ''
-  };
-
-  // Editar Alumno
-  modalEditarAbierto: boolean = false;
-  alumnoEditando: any = null;
-  guardandoEdicion: boolean = false;
-
-  // Eliminar Alumno
-  modalEliminarAbierto: boolean = false;
-  alumnoAEliminar: any = null;
-  eliminando: boolean = false;
-
   constructor(
     private academicService: AcademicService,
     private authService: AuthService,
@@ -82,24 +61,43 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
   }
 
   // --- REGISTRO ---
+  modalCrearAlumnoAbierto: boolean = false;
+  guardandoAlumno: boolean = false;
+  mensajeRegistroExito: string = '';
+  mensajeRegistroError: string = '';
+  nuevoAlumno = {
+    carnet: '',
+    nombre_completo: '',
+    correo_electronico: '',
+    contrasena: ''
+  };
+
   abrirModalRegistro(): void {
     this.mensajeRegistroExito = '';
     this.mensajeRegistroError = '';
-    this.nuevoAlumno = { nombre_completo: '', correo_electronico: '', contrasena: '' };
+    this.nuevoAlumno = { carnet: '', nombre_completo: '', correo_electronico: '', contrasena: '' };
     this.modalCrearAlumnoAbierto = true;
   }
   cerrarModalRegistro(): void { this.modalCrearAlumnoAbierto = false; }
 
   guardarNuevoAlumno(): void {
-    if (!this.nuevoAlumno.nombre_completo || !this.nuevoAlumno.correo_electronico || !this.nuevoAlumno.contrasena) {
+    if (!this.nuevoAlumno.carnet || !this.nuevoAlumno.nombre_completo || !this.nuevoAlumno.correo_electronico || !this.nuevoAlumno.contrasena) {
       this.mensajeRegistroError = 'Complete todos los campos.';
       return;
     }
+    
+    const regexCarnet = /^\d{4}-\d{2}-\d{4}$/;
+    if (!regexCarnet.test(this.nuevoAlumno.carnet)) {
+      this.mensajeRegistroError = 'El carnet debe tener el formato XXXX-XX-XXXX';
+      return;
+    }
+
     this.guardandoAlumno = true;
     this.mensajeRegistroError = '';
     this.mensajeRegistroExito = '';
 
     const datosRegistro = {
+      carnet: this.nuevoAlumno.carnet,
       id_rol: 2,
       nombre_completo: this.nuevoAlumno.nombre_completo,
       correo_electronico: this.nuevoAlumno.correo_electronico,
@@ -141,55 +139,6 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
         this.guardandoAlumno = false;
         this.mensajeRegistroError = err.error?.message || 'Error al registrar (correo duplicado).';
         this.cdr.detectChanges();
-      }
-    });
-  }
-
-  // --- EDICIÓN ---
-  abrirModalEditar(alumno: any): void {
-    this.alumnoEditando = { ...alumno, nombre_completo: alumno.nombre, correo_electronico: alumno.correo };
-    this.modalEditarAbierto = true;
-  }
-  cerrarModalEditar(): void { this.modalEditarAbierto = false; }
-
-  guardarEdicion(): void {
-    this.guardandoEdicion = true;
-    const datos = {
-      nombre_completo: this.alumnoEditando.nombre_completo,
-      correo_electronico: this.alumnoEditando.correo_electronico
-    };
-    
-    this.academicService.editarEstudiante(this.alumnoEditando.id_usuario, datos).subscribe({
-      next: () => {
-        this.guardandoEdicion = false;
-        this.cerrarModalEditar();
-        this.cargarDatos();
-      },
-      error: (err) => {
-        console.error('Error al editar:', err);
-        this.guardandoEdicion = false;
-      }
-    });
-  }
-
-  // --- ELIMINAR ---
-  abrirModalEliminar(alumno: any): void {
-    this.alumnoAEliminar = alumno;
-    this.modalEliminarAbierto = true;
-  }
-  cerrarModalEliminar(): void { this.modalEliminarAbierto = false; }
-
-  confirmarEliminar(): void {
-    this.eliminando = true;
-    this.academicService.eliminarEstudiante(this.alumnoAEliminar.id_usuario).subscribe({
-      next: () => {
-        this.eliminando = false;
-        this.cerrarModalEliminar();
-        this.cargarDatos();
-      },
-      error: (err) => {
-        console.error('Error al eliminar:', err);
-        this.eliminando = false;
       }
     });
   }

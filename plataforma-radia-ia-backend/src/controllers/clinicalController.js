@@ -168,6 +168,16 @@ const eliminarCaso = async (req, res) => {
     }
 };
 
+const obtenerInfoPatologiaIA = async (req, res) => {
+    try {
+        const { patologia } = req.params;
+        const infoJSON = await clinicalService.generarInfoPatologia(patologia);
+        res.status(200).json({ status: 'success', data: infoJSON });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     registrarPaciente,
     armarCaso,
@@ -178,5 +188,6 @@ module.exports = {
     obtenerCasoPorId,
     obtenerSiguienteCodigoPaciente,
     editarCaso,
-    eliminarCaso
+    eliminarCaso,
+    obtenerInfoPatologiaIA
 };

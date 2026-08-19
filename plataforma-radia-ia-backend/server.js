@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config();
+require('dotenv').config({ override: true });
 
 const app = express();
 
@@ -35,7 +35,7 @@ app.use('/api/clinical', clinicalRoutes);   // MÓDULO 3: Casos Clínicos y Paci
 app.use('/api/radiografias', radiografiaRoutes); // MÓDULO 3: Subida y Gestión de Radiografías
 app.use('/api/diagnostico', diagnosticoRoutes);  // MÓDULO 4: Diagnóstico y Catálogos
 app.use('/api/ia', iaRoutes);               // MÓDULO 5: Inferencia IA y Concordancia
-app.use('/api/metrics', metricsRoutes);     // MÓDULO 6 & 7: Rúbricas y Medición Científica (Likert)
+app.use('/api/metricas', metricsRoutes);     // MÓDULO 6 & 7: Rúbricas y Medición Científica (Likert)
 app.use('/api/extra', extraRoutes);         // MÓDULO EXTRA: Auditoría, Notificaciones, Comentarios
 app.use('/api/audit', auditRoutes);         // Visor de Auditoría (Timeline)
 app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)

@@ -10,6 +10,7 @@ module.exports = {
         CURSOS: 'Cursos_Secciones',
         ASIGNACIONES: 'Asignaciones_Estudiantes',
         ESTADISTICAS: 'Estadisticas_Dashboard',
+        CATALOGO_CURSOS: 'Catalogo_Cursos',
         USUARIOS: 'Usuarios',
         
         // Módulo 3

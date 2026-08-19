@@ -205,17 +205,8 @@
           <div class="form-section">
             <h4 class="form-section-title">3. MATRIZ RADIOGRÁFICA</h4>
             
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label>Tipo de Proyección Radiográfica</label>
-                <select [(ngModel)]="nuevoCaso.tipo_proyeccion" name="tipo_proyeccion">
-                  <option value="Tórax PA (Posteroanterior)">Tórax PA (Posteroanterior)</option>
-                  <option value="Tórax AP (Anteroposterior)">Tórax AP (Anteroposterior)</option>
-                  <option value="Tórax Lateral">Tórax Lateral</option>
-                  <option value="Columna Lumbar AP">Columna Lumbar AP</option>
-                  <option value="Mano Derecha">Mano Derecha</option>
-                </select>
-              </div>
+            <div class="form-grid-1">
+              <!-- El motor de IA se encargará de determinar la proyección óptima en base al diagnóstico (Tórax por defecto) -->
 
               <div class="form-group">
                 <label>Subir Archivo de Imagen (PNG, JPG, DICOM)</label>

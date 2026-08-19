@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { verificarToken } = require('../middlewares/authMiddleware');
+const { verificarToken, verificarRol } = require('../middlewares/authMiddleware');
 const extraController = require('../controllers/extraController');
 
-// Rutas de Auditoría (Solo admins/catedráticos en la vida real, aquí protegeremos con el middleware)
-router.get('/auditoria/logs', verificarToken, extraController.obtenerLogsAuditoria);
+// Rutas de Auditoría (Solo administradores)
+router.get('/auditoria/logs', verificarToken, verificarRol(['Admin']), extraController.obtenerLogsAuditoria);
 
 // Rutas de Notificaciones (Para todos los usuarios)
 router.get('/notificaciones', verificarToken, extraController.obtenerNotificaciones);

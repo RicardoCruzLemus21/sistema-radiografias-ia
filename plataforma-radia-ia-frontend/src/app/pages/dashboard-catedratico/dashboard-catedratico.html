@@ -199,62 +199,78 @@
 
         <!-- Evaluaciones Detalle -->
         <div class="evaluaciones-list">
-          <h3 class="section-title">Historial de Evaluaciones Clínicas</h3>
+          <h3 class="section-title" style="margin-bottom: 15px;">Historial de Evaluaciones Clínicas</h3>
           
           <div *ngIf="!estudianteSeleccionado.evaluaciones || estudianteSeleccionado.evaluaciones.length === 0" class="no-data">
             Este alumno aún no ha resuelto ningún caso clínico.
           </div>
 
-          <div *ngFor="let eval of estudianteSeleccionado.evaluaciones" class="eval-card">
-            <div class="eval-header">
-              <h4>{{ eval.caso }}</h4>
+          <div *ngFor="let eval of estudianteSeleccionado.evaluaciones" class="eval-card glass-panel premium-card">
+            <div class="eval-header-premium">
+              <div class="eval-title-group">
+                <div class="eval-icon">
+                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="var(--accent-cyan)" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                </div>
+                <h4>{{ eval.caso }}</h4>
+              </div>
               <span class="badge badge-diff">{{ eval.dificultad }}</span>
             </div>
             
-            <div class="eval-metrics">
-              <div class="metric">
-                <span class="label">Precisión IA:</span>
-                <span class="value success">{{ eval.precision_ia }}%</span>
+            <div class="eval-metrics-grid">
+              <div class="metric-box">
+                <span class="metric-label">Precisión IA</span>
+                <span class="metric-value text-success">{{ eval.precision_ia }}%</span>
               </div>
-              <div class="metric">
-                <span class="label">Tiempo de Análisis:</span>
-                <span class="value">{{ eval.tiempo }}</span>
+              <div class="metric-box">
+                <span class="metric-label">Tiempo de Análisis</span>
+                <span class="metric-value">{{ eval.tiempo }}</span>
               </div>
-              <div class="metric">
-                <span class="label">Fecha:</span>
-                <span class="value">{{ eval.fecha }}</span>
+              <div class="metric-box">
+                <span class="metric-label">Fecha</span>
+                <span class="metric-value">{{ eval.fecha }}</span>
               </div>
             </div>
 
-            <div class="eval-justification">
-              <strong>Justificación Clínica:</strong>
+            <div class="eval-justification-premium">
+              <div class="just-header">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> 
+                Justificación Clínica del Estudiante
+              </div>
               <p>{{ eval.justificacion }}</p>
             </div>
 
             <!-- Sección de Comentarios (NUEVO) -->
-            <div class="eval-comments" style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-              <strong>Retroalimentación del Catedrático:</strong>
+            <div class="eval-comments-section">
+              <div class="just-header feedback-header">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                Retroalimentación del Catedrático
+              </div>
               
-              <div *ngIf="eval.comentarios && eval.comentarios.length > 0" style="margin-top: 10px;">
-                <div *ngFor="let c of eval.comentarios" style="background: rgba(0, 255, 136, 0.05); border-left: 3px solid #00ff88; padding: 10px; margin-bottom: 5px; border-radius: 4px;">
-                  <span style="font-size: 12px; color: #00ff88;">{{ c.catedratico }} - {{ c.fecha_comentario | date:'shortDate' }}:</span>
-                  <p style="margin: 5px 0 0 0; font-size: 14px; color: var(--text-light);">{{ c.comentario }}</p>
+              <div class="comments-list" *ngIf="eval.comentarios && eval.comentarios.length > 0">
+                <div *ngFor="let c of eval.comentarios" class="comment-bubble">
+                  <div class="comment-meta">
+                    <span class="comment-author">{{ c.catedratico }}</span>
+                    <span class="comment-date">{{ c.fecha_comentario | date:'shortDate' }}</span>
+                  </div>
+                  <p class="comment-text">{{ c.comentario }}</p>
                 </div>
               </div>
 
-              <div *ngIf="!eval.comentarios || eval.comentarios.length === 0" style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">
+              <div *ngIf="!eval.comentarios || eval.comentarios.length === 0" class="no-comments-msg">
                 Sin comentarios aún.
               </div>
 
               <!-- Input para nuevo comentario -->
-              <div style="margin-top: 10px;" *ngIf="evaluacionComentarioActiva !== eval">
-                <button (click)="activarComentario(eval)" style="background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">+ Añadir Comentario</button>
+              <div class="comment-action-area" *ngIf="evaluacionComentarioActiva !== eval">
+                <button class="btn-add-comment" (click)="activarComentario(eval)">+ Añadir Comentario de Retroalimentación</button>
               </div>
 
-              <div *ngIf="evaluacionComentarioActiva === eval" style="margin-top: 10px; display: flex; gap: 10px;">
-                <input type="text" [(ngModel)]="nuevoComentarioTexto" placeholder="Escribe un consejo o corrección..." style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); color: white;">
-                <button (click)="enviarComentario()" [disabled]="guardandoComentario" style="background: var(--accent-blue); color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">Guardar</button>
-                <button (click)="evaluacionComentarioActiva = null" style="background: transparent; color: var(--text-muted); border: none; cursor: pointer;">Cancelar</button>
+              <div class="comment-input-area" *ngIf="evaluacionComentarioActiva === eval">
+                <input type="text" [(ngModel)]="nuevoComentarioTexto" placeholder="Escribe un consejo o corrección técnica..." class="glass-input-sm">
+                <div class="comment-actions">
+                  <button class="btn-save-comment" (click)="enviarComentario()" [disabled]="guardandoComentario">Guardar</button>
+                  <button class="btn-cancel-comment" (click)="evaluacionComentarioActiva = null">Cancelar</button>
+                </div>
               </div>
             </div>
 

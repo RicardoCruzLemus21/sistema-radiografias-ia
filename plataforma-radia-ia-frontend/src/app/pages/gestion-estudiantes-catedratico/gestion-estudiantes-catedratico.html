@@ -28,8 +28,6 @@
             <th>Estudiante</th>
             <th>Correo Electrónico</th>
             <th>Estado en Curso</th>
-            <th>Acciones</th>
-          </tr>
         </thead>
         <tbody>
           <tr *ngFor="let alumno of alumnosFiltrados">
@@ -45,12 +43,6 @@
               <span class="badge" [ngClass]="{'badge-good': alumno.estado === 'Sobresaliente', 'badge-avg': alumno.estado === 'Promedio', 'badge-bad': alumno.estado === 'En Riesgo', 'badge-none': alumno.estado === 'Sin Evaluar'}">
                 {{ alumno.estado | uppercase }}
               </span>
-            </td>
-            <td>
-              <div style="display: flex; gap: 8px;">
-                <button class="btn-outline" style="border-color: #ffaa00; color: #ffaa00;" (click)="abrirModalEditar(alumno)">Editar</button>
-                <button class="btn-outline" style="border-color: #ff4d4d; color: #ff4d4d;" (click)="abrirModalEliminar(alumno)">Eliminar</button>
-              </div>
             </td>
           </tr>
           <tr *ngIf="alumnosFiltrados.length === 0">
@@ -70,6 +62,10 @@
       </div>
       <div class="modal-body form-body">
         <div class="form-group">
+          <label>Carnet Universitario</label>
+          <input type="text" [(ngModel)]="nuevoAlumno.carnet" placeholder="Ej. 1234-56-7890" pattern="\d{4}-\d{2}-\d{4}" class="glass-input">
+        </div>
+        <div class="form-group">
           <label>Nombre Completo</label>
           <input type="text" [(ngModel)]="nuevoAlumno.nombre_completo" placeholder="Ej. Juan Pérez" class="glass-input">
         </div>
@@ -85,55 +81,9 @@
         <div class="alert-box alert-success" *ngIf="mensajeRegistroExito">{{ mensajeRegistroExito }}</div>
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" (click)="cerrarModalRegistro()">Cancelar</button>
+        <button class="btn-cancel" (click)="cerrarModalRegistro()">Cancelar</button>
         <button class="btn-primary" (click)="guardarNuevoAlumno()" [disabled]="guardandoAlumno">
           {{ guardandoAlumno ? 'Registrando...' : 'Matricular Estudiante' }}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE EDICIÓN -->
-  <div class="modal-backdrop" *ngIf="modalEditarAbierto" (click)="cerrarModalEditar()">
-    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Editar Datos del Estudiante</h3>
-        <button class="btn-close" (click)="cerrarModalEditar()">×</button>
-      </div>
-      <div class="modal-body form-body">
-        <div class="form-group">
-          <label>Nombre Completo</label>
-          <input type="text" [(ngModel)]="alumnoEditando.nombre_completo" class="glass-input">
-        </div>
-        <div class="form-group">
-          <label>Correo Electrónico</label>
-          <input type="email" [(ngModel)]="alumnoEditando.correo_electronico" class="glass-input">
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="cerrarModalEditar()">Cancelar</button>
-        <button class="btn-primary" (click)="guardarEdicion()" [disabled]="guardandoEdicion">
-          {{ guardandoEdicion ? 'Guardando...' : 'Guardar Cambios' }}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL DE ELIMINACIÓN -->
-  <div class="modal-backdrop" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
-    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()" style="max-width: 450px;">
-      <div class="modal-header">
-        <h3 style="color: #ff4d4d;">Eliminar Estudiante</h3>
-        <button class="btn-close" (click)="cerrarModalEliminar()">×</button>
-      </div>
-      <div class="modal-body">
-        <p style="color: #c4cdd5; font-size: 14px;">¿Estás seguro de que deseas eliminar a <strong>{{ alumnoAEliminar?.nombre }}</strong> de tus secciones?</p>
-        <p style="color: var(--text-muted); font-size: 12px; margin-top: 10px;">El estudiante ya no podrá acceder a tus casos y no aparecerá en tus métricas de rendimiento.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" (click)="cerrarModalEliminar()">Cancelar</button>
-        <button class="btn-primary" style="background-color: #ff4d4d;" (click)="confirmarEliminar()" [disabled]="eliminando">
-          {{ eliminando ? 'Eliminando...' : 'Sí, Eliminar' }}
         </button>
       </div>
     </div>

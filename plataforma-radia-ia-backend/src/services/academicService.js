@@ -100,10 +100,17 @@ const obtenerCursosCatedratico = async (id_catedratico) => {
     return cursos;
 };
 
+// 3.5 Obtener catálogo maestro de cursos disponibles
+const obtenerCatalogoCursos = async () => {
+    const query = `SELECT * FROM ${dict.TABLAS.CATALOGO_CURSOS}`;
+    const [catalogo] = await pool.query(query);
+    return catalogo;
+};
+
 // 4. Obtener la lista de estudiantes matriculados en un curso
 const obtenerEstudiantesPorCurso = async (id_curso) => {
     const query = `
-        SELECT u.${dict.COLUMNAS.ID_USUARIO}, u.${dict.COLUMNAS.NOMBRE_COMPLETO}, u.${dict.COLUMNAS.CORREO} 
+        SELECT u.${dict.COLUMNAS.ID_USUARIO}, u.carnet, u.${dict.COLUMNAS.NOMBRE_COMPLETO}, u.${dict.COLUMNAS.CORREO} 
         FROM ${dict.TABLAS.ASIGNACIONES} ae
         INNER JOIN ${dict.TABLAS.USUARIOS} u ON ae.${dict.COLUMNAS.ID_ESTUDIANTE} = u.${dict.COLUMNAS.ID_USUARIO}
         WHERE ae.${dict.COLUMNAS.ID_CURSO} = ?
@@ -145,6 +152,7 @@ const obtenerResumenGeneral = async (id_catedratico) => {
         const [estudiantesRows] = await pool.query(`
             SELECT 
                 u.${dict.COLUMNAS.ID_USUARIO} AS id,
+                u.carnet,
                 u.${dict.COLUMNAS.NOMBRE_COMPLETO} AS nombre,
                 u.${dict.COLUMNAS.CORREO} AS correo,
                 (
@@ -185,7 +193,7 @@ const obtenerResumenGeneral = async (id_catedratico) => {
             }
 
             return {
-                id: `EST-${String(est.id).padStart(4, '0')}`,
+                id: est.carnet || `EST-${String(est.id).padStart(4, '0')}`,
                 id_usuario: est.id,
                 nombre: est.nombre,
                 correo: est.correo,
@@ -389,6 +397,7 @@ module.exports = {
     crearCurso,
     asignarEstudiante,
     obtenerCursosCatedratico,
+    obtenerCatalogoCursos,
     obtenerEstudiantesPorCurso,
     obtenerEstadisticas,
     obtenerResumenGeneral,
