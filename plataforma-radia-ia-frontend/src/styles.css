@@ -1,12 +1,40 @@
 /* ==========================================
-   TEMA 1: CYAN SLATE (Por defecto)
+   TEMA 0: DARK MODE GLASSMORPHISM (Puro / Por defecto del Informe)
    ========================================== */
 :root,
+[data-theme="darkglass"] {
+  --bg-dark-base: #09090b;      /* Zinc 950 - Fondo casi negro */
+  --bg-panel: rgba(24, 24, 27, 0.65); /* Zinc 900 semi-transparente */
+  --accent-cyan: #e2e8f0;       /* Slate 200 - Acento gris claro/plata */
+  --accent-cyan-hover: #ffffff; /* Blanco puro para el hover */
+  --btn-text-color: #09090b;    /* Texto oscuro para botón claro */
+  --text-main: #f4f4f5;         /* Zinc 50 - Texto blanco nítido */
+  --text-muted: #a1a1aa;        /* Zinc 400 - Texto gris sutil */
+  --border-color: rgba(255, 255, 255, 0.08); /* Borde sutil */
+  --border-highlight: rgba(255, 255, 255, 0.25); /* Borde activo */
+  --error-red: #ef4444;
+  --success-green: #10b981;
+  --warning-yellow: #f59e0b;
+  --sidebar-bg: rgba(9, 9, 11, 0.95);
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --table-row-hover: rgba(255, 255, 255, 0.03);
+  --modal-bg: rgba(24, 24, 27, 0.95);
+  --shadow-accent: rgba(255, 255, 255, 0.1);
+  
+  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ==========================================
+   TEMA 1: CYAN SLATE
+   ========================================== */
 [data-theme="cyan"] {
   --bg-dark-base: #0f172a;      /* Slate 900 - Fondo profundo y profesional */
   --bg-panel: rgba(30, 41, 59, 0.7); /* Slate 800 semi-transparente para paneles */
   --accent-cyan: #06b6d4;       /* Cyan 500 - Acento elegante */
   --accent-cyan-hover: #0891b2; /* Cyan 600 - Hover del acento */
+  --btn-text-color: #ffffff;
   --text-main: #f8fafc;         /* Slate 50 - Texto principal claro y nítido */
   --text-muted: #94a3b8;        /* Slate 400 - Texto secundario/deshabilitado */
   --border-color: rgba(255, 255, 255, 0.1); /* Borde sutil para glassmorphism */
@@ -34,6 +62,7 @@
   --bg-panel: rgba(31, 24, 51, 0.75);
   --accent-cyan: #a855f7;
   --accent-cyan-hover: #9333ea;
+  --btn-text-color: #ffffff;
   --text-main: #f5f3ff;
   --text-muted: #a78bfa;
   --border-color: rgba(168, 85, 247, 0.12);
@@ -56,6 +85,7 @@
   --bg-panel: rgba(16, 42, 32, 0.75);
   --accent-cyan: #10b981;
   --accent-cyan-hover: #059669;
+  --btn-text-color: #ffffff;
   --text-main: #ecfdf5;
   --text-muted: #6ee7b7;
   --border-color: rgba(16, 185, 129, 0.12);
@@ -125,7 +155,7 @@ body {
 /* Estilos de botones genéricos con micro-animaciones */
 .btn-primary {
   background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-cyan-hover) 100%);
-  color: #ffffff;
+  color: var(--btn-text-color);
   border: none;
   padding: 10px 24px;
   border-radius: 8px;

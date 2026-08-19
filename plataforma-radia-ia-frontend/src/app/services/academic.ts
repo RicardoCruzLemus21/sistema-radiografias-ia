@@ -22,6 +22,20 @@ export class AcademicService {
     });
   }
 
+  // Obtiene los cursos de un catedrático específico (usado por Admin)
+  getCursosPorCatedratico(idCatedratico: number | string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/catedratico/${idCatedratico}/cursos`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Obtiene el catálogo maestro de cursos disponibles
+  getCatalogoCursos(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/catalogo-cursos`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   // Asigna un estudiante a un curso
   asignarEstudiante(id_curso: number, id_estudiante: number, contrasena_temporal?: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/asignar`, { id_curso, id_estudiante, contrasena_temporal }, {

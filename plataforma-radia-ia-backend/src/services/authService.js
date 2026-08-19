@@ -3,11 +3,11 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const registrarUsuario = async (datosUsuario) => {
-    const { id_rol, nombre_completo, correo_electronico, contrasena } = datosUsuario;
+    const { id_rol, nombre_completo, correo_electronico, contrasena, carnet, nombre_curso_asignar } = datosUsuario;
 
     // VALIDACIÓN ESTRICTA: Evita el error "Unknown column 'undefined'" rechazando peticiones incompletas
-    if (!id_rol || !nombre_completo || !correo_electronico || !contrasena) {
-        throw new Error('Faltan datos obligatorios (id_rol, nombre_completo, correo_electronico, contrasena).');
+    if (!id_rol || !nombre_completo || !correo_electronico || !contrasena || !carnet) {
+        throw new Error('Faltan datos obligatorios (id_rol, nombre_completo, correo_electronico, contrasena, carnet).');
     }
 
     // 1. Validar que el correo no exista previamente
@@ -21,12 +21,25 @@ const registrarUsuario = async (datosUsuario) => {
 
     // 3. Inserción segura usando texto plano para el nombre de las columnas (No usar dbDictionary aquí)
     const [resultado] = await pool.query(
-        `INSERT INTO Usuarios (id_rol, nombre_completo, correo_electronico, contrasena_hash, estado, debe_cambiar_contrasena)
-         VALUES (?, ?, ?, ?, 'Activo', TRUE)`,
-        [id_rol, nombre_completo, correo_electronico, contrasena_hash]
+        `INSERT INTO Usuarios (id_rol, nombre_completo, correo_electronico, contrasena_hash, carnet, estado, debe_cambiar_contrasena)
+         VALUES (?, ?, ?, ?, ?, 'Activo', TRUE)`,
+        [id_rol, nombre_completo, correo_electronico, contrasena_hash, carnet]
     );
 
-    return { id_usuario: resultado.insertId, nombre_completo, correo_electronico };
+    const nuevoIdUsuario = resultado.insertId;
+
+    // 4. Si es catedrático (id_rol == 1) y viene un curso para asignarle
+    if (Number(id_rol) === 1 && nombre_curso_asignar) {
+        // En este diseño, la tabla Cursos_Secciones crea el grupo para el catedrático. 
+        // Asignaremos semestre 1 y año actual por defecto.
+        const anioActual = new Date().getFullYear();
+        await pool.query(
+            `INSERT INTO Cursos_Secciones (id_catedratico, nombre_curso, semestre, anio) VALUES (?, ?, 1, ?)`,
+            [nuevoIdUsuario, nombre_curso_asignar, anioActual]
+        );
+    }
+
+    return { id_usuario: nuevoIdUsuario, nombre_completo, correo_electronico, carnet };
 };
 
 const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) => {
@@ -108,7 +121,7 @@ const obtenerRoles = async () => {
 
 const obtenerUsuarios = async () => {
     const [usuarios] = await pool.query(
-        `SELECT u.id_usuario, u.nombre_completo, u.correo_electronico, r.nombre_rol, u.estado, u.fecha_registro 
+        `SELECT u.id_usuario, u.carnet, u.nombre_completo, u.correo_electronico, r.nombre_rol, u.estado, u.fecha_registro 
          FROM Usuarios u 
          INNER JOIN Roles r ON u.id_rol = r.id_rol`
     );

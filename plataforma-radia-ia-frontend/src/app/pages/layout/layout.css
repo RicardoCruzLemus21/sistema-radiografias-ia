@@ -140,6 +140,7 @@
   transform: scale(1.15);
 }
 
+.theme-dot.darkglass { background: linear-gradient(135deg, #3f3f46, #09090b); border: 1px solid rgba(255,255,255,0.2); }
 .theme-dot.cyan { background: linear-gradient(135deg, #06b6d4, #0f172a); }
 .theme-dot.purple { background: linear-gradient(135deg, #a855f7, #13111c); }
 .theme-dot.emerald { background: linear-gradient(135deg, #10b981, #0a1a14); }

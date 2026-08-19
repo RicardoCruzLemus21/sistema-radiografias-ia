@@ -14,10 +14,11 @@ import { ExtraService } from '../../services/extra';
 export class LayoutComponent implements OnInit {
   nombreUsuarioActual: string = 'Usuario';
   rolUsuarioActual: string = '';
+  isAdmin: boolean = false;
   isCatedratico: boolean = false;
   isEstudiante: boolean = false;
   notificacionesNoLeidas: number = 0;
-  temaActual: string = 'cyan';
+  temaActual: string = 'darkglass';
 
   constructor(
     private authService: AuthService,
@@ -33,6 +34,7 @@ export class LayoutComponent implements OnInit {
   cargarDatosUsuario(): void {
     this.rolUsuarioActual = this.authService.getRolUsuario();
     this.nombreUsuarioActual = this.authService.getNombreUsuario();
+    this.isAdmin = this.authService.isAdmin();
     this.isCatedratico = this.authService.isCatedratico();
     this.isEstudiante = this.authService.isEstudiante();
 
@@ -54,7 +56,7 @@ export class LayoutComponent implements OnInit {
   }
 
   cargarTema(): void {
-    const temaGuardado = localStorage.getItem('tema-radia') || 'cyan';
+    const temaGuardado = localStorage.getItem('tema-radia') || 'darkglass';
     this.temaActual = temaGuardado;
     document.documentElement.setAttribute('data-theme', temaGuardado);
   }

@@ -1,41 +1,234 @@
 <div class="users-container">
   <header class="users-header">
     <div class="header-titles">
-      <h1>Control de Accesos y Usuarios</h1>
-      <p>Gestión administrativa de los roles y cuentas en la plataforma.</p>
+      <h1>Control de Accesos</h1>
+      <p>Administra los roles, permisos y accesos de todos los usuarios de la plataforma.</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-primary btn-icon" (click)="abrirModalRegistro()">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        Registrar Nuevo Usuario
+      </button>
     </div>
   </header>
 
+  <div class="search-bar-container">
+    <input type="text" class="search-input" placeholder="Buscar por nombre, email, rol o curso..." [(ngModel)]="filtroBusqueda" (input)="aplicarFiltros()">
+  </div>
+
   <div class="spinner" *ngIf="cargando">Cargando usuarios...</div>
 
-  <div class="table-card glass-panel" *ngIf="!cargando">
-    <table class="users-table">
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre Completo</th>
-          <th>Email</th>
-          <th>Rol</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let u of usuarios">
-          <td>#{{ u.id }}</td>
-          <td><strong>{{ u.nombre }}</strong></td>
-          <td>{{ u.email }}</td>
-          <td>
-            <span class="role-badge" [ngClass]="{'badge-admin': u.id_rol === 1, 'badge-student': u.id_rol === 2}">
-              {{ u.rol | uppercase }}
+  <div *ngIf="!cargando">
+    
+    <!-- VISTA DE RESULTADOS DE BÚSQUEDA PLANA -->
+    <div *ngIf="filtroBusqueda.trim().length > 0">
+      <h3 class="section-title">Resultados de Búsqueda</h3>
+      <div class="glass-panel">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Carnet</th>
+              <th>Nombre Completo</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Curso / Asignación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of resultadosBusquedaPlana">
+              <td><strong>{{ u.carnet || u.id }}</strong></td>
+              <td><strong>{{ u.nombre }}</strong></td>
+              <td>{{ u.email }}</td>
+              <td>
+                <span class="role-badge" [ngClass]="{'badge-admin': u.id_rol !== 2, 'badge-student': u.id_rol === 2}">{{ u.rol | uppercase }}</span>
+              </td>
+              <td>
+                <span *ngIf="u.nombre_curso" class="course-badge">{{ u.nombre_curso }}</span>
+                <span *ngIf="!u.nombre_curso" style="color: #888;">N/A</span>
+              </td>
+              <td class="actions-cell">
+                <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
+                <button class="btn-delete" (click)="abrirModalEliminar(u)" [disabled]="u.id_rol === 3 && adminUsuarios.length <= 1">Eliminar</button>
+              </td>
+            </tr>
+            <tr *ngIf="resultadosBusquedaPlana.length === 0">
+              <td colspan="6" class="text-center">No se encontraron resultados para "{{ filtroBusqueda }}".</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- VISTA NORMAL (ACORDEONES) -->
+    <div *ngIf="filtroBusqueda.trim().length === 0">
+      <!-- SECCIÓN: STAFF ADMINISTRATIVO Y DOCENTE -->
+      <h3 class="section-title">Personal Administrativo y Docente</h3>
+    
+    <!-- Acordeón Administradores Globales -->
+    <div class="accordion-container">
+      <details class="glass-panel">
+        <summary class="accordion-header">
+          <strong>Administradores Globales</strong>
+          <span class="badge-count">{{ adminUsuarios.length }} administradores</span>
+        </summary>
+        <div class="accordion-body">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Carnet</th>
+                <th>Nombre Completo</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of adminUsuarios">
+                <td><strong>{{ u.carnet || u.id }}</strong></td>
+                <td><strong>{{ u.nombre }}</strong></td>
+                <td>{{ u.email }}</td>
+                <td>
+                  <span class="role-badge badge-admin">{{ u.rol | uppercase }}</span>
+                </td>
+                <td class="actions-cell">
+                  <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
+                  <button class="btn-delete" (click)="abrirModalEliminar(u)" [disabled]="adminUsuarios.length <= 1">Eliminar</button>
+                </td>
+              </tr>
+              <tr *ngIf="adminUsuarios.length === 0">
+                <td colspan="5" class="text-center">No hay administradores encontrados.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+
+    <!-- Acordeón Catedráticos / Docentes -->
+    <div class="accordion-container">
+      <details class="glass-panel">
+        <summary class="accordion-header">
+          <strong>Catedráticos / Docentes</strong>
+          <span class="badge-count">{{ catedraticosUsuarios.length }} catedráticos</span>
+        </summary>
+        <div class="accordion-body">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Carnet</th>
+                <th>Nombre Completo</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of catedraticosUsuarios">
+                <td><strong>{{ u.carnet || u.id }}</strong></td>
+                <td><strong>{{ u.nombre }}</strong></td>
+                <td>{{ u.email }}</td>
+                <td>
+                  <span class="role-badge badge-admin">{{ u.rol | uppercase }}</span>
+                </td>
+                <td class="actions-cell">
+                  <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
+                  <button class="btn-delete" (click)="abrirModalEliminar(u)">Eliminar</button>
+                </td>
+              </tr>
+              <tr *ngIf="catedraticosUsuarios.length === 0">
+                <td colspan="5" class="text-center">No hay catedráticos encontrados.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+
+    <!-- SECCIÓN: ALUMNOS AGRUPADOS POR CATEDRÁTICO -->
+    <h3 class="section-title">Estudiantes Matriculados</h3>
+    
+    <div class="accordion-container" *ngFor="let cat of catedraticosList">
+      <details class="glass-panel">
+        <summary class="accordion-header">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <strong>Catedrático: {{ cat }}</strong>
+            <span style="font-size: 13px; color: var(--text-muted); font-weight: normal;">
+              Carnet: {{ infoCatedraticos[cat]?.carnet || 'N/A' }} | Email: {{ infoCatedraticos[cat]?.email || 'N/A' }} | Curso: {{ infoCatedraticos[cat]?.curso || 'N/A' }}
             </span>
-          </td>
-          <td class="actions-cell">
-            <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
-            <button class="btn-delete" (click)="abrirModalEliminar(u)" [disabled]="u.id_rol === 1 && usuarios.length > 1">Eliminar</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </div>
+          <span class="badge-count">{{ estudiantesPorCatedratico[cat].length }} estudiantes</span>
+        </summary>
+        
+        <div class="accordion-body">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Carnet</th>
+                <th>Nombre Completo</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Curso Asignado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of estudiantesPorCatedratico[cat]">
+                <td><strong>{{ u.carnet || u.id }}</strong></td>
+                <td><strong>{{ u.nombre }}</strong></td>
+                <td>{{ u.email }}</td>
+                <td>
+                  <span class="role-badge badge-student">{{ u.rol | uppercase }}</span>
+                </td>
+                <td><span class="course-badge">{{ u.nombre_curso }}</span></td>
+                <td class="actions-cell">
+                  <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
+                  <button class="btn-delete" (click)="abrirModalEliminar(u)">Eliminar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+    
+    <div class="accordion-container" *ngIf="estudiantesSinAsignar.length > 0">
+      <details class="glass-panel">
+        <summary class="accordion-header">
+          <strong>Estudiantes Sin Asignar a Catedrático</strong>
+          <span class="badge-count">{{ estudiantesSinAsignar.length }} estudiantes</span>
+        </summary>
+        <div class="accordion-body">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Carnet</th>
+                <th>Nombre Completo</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let u of estudiantesSinAsignar">
+                <td><strong>{{ u.carnet || u.id }}</strong></td>
+                <td><strong>{{ u.nombre }}</strong></td>
+                <td>{{ u.email }}</td>
+                <td>
+                  <span class="role-badge badge-student">{{ u.rol | uppercase }}</span>
+                </td>
+                <td class="actions-cell">
+                  <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
+                  <button class="btn-delete" (click)="abrirModalEliminar(u)">Eliminar</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+    </div> <!-- FIN VISTA NORMAL -->
+
   </div>
 
   <!-- MODAL: EDITAR USUARIO -->
@@ -46,6 +239,10 @@
         <button class="btn-close" (click)="cerrarModalEditar()">&times;</button>
       </div>
       <div class="modal-body">
+        <div class="form-group">
+          <label>Carnet Universitario</label>
+          <input type="text" [(ngModel)]="usuarioEditando.carnet" placeholder="Ej. 1234-56-7890" pattern="\d{4}-\d{2}-\d{4}">
+        </div>
         <div class="form-group">
           <label>Nombre Completo</label>
           <input type="text" [(ngModel)]="usuarioEditando.nombre_completo">
@@ -61,8 +258,9 @@
         <div class="form-group">
           <label>Rol de Usuario</label>
           <select [(ngModel)]="usuarioEditando.id_rol">
-            <option [ngValue]="1">Catedrático / Administrador</option>
-            <option [ngValue]="2">Estudiante</option>
+            <option *ngFor="let rol of rolesList" [ngValue]="rol.id_rol">
+              {{ rol.nombre_rol }}
+            </option>
           </select>
         </div>
       </div>
@@ -92,4 +290,89 @@
       </div>
     </div>
   </div>
+
+  <!-- MODAL: REGISTRAR NUEVO USUARIO -->
+  <div class="modal-backdrop" *ngIf="modalRegistroAbierto" (click)="cerrarModalRegistro()">
+    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Registrar Nuevo Usuario</h3>
+        <button class="btn-close" (click)="cerrarModalRegistro()">×</button>
+      </div>
+      <div class="modal-body form-body">
+        <div class="form-group">
+          <label>Carnet Universitario</label>
+          <input type="text" [(ngModel)]="nuevoUsuario.carnet" placeholder="Ej. 1234-56-7890" pattern="\d{4}-\d{2}-\d{4}" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="nuevoUsuario.nombre_completo" placeholder="Ej. Dr. Juan Pérez" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico (Usuario)</label>
+          <input type="email" [(ngModel)]="nuevoUsuario.correo_electronico" placeholder="usuario@miumg.edu.gt" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Contraseña Temporal</label>
+          <input type="password" [(ngModel)]="nuevoUsuario.contrasena" placeholder="Mínimo 6 caracteres" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Rol de Acceso</label>
+          <select [(ngModel)]="nuevoUsuario.id_rol" class="glass-input">
+            <option *ngFor="let rol of rolesList" [ngValue]="rol.id_rol">
+              {{ rol.nombre_rol }}
+            </option>
+          </select>
+        </div>
+        
+        <!-- ASIGNACIÓN CONDICIONAL DE CATEDRÁTICO -->
+        <ng-container *ngIf="nuevoUsuario.id_rol == idRolCatedratico">
+          <div class="form-group">
+            <label>Curso a Impartir</label>
+            <select [(ngModel)]="nuevoUsuario.nombre_curso_asignar" class="glass-input">
+              <option value="">-- Selecciona el Curso del Catálogo --</option>
+              <option *ngFor="let curso of catalogoCursos" [value]="curso.nombre_curso">
+                {{ curso.nombre_curso }}
+              </option>
+            </select>
+          </div>
+        </ng-container>
+
+        <!-- ASIGNACIÓN CONDICIONAL DE ESTUDIANTE -->
+        <ng-container *ngIf="nuevoUsuario.id_rol == idRolEstudiante">
+          <div class="form-group">
+            <label>Asignar a Catedrático</label>
+            <select [(ngModel)]="nuevoUsuario.id_catedratico" (change)="onCatedraticoChange()" class="glass-input">
+              <option value="">-- Selecciona un Catedrático --</option>
+              <option *ngFor="let cat of catedraticosUsuarios" [value]="cat.id">
+                {{ cat.nombre }} (Carnet: {{ cat.carnet || 'N/A' }})
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-group" *ngIf="nuevoUsuario.id_catedratico">
+            <label>Asignar a Curso</label>
+            <select [(ngModel)]="nuevoUsuario.id_curso" class="glass-input" [disabled]="cursosDisponibles.length === 0">
+              <option value="">-- Selecciona un Curso --</option>
+              <option *ngFor="let curso of cursosDisponibles" [value]="curso.id_curso">
+                {{ curso.nombre_curso }} ({{ curso.semestre }} - {{ curso.anio }})
+              </option>
+            </select>
+            <small *ngIf="cursosDisponibles.length === 0" style="color: #ffaa00; margin-top: 5px; display: block;">
+              Este catedrático aún no tiene cursos registrados.
+            </small>
+          </div>
+        </ng-container>
+        
+        <div class="alert-box alert-error" *ngIf="mensajeRegistroError">{{ mensajeRegistroError }}</div>
+        <div class="alert-box alert-success" *ngIf="mensajeRegistroExito">{{ mensajeRegistroExito }}</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalRegistro()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarNuevoUsuario()" [disabled]="guardandoRegistro">
+          {{ guardandoRegistro ? 'Creando...' : 'Crear Usuario' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

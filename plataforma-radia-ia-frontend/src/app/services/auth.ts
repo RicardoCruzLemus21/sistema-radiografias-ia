@@ -44,7 +44,13 @@ export class AuthService {
   }
 
   registrarEstudiante(datos: any) {
-    return this.http.post<any>(`${this.apiUrl}/api/auth/registrar`, datos);
+    return this.http.post<any>(`${this.apiUrl}/api/auth/registrar`, datos, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  getRoles() {
+    return this.http.get<any>(`${this.apiUrl}/api/auth/roles`);
   }
 
   getToken(): string | null {
@@ -103,14 +109,19 @@ export class AuthService {
     return 0; // O un ID por defecto si es necesario
   }
 
+  isAdmin(): boolean {
+    const rol = this.getRolUsuario().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return rol.includes('admin');
+  }
+
   isCatedratico(): boolean {
     const rol = this.getRolUsuario().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return rol.includes('catedr') || rol.includes('admin') || rol.includes('docente');
+    return (rol.includes('catedr') || rol.includes('docente')) && !this.isAdmin();
   }
 
   isEstudiante(): boolean {
     const rol = this.getRolUsuario().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return rol.includes('estud') || (!this.isCatedratico() && rol.length > 0);
+    return rol.includes('estud') || (!this.isCatedratico() && !this.isAdmin() && rol.length > 0);
   }
 
   limpiarTexto(texto: string): string {

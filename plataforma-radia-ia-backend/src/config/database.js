@@ -1,5 +1,5 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config();
+require('dotenv').config({ override: true });
 
 // Creación del Pool de conexiones para manejar múltiples peticiones asíncronas
 const pool = mysql.createPool({

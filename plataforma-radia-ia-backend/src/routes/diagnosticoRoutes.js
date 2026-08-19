@@ -19,6 +19,7 @@ router.delete('/patologia/:id', verificarToken, verificarRol(['catedratico', 'ad
 
 // Módulo Human-in-the-Loop (Gestión de Evaluaciones)
 router.get('/evaluaciones/curso/:id_curso', verificarToken, verificarRol(['catedratico', 'admin']), diagnosticoController.obtenerEvaluacionesPorCurso);
+router.get('/evaluaciones/todas', verificarToken, verificarRol(['admin']), diagnosticoController.obtenerTodasLasEvaluaciones);
 router.put('/evaluacion/:id', verificarToken, verificarRol(['catedratico', 'admin']), diagnosticoController.agregarFeedback);
 router.delete('/evaluacion/:id', verificarToken, verificarRol(['catedratico', 'admin']), diagnosticoController.invalidarEvaluacion);
 

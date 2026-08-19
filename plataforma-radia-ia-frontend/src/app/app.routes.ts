@@ -16,6 +16,8 @@ import { RevisionEvaluacionesComponent } from './pages/revision-evaluaciones/rev
 import { authGuard } from './guards/auth.guard';
 import { roleGuard } from './guards/role.guard';
 
+import { DashboardAdminComponent } from './pages/dashboard-admin/dashboard-admin';
+
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { 
@@ -23,13 +25,14 @@ export const routes: Routes = [
     component: LayoutComponent,
     canActivate: [authGuard],
     children: [
+      { path: 'dashboard-admin', component: DashboardAdminComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
       { path: 'estudiante', component: DashboardEstudiante, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
       { path: 'catedratico', component: DashboardCatedratico, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'gestion-casos', component: GestionCasosCatedratico, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'gestion-estudiantes', component: GestionEstudiantesCatedraticoComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
-      { path: 'gestion-admin-usuarios', component: GestionUsuariosComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
-      { path: 'revision-evaluaciones', component: RevisionEvaluacionesComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
-      { path: 'auditoria', component: AuditoriaLogsComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
+      { path: 'gestion-admin-usuarios', component: GestionUsuariosComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
+      { path: 'revision-evaluaciones', component: RevisionEvaluacionesComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
+      { path: 'auditoria', component: AuditoriaLogsComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
       { path: 'visor/:id', component: VisorDiagnostico, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } }, 
       { path: 'resultado/:id', component: RetroalimentacionIa, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } }, 
       { path: 'mi-rendimiento', component: RendimientoEstudiante, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },

@@ -15,6 +15,8 @@ router.get('/mi-rendimiento', academicController.verMiRendimiento);
 router.get('/resumen-general', academicController.verResumenGeneral);
 router.get('/estudiante/:id/detalle', academicController.verDetalleEstudiante);
 router.get('/mis-cursos', academicController.listarMisCursos);
+router.get('/catalogo-cursos', academicController.listarCatalogoCursos);
+router.get('/catedratico/:id_catedratico/cursos', academicController.listarCursosDeCatedratico);
 router.get('/:id_curso/estudiantes', academicController.listarEstudiantes);
 router.get('/:id_curso/dashboard', academicController.verDashboard);
 

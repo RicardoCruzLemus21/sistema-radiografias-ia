@@ -18,20 +18,31 @@ async function seed() {
 
         // Contraseña por defecto
         const passHash = await bcrypt.hash('123456', 10);
+        const adminHash = await bcrypt.hash('123', 10);
 
         // Insertar Usuarios
         console.log("Insertando usuarios...");
         await connection.execute(`
-            INSERT IGNORE INTO Usuarios (id_usuario, nombre_completo, correo_electronico, contrasena_hash, id_rol) VALUES 
-            (2, 'Carlos Julio Peralta', 'carlos.peralta@miumg.edu.gt', ?, 2),
-            (3, 'Dra. Gabriela Mendoza', 'gabriela.mendoza@miumg.edu.gt', ?, 2),
-            (4, 'Luis Alejandro Ruiz', 'luis.ruiz@miumg.edu.gt', ?, 2),
-            (5, 'Sonia Sofía Delgado', 'sonia.delgado@miumg.edu.gt', ?, 2)
-        `, [passHash, passHash, passHash, passHash]);
+            INSERT IGNORE INTO Usuarios (id_usuario, nombre_completo, correo_electronico, contrasena_hash, id_rol, carnet) VALUES 
+            (2, 'Carlos Julio Peralta', 'carlos.peralta@miumg.edu.gt', ?, 2, '1001-22-3333'),
+            (3, 'Dra. Gabriela Mendoza', 'gabriela.mendoza@miumg.edu.gt', ?, 2, '1002-22-3333'),
+            (4, 'Luis Alejandro Ruiz', 'luis.ruiz@miumg.edu.gt', ?, 2, '1003-22-3333'),
+            (5, 'Sonia Sofía Delgado', 'sonia.delgado@miumg.edu.gt', ?, 2, '1004-22-3333'),
+            (99, 'Administrador Global', 'admin@miumg.edu.gt', ?, 3, '0000-00-0000')
+        `, [passHash, passHash, passHash, passHash, adminHash]);
 
         // Insertar Curso (ID 1)
-        console.log("Insertando curso...");
-        await connection.execute(`INSERT IGNORE INTO Cursos_Secciones (id_curso, id_catedratico, nombre_curso, semestre, anio) VALUES (1, 1, 'Radiología Médica', 2, 2026)`);
+        console.log("Insertando cursos y carreras...");
+        await connection.execute(`
+            INSERT IGNORE INTO Cursos_Secciones (id_curso, id_catedratico, nombre_curso, semestre, anio) VALUES 
+            (1, 1, 'Radiología Médica', 2, 2026),
+            (2, 1, 'Física de las radiaciones e instalaciones seguras', 1, 2026),
+            (3, 1, 'Radiología convencional y fluoroscopia', 1, 2026),
+            (4, 2, 'Tomografía Computarizada (TC) y Resonancia Magnética (RM)', 2, 2026),
+            (5, 2, 'Ecografía / Ultrasonografía general y especializada', 2, 2026),
+            (6, 1, 'Radiología pediátrica, cardiotorácica y musculoesquelética', 1, 2026),
+            (7, 2, 'Neurorradiología e imagen oncológica', 2, 2026)
+        `);
 
         // Asignar Estudiantes al Curso
         console.log("Asignando estudiantes...");

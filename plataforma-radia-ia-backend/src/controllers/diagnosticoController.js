@@ -106,6 +106,16 @@ const obtenerEvaluacionesPorCurso = async (req, res) => {
     }
 };
 
+const obtenerTodasLasEvaluaciones = async (req, res) => {
+    try {
+        const evaluaciones = await diagnosticoService.obtenerTodasLasEvaluaciones();
+        res.status(200).json({ status: 'success', data: evaluaciones });
+    } catch (error) {
+        console.error("Error al obtener evaluaciones globales:", error);
+        res.status(500).json({ status: 'error', message: 'Error al obtener evaluaciones globales' });
+    }
+};
+
 const agregarFeedback = async (req, res) => {
     try {
         const { id } = req.params;
@@ -141,6 +151,7 @@ module.exports = {
     editarPatologia,
     eliminarPatologia,
     obtenerEvaluacionesPorCurso,
+    obtenerTodasLasEvaluaciones,
     agregarFeedback,
     invalidarEvaluacion
 };

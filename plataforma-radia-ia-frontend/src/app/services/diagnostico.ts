@@ -37,6 +37,10 @@ export class DiagnosticoService {
     return this.http.get(`${this.apiUrl}/evaluaciones/curso/${id_curso}`, { headers: this.authService.getAuthHeaders() });
   }
 
+  getTodasLasEvaluaciones(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/evaluaciones/todas`, { headers: this.authService.getAuthHeaders() });
+  }
+
   agregarFeedback(id_evaluacion: number, feedback: string): Observable<any> {
     return this.http.put(`${this.apiUrl}/evaluacion/${id_evaluacion}`, { feedback }, { headers: this.authService.getAuthHeaders() });
   }

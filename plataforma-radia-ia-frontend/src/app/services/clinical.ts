@@ -60,4 +60,11 @@ export class ClinicalService {
       headers: this.authService.getAuthHeaders()
     });
   }
+
+  // Generar Info de Patología usando Gemini (IA Generativa)
+  obtenerInfoPatologiaIA(patologia: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/library/${encodeURIComponent(patologia)}`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
 }

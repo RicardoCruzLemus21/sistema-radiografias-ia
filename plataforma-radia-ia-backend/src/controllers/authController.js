@@ -1,8 +1,25 @@
 const authService = require('../services/authService');
+const auditService = require('../services/auditService');
+const jwt = require('jsonwebtoken');
 
 const registrar = async (req, res) => {
     try {
         const nuevoUsuario = await authService.registrarUsuario(req.body);
+
+        // Intentar extraer el ID del administrador que está creando al usuario
+        let id_admin = 1; // ID de sistema por defecto
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                id_admin = decoded.id_usuario;
+            } catch (err) {}
+        }
+
+        // Registrar en auditoría
+        await auditService.registrarAccion(id_admin, 'CREAR_USUARIO', `Se creó el usuario ID: ${nuevoUsuario.id_usuario} del sistema`);
+
         res.status(201).json({
             status: 'success',
             message: 'Usuario registrado correctamente',

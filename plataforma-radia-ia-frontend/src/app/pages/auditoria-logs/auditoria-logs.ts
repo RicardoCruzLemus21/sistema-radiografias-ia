@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuditService } from '../../services/audit.service';
 
@@ -13,7 +13,7 @@ export class AuditoriaLogsComponent implements OnInit {
   logs: any[] = [];
   cargando: boolean = false;
 
-  constructor(private auditService: AuditService) {}
+  constructor(private auditService: AuditService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
     this.cargarLogs();
@@ -25,10 +25,12 @@ export class AuditoriaLogsComponent implements OnInit {
       next: (resp) => {
         this.logs = resp.data || [];
         this.cargando = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Error al cargar logs:', err);
         this.cargando = false;
+        this.cdr.markForCheck();
       }
     });
   }

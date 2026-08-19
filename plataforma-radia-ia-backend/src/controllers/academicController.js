@@ -28,6 +28,25 @@ const listarMisCursos = async (req, res) => {
     }
 };
 
+const listarCursosDeCatedratico = async (req, res) => {
+    try {
+        const { id_catedratico } = req.params;
+        const cursos = await academicService.obtenerCursosCatedratico(id_catedratico);
+        res.status(200).json({ status: 'success', data: cursos });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'Error al obtener los cursos del catedrático' });
+    }
+};
+
+const listarCatalogoCursos = async (req, res) => {
+    try {
+        const catalogo = await academicService.obtenerCatalogoCursos();
+        res.status(200).json({ status: 'success', data: catalogo });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'Error al obtener el catálogo de cursos' });
+    }
+};
+
 const listarEstudiantes = async (req, res) => {
     try {
         const { id_curso } = req.params;
@@ -133,5 +152,7 @@ module.exports = {
     eliminarEstudiante,
     verMiRendimiento,
     editarCurso,
-    eliminarCurso
+    eliminarCurso,
+    listarCursosDeCatedratico,
+    listarCatalogoCursos
 };
