@@ -40,12 +40,21 @@ app.use('/api/extra', extraRoutes);         // MÓDULO EXTRA: Auditoría, Notifi
 app.use('/api/audit', auditRoutes);         // Visor de Auditoría (Timeline)
 app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)
 
+const iaService = require('./src/services/iaService');
+
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
     console.log(`\n=================================================`);
     console.log(`🚀 SERVIDOR ACTIVO EN MODO DESARROLLO (WINDOWS)`);
     console.log(`📡 URL Base: http://localhost:${PORT}`);
+    
+    // Pre-cargar modelo de IA
+    try {
+        await iaService.cargarModeloIA();
+    } catch (error) {
+        console.error("❌ Error al pre-cargar el modelo de IA:", error.message);
+    }
     console.log(`🛡️  Módulo 1 (Auth API): EN LÍNEA`);
     console.log(`🛡️  Módulo 2 (Academic API): EN LÍNEA`);
     console.log(`🛡️  Módulo 3 (Clinical API): EN LÍNEA`);
