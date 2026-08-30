@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 const dict = require('../config/dbDictionary');
 const tf = require('@tensorflow/tfjs');
-const jimp = require('jimp');
+const { Jimp } = require('jimp');
 const fs = require('fs');
 const path = require('path');
 
@@ -77,8 +77,8 @@ const procesarResultadoYConcordancia = async (datosPeticion) => {
         // 2. Ejecutar el Motor de Inferencia (ResNet50)
         console.log(`🔍 [Motor IA] Procesando imagen: ${rutaAbsoluta}`);
         const model = await cargarModeloIA();
-        const image = await jimp.read(rutaAbsoluta);
-        image.resize(224, 224); // Tamaño esperado por ResNet50
+        const image = await Jimp.read(rutaAbsoluta);
+        image.resize({w: 224, h: 224}); // Tamaño esperado por ResNet50
         
         const values = new Float32Array(224 * 224 * 3);
         let i = 0;
