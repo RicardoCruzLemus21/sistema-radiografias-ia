@@ -59,19 +59,13 @@ const cargarModeloIA = async () => {
 
 const procesarResultadoYConcordancia = async (datosPeticion) => {
     const { id_evaluacion, id_radiografia } = datosPeticion;
-    const connection = await pool.getConnection();
-
     try {
-        await connection.beginTransaction();
-
         // 1. Obtener la ruta de la radiografía
-        const [radiografiaRows] = await connection.query(
-            `SELECT ${dict.COLUMNAS.RUTA_IMAGEN} FROM ${dict.TABLAS.RADIOGRAFIAS} WHERE ${dict.COLUMNAS.ID_RADIOGRAFIA} = ?`, 
-            [id_radiografia]
-        );
+        const [radiografiaRowsArray] = await pool.query('CALL sp_obtener_ruta_radiografia(?)', [id_radiografia]);
+        const radiografiaRows = radiografiaRowsArray[0];
         if (radiografiaRows.length === 0) throw new Error("Radiografía no encontrada.");
         
-        const ruta_imagen_relativa = radiografiaRows[0][dict.COLUMNAS.RUTA_IMAGEN];
+        const ruta_imagen_relativa = radiografiaRows[0].ruta_imagen;
         const rutaAbsoluta = path.join(__dirname, '../../', ruta_imagen_relativa);
 
         // 2. Ejecutar el Motor de Inferencia (ResNet50)
@@ -109,54 +103,33 @@ const procesarResultadoYConcordancia = async (datosPeticion) => {
         const probabilidad_porcentaje = (maxProb * 100).toFixed(2);
         console.log(`🤖 [Motor IA] Diagnóstico: ${claseDetectada.nombre} (${probabilidad_porcentaje}%)`);
 
-        // 3. Guardar el veredicto de la Inteligencia Artificial
-        const queryIA = `
-            INSERT INTO ${dict.TABLAS.RESULTADOS_IA} 
-            (${dict.COLUMNAS.ID_RADIOGRAFIA}, ${dict.COLUMNAS.ID_PATOLOGIA_DETECTADA}, ${dict.COLUMNAS.PROBABILIDAD}, ${dict.COLUMNAS.RUTA_MAPA_CALOR}) 
-            VALUES (?, ?, ?, ?)
-        `;
-        const [resIA] = await connection.query(queryIA, [
-            id_radiografia, 
-            claseDetectada.id_patologia, 
-            probabilidad_porcentaje, 
-            '/uploads/mapas_calor/default.png' // Fase C (Grad-CAM) pendiente
-        ]);
-        const id_resultado_ia = resIA.insertId;
+        // 3. Extraer el diagnóstico que hizo el estudiante
+        const [hallazgosArray] = await pool.query('CALL sp_obtener_hallazgos_estudiante(?)', [id_evaluacion]);
+        const hallazgosEstudiante = hallazgosArray[0];
 
-        // 4. Extraer el diagnóstico que hizo el estudiante
-        const queryEstudiante = `
-            SELECT ${dict.COLUMNAS.ID_PATOLOGIA} 
-            FROM ${dict.TABLAS.DETALLE_HALLAZGOS} 
-            WHERE ${dict.COLUMNAS.ID_EVALUACION} = ?
-        `;
-        const [hallazgosEstudiante] = await connection.query(queryEstudiante, [id_evaluacion]);
-
-        // 5. Motor Lógico de Concordancia Diagnóstica
+        // 4. Motor Lógico de Concordancia Diagnóstica
         let porcentaje_concordancia = 0.00;
         let nivel_precision = 'Baja';
 
-        const acierto = hallazgosEstudiante.some(h => h[dict.COLUMNAS.ID_PATOLOGIA] === claseDetectada.id_patologia);
+        const acierto = hallazgosEstudiante.some(h => h.id_patologia === claseDetectada.id_patologia);
 
         if (acierto) {
             porcentaje_concordancia = 100.00; 
             nivel_precision = 'Alta';
         }
 
-        // 6. Guardar la calificación final en la tabla de Concordancia
-        const queryConcordancia = `
-            INSERT INTO ${dict.TABLAS.CONCORDANCIA} 
-            (${dict.COLUMNAS.ID_EVALUACION}, ${dict.COLUMNAS.ID_RESULTADO_IA}, ${dict.COLUMNAS.PORCENTAJE_CONCORDANCIA}, ${dict.COLUMNAS.NIVEL_PRECISION}) 
-            VALUES (?, ?, ?, ?)
-        `;
-        await connection.query(queryConcordancia, [
-            id_evaluacion, 
-            id_resultado_ia, 
-            porcentaje_concordancia, 
+        // 5. Guardar el veredicto de la IA y la Concordancia en la BD mediante SP Transaccional
+        const [resIAArray] = await pool.query('CALL sp_guardar_resultado_ia_y_concordancia(?, ?, ?, ?, ?, ?, ?)', [
+            id_radiografia, 
+            claseDetectada.id_patologia, 
+            probabilidad_porcentaje, 
+            '/uploads/mapas_calor/default.png',
+            id_evaluacion,
+            porcentaje_concordancia,
             nivel_precision
         ]);
-
-        await connection.commit();
-        connection.release();
+        
+        const id_resultado_ia = resIAArray[0][0].id_resultado_ia;
 
         return {
             id_resultado_ia,
@@ -173,8 +146,6 @@ const procesarResultadoYConcordancia = async (datosPeticion) => {
         };
 
     } catch (error) {
-        await connection.rollback();
-        connection.release();
         throw error;
     }
 };
