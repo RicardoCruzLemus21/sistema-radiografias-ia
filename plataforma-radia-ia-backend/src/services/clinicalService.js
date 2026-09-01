@@ -5,36 +5,21 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 // 1. Crear el paciente simulado
 const crearPaciente = async (datosPaciente) => {
     const { codigo_paciente, edad, genero, antecedentes_medicos } = datosPaciente;
-    const query = `
-        INSERT INTO ${dict.TABLAS.PACIENTES} 
-        (${dict.COLUMNAS.CODIGO_PACIENTE}, ${dict.COLUMNAS.EDAD}, ${dict.COLUMNAS.GENERO}, ${dict.COLUMNAS.ANTECEDENTES}) 
-        VALUES (?, ?, ?, ?)
-    `;
-    const [resultado] = await pool.query(query, [codigo_paciente, edad, genero, antecedentes_medicos]);
-    return { id_paciente: resultado.insertId, codigo_paciente };
+    const [resultado] = await pool.query('CALL sp_crear_paciente_simulado(?, ?, ?, ?)', [codigo_paciente, edad, genero, antecedentes_medicos]);
+    return { id_paciente: resultado[0][0].id_paciente, codigo_paciente };
 };
 
 // 2. Crear el caso clínico asociándolo al curso y al paciente
 const crearCaso = async (datosCaso) => {
     const { id_curso, id_paciente, titulo_caso, motivo_consulta, nivel_dificultad } = datosCaso;
-    const query = `
-        INSERT INTO ${dict.TABLAS.CASOS} 
-        (${dict.COLUMNAS.ID_CURSO}, ${dict.COLUMNAS.ID_PACIENTE}, ${dict.COLUMNAS.TITULO_CASO}, ${dict.COLUMNAS.MOTIVO_CONSULTA}, ${dict.COLUMNAS.NIVEL_DIFICULTAD}) 
-        VALUES (?, ?, ?, ?, ?)
-    `;
-    const [resultado] = await pool.query(query, [id_curso, id_paciente, titulo_caso, motivo_consulta, nivel_dificultad]);
-    return { id_caso: resultado.insertId, titulo_caso };
+    const [resultado] = await pool.query('CALL sp_crear_caso_clinico(?, ?, ?, ?, ?)', [id_curso, id_paciente, titulo_caso, motivo_consulta, nivel_dificultad]);
+    return { id_caso: resultado[0][0].id_caso, titulo_caso };
 };
 
 // 3. Guardar el registro de la radiografía en la BD
 const guardarRadiografia = async (id_caso, tipo_proyeccion, ruta_imagen) => {
-    const query = `
-        INSERT INTO ${dict.TABLAS.RADIOGRAFIAS} 
-        (${dict.COLUMNAS.ID_CASO}, ${dict.COLUMNAS.TIPO_PROYECCION}, ${dict.COLUMNAS.RUTA_IMAGEN}) 
-        VALUES (?, ?, ?)
-    `;
-    const [resultado] = await pool.query(query, [id_caso, tipo_proyeccion, ruta_imagen]);
-    return { id_radiografia: resultado.insertId, id_caso, tipo_proyeccion, ruta_imagen };
+    const [resultado] = await pool.query('CALL sp_guardar_radiografia(?, ?, ?)', [id_caso, tipo_proyeccion, ruta_imagen]);
+    return { id_radiografia: resultado[0][0].id_radiografia, id_caso, tipo_proyeccion, ruta_imagen };
 };
 
 // 4. Crear Caso Completo (Paciente + Caso + Radiografía) en una sola transacción
@@ -53,75 +38,20 @@ const crearCasoCompleto = async (datos) => {
         ruta_imagen
     } = datos;
 
-    const connection = await pool.getConnection();
     try {
-        await connection.beginTransaction();
-
-        // A. Insertar Paciente Simulado
-        const queryPaciente = `
-            INSERT INTO ${dict.TABLAS.PACIENTES} 
-            (${dict.COLUMNAS.CODIGO_PACIENTE}, ${dict.COLUMNAS.EDAD}, ${dict.COLUMNAS.GENERO}, ${dict.COLUMNAS.ANTECEDENTES}) 
-            VALUES (?, ?, ?, ?)
-        `;
-        const [resPaciente] = await connection.query(queryPaciente, [
-            codigo_paciente,
-            parseInt(edad, 10) || 30,
-            genero || 'Otro',
-            antecedentes_medicos || 'Sin antecedentes relevantes reportados'
-        ]);
-        const id_paciente = resPaciente.insertId;
-
-        // B. Determinar Curso (si no viene, asociar al primer curso disponible del catedratico actual o crear uno por defecto)
-        let cursoIdFinal = id_curso ? parseInt(id_curso, 10) : null;
-        if (!cursoIdFinal) {
-            const [cursos] = await connection.query(`SELECT id_curso FROM ${dict.TABLAS.CURSOS} WHERE id_catedratico = ? LIMIT 1`, [id_catedratico || 1]);
-            if (cursos.length > 0) {
-                cursoIdFinal = cursos[0].id_curso;
-            } else {
-                // Crear curso base por defecto si no existe ninguno
-                const [nuevoCurso] = await connection.query(
-                    `INSERT INTO ${dict.TABLAS.CURSOS} (id_catedratico, nombre_curso, semestre, anio) 
-                     VALUES (?, 'Radiología Clínica I', 'Primer Semestre', 2026)`, [id_catedratico || 1]
-                );
-                cursoIdFinal = nuevoCurso.insertId;
-            }
-        }
-
-        // C. Insertar Caso Clínico
-        const queryCaso = `
-            INSERT INTO ${dict.TABLAS.CASOS} 
-            (${dict.COLUMNAS.ID_CURSO}, ${dict.COLUMNAS.ID_PACIENTE}, ${dict.COLUMNAS.TITULO_CASO}, ${dict.COLUMNAS.MOTIVO_CONSULTA}, ${dict.COLUMNAS.NIVEL_DIFICULTAD}) 
-            VALUES (?, ?, ?, ?, ?)
-        `;
-        const [resCaso] = await connection.query(queryCaso, [
-            cursoIdFinal,
-            id_paciente,
-            titulo_caso,
-            motivo_consulta,
-            nivel_dificultad || 'Intermedio'
-        ]);
-        const id_caso = resCaso.insertId;
-
-        // D. Insertar Radiografía
-        const queryRx = `
-            INSERT INTO ${dict.TABLAS.RADIOGRAFIAS} 
-            (${dict.COLUMNAS.ID_CASO}, ${dict.COLUMNAS.TIPO_PROYECCION}, ${dict.COLUMNAS.RUTA_IMAGEN}) 
-            VALUES (?, ?, ?)
-        `;
-        const [resRx] = await connection.query(queryRx, [
-            id_caso,
-            tipo_proyeccion || 'Tórax PA',
-            ruta_imagen || '/uploads/radiografias/rx-default.jpg'
+        const [resultado] = await pool.query('CALL sp_crear_caso_completo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+            codigo_paciente, edad, genero, antecedentes_medicos,
+            id_curso, id_catedratico, titulo_caso, motivo_consulta, nivel_dificultad,
+            tipo_proyeccion, ruta_imagen
         ]);
 
-        await connection.commit();
-        connection.release();
+        const ids = resultado[0][0];
 
         return {
-            id_caso,
-            id_paciente,
-            id_curso: cursoIdFinal,
-            id_radiografia: resRx.insertId,
+            id_caso: ids.id_caso,
+            id_paciente: ids.id_paciente,
+            id_curso: ids.id_curso,
+            id_radiografia: ids.id_radiografia,
             codigo_paciente,
             titulo_caso,
             tipo_proyeccion,
@@ -129,76 +59,29 @@ const crearCasoCompleto = async (datos) => {
             mensaje: "Caso clínico y radiografía registrados exitosamente en la plataforma."
         };
     } catch (error) {
-        await connection.rollback();
-        connection.release();
         throw error;
     }
 };
 
 // 5. Obtener todos los casos con información completa para gestión del catedrático
 const obtenerCasosDetallados = async (id_catedratico) => {
-    const query = `
-        SELECT 
-            c.${dict.COLUMNAS.ID_CASO} AS id,
-            c.${dict.COLUMNAS.TITULO_CASO} AS titulo,
-            c.${dict.COLUMNAS.MOTIVO_CONSULTA} AS motivo_consulta,
-            c.${dict.COLUMNAS.NIVEL_DIFICULTAD} AS nivel_dificultad,
-            p.${dict.COLUMNAS.ID_PACIENTE} AS id_paciente,
-            p.${dict.COLUMNAS.CODIGO_PACIENTE} AS paciente,
-            p.${dict.COLUMNAS.EDAD} AS edad,
-            p.${dict.COLUMNAS.GENERO} AS genero,
-            p.${dict.COLUMNAS.ANTECEDENTES} AS antecedentes,
-            r.${dict.COLUMNAS.ID_RADIOGRAFIA} AS id_radiografia,
-            r.${dict.COLUMNAS.TIPO_PROYECCION} AS proyeccion,
-            r.${dict.COLUMNAS.RUTA_IMAGEN} AS ruta_imagen,
-            DATE_FORMAT(r.fecha_subida, '%Y-%m-%d') AS fecha_creacion,
-            (SELECT COUNT(*) FROM ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} ee WHERE ee.id_caso = c.id_caso) AS total_evaluaciones
-        FROM ${dict.TABLAS.CASOS} c
-        INNER JOIN ${dict.TABLAS.PACIENTES} p ON c.${dict.COLUMNAS.ID_PACIENTE} = p.${dict.COLUMNAS.ID_PACIENTE}
-        LEFT JOIN ${dict.TABLAS.RADIOGRAFIAS} r ON c.${dict.COLUMNAS.ID_CASO} = r.${dict.COLUMNAS.ID_CASO}
-        INNER JOIN ${dict.TABLAS.CURSOS} cs ON c.${dict.COLUMNAS.ID_CURSO} = cs.${dict.COLUMNAS.ID_CURSO}
-        WHERE cs.${dict.COLUMNAS.ID_CATEDRATICO} = ?
-        ORDER BY c.${dict.COLUMNAS.ID_CASO} DESC
-    `;
-    const [casos] = await pool.query(query, [id_catedratico]);
-    return casos;
+    const [casos] = await pool.query('CALL sp_obtener_casos_detallados(?)', [id_catedratico]);
+    return casos[0];
 };
 
 // 6. Obtener caso por ID
 const obtenerDetalleCaso = async (id_caso) => {
-    const query = `
-        SELECT 
-            c.${dict.COLUMNAS.ID_CASO} AS id,
-            c.${dict.COLUMNAS.TITULO_CASO} AS titulo,
-            c.${dict.COLUMNAS.MOTIVO_CONSULTA} AS motivo_consulta,
-            c.${dict.COLUMNAS.NIVEL_DIFICULTAD} AS nivel_dificultad,
-            p.${dict.COLUMNAS.ID_PACIENTE} AS id_paciente,
-            p.${dict.COLUMNAS.CODIGO_PACIENTE} AS paciente,
-            p.${dict.COLUMNAS.EDAD} AS edad,
-            p.${dict.COLUMNAS.GENERO} AS genero,
-            p.${dict.COLUMNAS.ANTECEDENTES} AS antecedentes,
-            r.${dict.COLUMNAS.ID_RADIOGRAFIA} AS id_radiografia,
-            r.${dict.COLUMNAS.TIPO_PROYECCION} AS proyeccion,
-            r.${dict.COLUMNAS.RUTA_IMAGEN} AS ruta_imagen
-        FROM ${dict.TABLAS.CASOS} c
-        INNER JOIN ${dict.TABLAS.PACIENTES} p ON c.${dict.COLUMNAS.ID_PACIENTE} = p.${dict.COLUMNAS.ID_PACIENTE}
-        LEFT JOIN ${dict.TABLAS.RADIOGRAFIAS} r ON c.${dict.COLUMNAS.ID_CASO} = r.${dict.COLUMNAS.ID_CASO}
-        WHERE c.${dict.COLUMNAS.ID_CASO} = ?
-    `;
-    const [casos] = await pool.query(query, [id_caso]);
-    if (casos.length === 0) throw new Error('Caso clínico no encontrado');
-    return casos[0];
+    const [casos] = await pool.query('CALL sp_obtener_detalle_caso(?)', [id_caso]);
+    if (casos[0].length === 0) throw new Error('Caso clínico no encontrado');
+    return casos[0][0];
 };
 
 // 7. Obtener el siguiente código secuencial para Paciente
 const obtenerSiguienteCodigoPaciente = async () => {
     // Buscar todos los códigos actuales que sigan el formato PAC-%
     const query = `
-        SELECT codigo_paciente 
-        FROM ${dict.TABLAS.PACIENTES} 
-        WHERE codigo_paciente LIKE 'PAC-%'
-    `;
-    const [rows] = await pool.query(query);
+    const [rowsArray] = await pool.query('CALL sp_obtener_codigos_pacientes()');
+    const rows = rowsArray[0];
 
     let maxNum = 0;
     for (const row of rows) {
@@ -215,32 +98,14 @@ const obtenerSiguienteCodigoPaciente = async () => {
 
 // 8. Editar Caso y Paciente
 const editarCaso = async (id_caso, datos) => {
-    const connection = await pool.getConnection();
     try {
-        await connection.beginTransaction();
-
         const { titulo_caso, motivo_consulta, nivel_dificultad, id_paciente, edad, genero, antecedentes_medicos } = datos;
-
-        // Actualizar Caso
-        await connection.query(
-            `UPDATE ${dict.TABLAS.CASOS} SET ${dict.COLUMNAS.TITULO_CASO} = ?, ${dict.COLUMNAS.MOTIVO_CONSULTA} = ?, ${dict.COLUMNAS.NIVEL_DIFICULTAD} = ? WHERE ${dict.COLUMNAS.ID_CASO} = ?`,
-            [titulo_caso, motivo_consulta, nivel_dificultad, id_caso]
-        );
-
-        // Actualizar Paciente
-        if (id_paciente) {
-            await connection.query(
-                `UPDATE ${dict.TABLAS.PACIENTES} SET ${dict.COLUMNAS.EDAD} = ?, ${dict.COLUMNAS.GENERO} = ?, ${dict.COLUMNAS.ANTECEDENTES} = ? WHERE ${dict.COLUMNAS.ID_PACIENTE} = ?`,
-                [edad, genero, antecedentes_medicos, id_paciente]
-            );
-        }
-
-        await connection.commit();
-        connection.release();
+        await pool.query('CALL sp_editar_caso_paciente(?, ?, ?, ?, ?, ?, ?, ?)', [
+            id_caso, titulo_caso, motivo_consulta, nivel_dificultad,
+            id_paciente, edad, genero, antecedentes_medicos
+        ]);
         return true;
     } catch (error) {
-        await connection.rollback();
-        connection.release();
         throw error;
     }
 };
@@ -248,7 +113,7 @@ const editarCaso = async (id_caso, datos) => {
 // 9. Eliminar Caso
 const eliminarCaso = async (id_caso) => {
     try {
-        await pool.query(`DELETE FROM ${dict.TABLAS.CASOS} WHERE ${dict.COLUMNAS.ID_CASO} = ?`, [id_caso]);
+        await pool.query('CALL sp_eliminar_caso(?)', [id_caso]);
         return true;
     } catch (error) {
         throw new Error('No se puede eliminar el caso porque ya tiene evaluaciones asociadas.');

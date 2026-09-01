@@ -11,17 +11,10 @@ const guardarCalificacionRubrica = async (bodyData) => {
         await connection.beginTransaction();
 
         if (calificaciones && calificaciones.length > 0) {
-            const query = `
-                INSERT INTO ${dict.TABLAS.CALIFICACIONES} 
-                (${dict.COLUMNAS.ID_EVALUACION}, ${dict.COLUMNAS.ID_CRITERIO}, ${dict.COLUMNAS.PUNTAJE_OBTENIDO}) 
-                VALUES ?
-            `;
-            const valores = calificaciones.map(c => [id_evaluacion, c.id_criterio, c.puntaje_obtenido]);
-            await connection.query(query, [valores]);
+            for (const c of calificaciones) {
+                await pool.query('CALL sp_guardar_calificacion_rubrica(?, ?, ?)', [id_evaluacion, c.id_criterio, c.puntaje_obtenido]);
+            }
         }
-
-        await connection.commit();
-        connection.release();
 
         return {
             id_evaluacion,
@@ -29,8 +22,6 @@ const guardarCalificacionRubrica = async (bodyData) => {
             mensaje: "Calificaciones de rúbrica guardadas exitosamente."
         };
     } catch (error) {
-        await connection.rollback();
-        connection.release();
         throw error;
     }
 };
@@ -45,17 +36,10 @@ const guardarRespuestasLikert = async (bodyData) => {
         await connection.beginTransaction();
 
         if (respuestas && respuestas.length > 0) {
-            const query = `
-                INSERT INTO ${dict.TABLAS.RESPUESTAS_LIKERT} 
-                (${dict.COLUMNAS.ID_CUESTIONARIO}, ${dict.COLUMNAS.ID_ESTUDIANTE}, ${dict.COLUMNAS.DIMENSION_EVALUADA}, ${dict.COLUMNAS.PUNTAJE_LIKERT}) 
-                VALUES ?
-            `;
-            const valores = respuestas.map(r => [id_cuestionario, id_estudiante, r.dimension_evaluada, r.puntaje]);
-            await connection.query(query, [valores]);
+            for (const r of respuestas) {
+                await pool.query('CALL sp_guardar_respuesta_likert(?, ?, ?, ?)', [id_cuestionario, id_estudiante, r.dimension_evaluada, r.puntaje]);
+            }
         }
-
-        await connection.commit();
-        connection.release();
 
         return {
             id_estudiante,
@@ -63,42 +47,26 @@ const guardarRespuestasLikert = async (bodyData) => {
             mensaje: "Respuestas del cuestionario Likert registradas para medición científica."
         };
     } catch (error) {
-        await connection.rollback();
-        connection.release();
         throw error;
     }
 };
 
 const obtenerCatalogosMetricas = async () => {
-    const connection = await pool.getConnection();
     try {
-        const [rubricas] = await connection.query(`SELECT * FROM ${dict.TABLAS.RUBRICAS}`);
-        const [cuestionarios] = await connection.query(`SELECT * FROM ${dict.TABLAS.CUESTIONARIOS}`);
+        const [rubricasArray] = await pool.query('CALL sp_obtener_catalogo_rubricas()');
+        const [cuestionariosArray] = await pool.query('CALL sp_obtener_catalogo_cuestionarios()');
         
-        connection.release();
-        return { rubricas, cuestionarios };
+        return { rubricas: rubricasArray[0], cuestionarios: cuestionariosArray[0] };
     } catch (error) {
-        connection.release();
         throw error;
     }
 };
 
 const obtenerResultadosLikert = async () => {
-    const connection = await pool.getConnection();
     try {
-        const query = `
-            SELECT 
-                ${dict.COLUMNAS.DIMENSION_EVALUADA} AS dimension, 
-                COUNT(*) AS total_respuestas,
-                ROUND(AVG(${dict.COLUMNAS.PUNTAJE_LIKERT}), 1) AS promedio
-            FROM ${dict.TABLAS.RESPUESTAS_LIKERT}
-            GROUP BY ${dict.COLUMNAS.DIMENSION_EVALUADA}
-        `;
-        const [resultados] = await connection.query(query);
-        connection.release();
-        return resultados;
+        const [resultadosArray] = await pool.query('CALL sp_obtener_resultados_likert()');
+        return resultadosArray[0];
     } catch (error) {
-        connection.release();
         throw error;
     }
 };
