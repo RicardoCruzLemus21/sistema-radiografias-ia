@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ClinicalService } from '../../services/clinical'; 
@@ -32,8 +32,20 @@ export class DashboardEstudiante implements OnInit {
     private clinicalService: ClinicalService,
     private authService: AuthService,
     private extraService: ExtraService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private elementRef: ElementRef
   ) {}
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event) {
+    if (this.mostrarNotificaciones) {
+      const notificationsWrapper = this.elementRef.nativeElement.querySelector('.notifications-wrapper');
+      if (notificationsWrapper && !notificationsWrapper.contains(event.target)) {
+        this.mostrarNotificaciones = false;
+        this.cdr.detectChanges();
+      }
+    }
+  }
 
   ngOnInit(): void {
     this.cargarWorklistReal();

@@ -78,8 +78,6 @@ const obtenerDetalleCaso = async (id_caso) => {
 
 // 7. Obtener el siguiente código secuencial para Paciente
 const obtenerSiguienteCodigoPaciente = async () => {
-    // Buscar todos los códigos actuales que sigan el formato PAC-%
-    const query = `
     const [rowsArray] = await pool.query('CALL sp_obtener_codigos_pacientes()');
     const rows = rowsArray[0];
 
@@ -95,6 +93,7 @@ const obtenerSiguienteCodigoPaciente = async () => {
     const nextNum = maxNum + 1;
     return 'PAC-' + nextNum.toString().padStart(3, '0');
 };
+
 
 // 8. Editar Caso y Paciente
 const editarCaso = async (id_caso, datos) => {
@@ -120,55 +119,59 @@ const eliminarCaso = async (id_caso) => {
     }
 };
 
-// 10. Generar Info de Patología con Gemini (HTTP directo para máxima compatibilidad)
+// 10. Generar Info de Patología con Gemini
 const generarInfoPatologia = async (patologia) => {
     try {
         if (!process.env.GEMINI_API_KEY) throw new Error("API Key de Gemini no configurada");
 
-        // .trim() elimina cualquier \r, \n o espacios invisibles del .env
         const apiKey = process.env.GEMINI_API_KEY.trim();
-        console.log(`[Gemini] Usando clave tipo: ${apiKey.substring(0, 6)}... (${apiKey.length} chars)`);
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`;
-
-        const prompt = `Actúa como un médico radiólogo experto y profesor universitario. Explica la patología radiológica: ${patologia}.
-Devuelve tu respuesta estrictamente en formato JSON válido, en idioma español, con la siguiente estructura exacta:
-{
-  "definicion": "Descripción médica clara y profesional de la patología.",
-  "fisiopatologia": "Breve explicación de cómo y por qué ocurre esta patología a nivel fisiológico o anatómico.",
-  "signos_radiologicos": ["Signo radiológico 1", "Signo radiológico 2", "Signo radiológico 3 (Añade al menos 3 signos clave visibles en Rayos X)"],
-  "presentacion_clinica": "Breve lista de los síntomas más comunes con los que se presenta el paciente.",
-  "epidemiologia": "Información sobre qué tipo de pacientes suelen padecerla o factores de riesgo principales.",
-  "diagnostico_diferencial": "Otras patologías que se ven similares en Rayos X y cómo distinguirlas de esta.",
-  "dato_clave": "Una frase corta, mnemónico o perla clínica memorable para que un estudiante no olvide esta patología."
-}`;
-
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-goog-api-key': apiKey   // Header oficial de Google para API Keys (standard y auth)
-            },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: { responseMimeType: "application/json" }
-            })
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-flash-latest",
+            generationConfig: {
+                responseMimeType: "application/json"
+            }
         });
 
-        if (!response.ok) {
-            const errorBody = await response.text();
-            console.error('Gemini API HTTP Error:', response.status, errorBody);
-            throw new Error(`Gemini API respondió con ${response.status}`);
-        }
+        const prompt = "Actúa como un médico radiólogo experto y profesor universitario. Explica la patología radiológica: " + patologia + ".\n" +
+            "Devuelve tu respuesta estrictamente en formato JSON válido, en idioma español, sin bloques de código markdown, con la siguiente estructura exacta:\n" +
+            "{\n" +
+            "  \"definicion\": \"Descripción médica clara y profesional de la patología.\",\n" +
+            "  \"fisiopatologia\": \"Breve explicación de cómo y por qué ocurre esta patología a nivel fisiológico o anatómico.\",\n" +
+            "  \"signos_radiologicos\": [\"Signo radiológico 1\", \"Signo radiológico 2\", \"Signo radiológico 3\"],\n" +
+            "  \"presentacion_clinica\": \"Breve lista de los síntomas más comunes con los que se presenta el paciente.\",\n" +
+            "  \"epidemiologia\": \"Información sobre qué tipo de pacientes suelen padecerla o factores de riesgo principales.\",\n" +
+            "  \"diagnostico_diferencial\": \"Otras patologías que se ven similares en Rayos X y cómo distinguirlas de esta.\",\n" +
+            "  \"dato_clave\": \"Una frase corta, mnemónico o perla clínica memorable para que un estudiante no olvide esta patología.\"\n" +
+            "}";
 
-        const data = await response.json();
-        const responseText = data.candidates[0].content.parts[0].text;
-        return JSON.parse(responseText);
+        let retries = 3;
+        while (retries > 0) {
+            try {
+                const result = await model.generateContent(prompt);
+                const responseText = result.response.text();
+                
+                // Limpiar backticks de markdown si Gemini los incluye por error
+                const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+                return JSON.parse(cleanText);
+            } catch (apiError) {
+                if (apiError.status === 503 || apiError.status === 429 || apiError.message.includes('503') || apiError.message.includes('429')) {
+                    retries--;
+                    console.log(`⚠️ Servidores de Gemini saturados (HTTP ${apiError.status || 503}). Reintentando en 3 segundos... (${retries} intentos restantes)`);
+                    if (retries === 0) throw apiError;
+                    await new Promise(res => setTimeout(res, 3000));
+                } else {
+                    throw apiError;
+                }
+            }
+        }
     } catch (error) {
         console.error('Error generando info con Gemini:', error);
         throw new Error('No se pudo generar la información de la patología con IA.');
     }
 };
+
 
 module.exports = {
     crearPaciente,

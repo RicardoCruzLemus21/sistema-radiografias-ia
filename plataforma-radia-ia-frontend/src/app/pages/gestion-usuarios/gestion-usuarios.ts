@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { UserService } from '../../services/user.service';
 import { AuthService } from '../../services/auth';
 import { AcademicService } from '../../services/academic';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-gestion-usuarios',
@@ -65,7 +66,8 @@ export class GestionUsuariosComponent implements OnInit {
     private userService: UserService, 
     private authService: AuthService,
     private academicService: AcademicService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertService: AlertService
   ) {}
 
   ngOnInit(): void {
@@ -225,7 +227,7 @@ export class GestionUsuariosComponent implements OnInit {
       },
       error: (err) => {
         this.eliminandoUsuario = false;
-        alert(err.error?.message || 'Error al eliminar usuario. Puede que tenga evaluaciones o cursos asociados.');
+        this.alertService.error("Error al eliminar", err.error?.message || 'Error al eliminar usuario. Puede que tenga evaluaciones o cursos asociados.');
       }
     });
   }

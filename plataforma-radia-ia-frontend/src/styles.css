@@ -18,8 +18,12 @@
   --sidebar-bg: rgba(9, 9, 11, 0.95);
   --input-bg: rgba(255, 255, 255, 0.05);
   --table-row-hover: rgba(255, 255, 255, 0.03);
-  --modal-bg: rgba(24, 24, 27, 0.95);
+  --modal-bg: #18181b;
   --shadow-accent: rgba(255, 255, 255, 0.1);
+  --modal-backdrop-bg: rgba(0, 0, 0, 0.7);
+  --panel-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  --modal-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+  --gradient-title: linear-gradient(90deg, #fff, #a5d8ff);
   
   --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -27,77 +31,30 @@
 }
 
 /* ==========================================
-   TEMA 1: CYAN SLATE
+   TEMA 1: CLARO (LIGHT)
    ========================================== */
-[data-theme="cyan"] {
-  --bg-dark-base: #0f172a;      /* Slate 900 - Fondo profundo y profesional */
-  --bg-panel: rgba(30, 41, 59, 0.7); /* Slate 800 semi-transparente para paneles */
-  --accent-cyan: #06b6d4;       /* Cyan 500 - Acento elegante */
-  --accent-cyan-hover: #0891b2; /* Cyan 600 - Hover del acento */
+[data-theme="light"] {
+  --bg-dark-base: #f8fafc;      /* Fondo principal muy claro */
+  --bg-panel: rgba(255, 255, 255, 0.85); /* Paneles blancos semi-transparentes */
+  --accent-cyan: #0ea5e9;       /* Acento principal azul/celeste */
+  --accent-cyan-hover: #0284c7; /* Hover del acento */
   --btn-text-color: #ffffff;
-  --text-main: #f8fafc;         /* Slate 50 - Texto principal claro y nítido */
-  --text-muted: #94a3b8;        /* Slate 400 - Texto secundario/deshabilitado */
-  --border-color: rgba(255, 255, 255, 0.1); /* Borde sutil para glassmorphism */
-  --border-highlight: rgba(6, 182, 212, 0.3); /* Borde brillante para elementos activos */
-  --error-red: #ef4444;         /* Red 500 */
-  --success-green: #10b981;     /* Emerald 500 */
-  --warning-yellow: #f59e0b;    /* Amber 500 */
-  --sidebar-bg: rgba(15, 23, 42, 0.95);
-  --input-bg: rgba(0, 0, 0, 0.2);
-  --table-row-hover: rgba(255, 255, 255, 0.02);
-  --modal-bg: rgba(30, 41, 59, 0.95);
-  --shadow-accent: rgba(6, 182, 212, 0.25);
-  
-  --font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  
-  --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* ==========================================
-   TEMA 2: PÚRPURA CYBERPUNK
-   ========================================== */
-[data-theme="purple"] {
-  --bg-dark-base: #13111c;
-  --bg-panel: rgba(31, 24, 51, 0.75);
-  --accent-cyan: #a855f7;
-  --accent-cyan-hover: #9333ea;
-  --btn-text-color: #ffffff;
-  --text-main: #f5f3ff;
-  --text-muted: #a78bfa;
-  --border-color: rgba(168, 85, 247, 0.12);
-  --border-highlight: rgba(168, 85, 247, 0.4);
-  --error-red: #f43f5e;
-  --success-green: #34d399;
-  --warning-yellow: #fbbf24;
-  --sidebar-bg: rgba(19, 17, 28, 0.95);
-  --input-bg: rgba(0, 0, 0, 0.3);
-  --table-row-hover: rgba(168, 85, 247, 0.04);
-  --modal-bg: rgba(31, 24, 51, 0.95);
-  --shadow-accent: rgba(168, 85, 247, 0.3);
-}
-
-/* ==========================================
-   TEMA 3: ESMERALDA MÉDICO
-   ========================================== */
-[data-theme="emerald"] {
-  --bg-dark-base: #0a1a14;
-  --bg-panel: rgba(16, 42, 32, 0.75);
-  --accent-cyan: #10b981;
-  --accent-cyan-hover: #059669;
-  --btn-text-color: #ffffff;
-  --text-main: #ecfdf5;
-  --text-muted: #6ee7b7;
-  --border-color: rgba(16, 185, 129, 0.12);
-  --border-highlight: rgba(16, 185, 129, 0.4);
-  --error-red: #f43f5e;
-  --success-green: #34d399;
-  --warning-yellow: #fbbf24;
-  --sidebar-bg: rgba(10, 26, 20, 0.95);
-  --input-bg: rgba(0, 0, 0, 0.3);
-  --table-row-hover: rgba(16, 185, 129, 0.04);
-  --modal-bg: rgba(16, 42, 32, 0.95);
-  --shadow-accent: rgba(16, 185, 129, 0.3);
+  --text-main: #0f172a;         /* Texto principal oscuro */
+  --text-muted: #64748b;        /* Texto secundario */
+  --border-color: rgba(0, 0, 0, 0.1); 
+  --border-highlight: rgba(14, 165, 233, 0.4);
+  --error-red: #ef4444;
+  --success-green: #10b981;
+  --warning-yellow: #f59e0b;
+  --sidebar-bg: rgba(241, 245, 249, 0.95);
+  --input-bg: rgba(0, 0, 0, 0.05);
+  --table-row-hover: rgba(0, 0, 0, 0.04);
+  --modal-bg: #ffffff;
+  --shadow-accent: rgba(14, 165, 233, 0.2);
+  --modal-backdrop-bg: rgba(255, 255, 255, 0.6);
+  --panel-shadow: none;
+  --modal-shadow: none;
+  --gradient-title: linear-gradient(90deg, #0f172a, #0ea5e9);
 }
 
 /* Reset y Modo Oscuro Global */
@@ -141,7 +98,7 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--panel-shadow);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal);
 }
 
@@ -189,6 +146,33 @@ body {
   background: var(--text-muted);
 }
 
+.btn-cancel {
+  background-color: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-cancel:hover {
+  background-color: var(--table-row-hover);
+  color: var(--text-main);
+  border-color: var(--text-muted);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.btn-cancel:active {
+  transform: translateY(0);
+}
+
 .btn-secondary {
   background-color: transparent;
   color: var(--text-muted);
@@ -234,6 +218,61 @@ body {
 .skeleton {
   animation: skeleton-loading 1s linear infinite alternate;
   border-radius: 6px;
+}
+
+/* ==========================================
+   ESTILOS GLOBALES DE FORMULARIOS (SELECTS)
+   ========================================== */
+select, .glass-input[tagName="select"] {
+  width: 100%;
+  padding: 12px 40px 12px 16px;
+  border-radius: 8px;
+  background-color: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  font-family: inherit;
+  box-sizing: border-box;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L13 1" stroke="%23888888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 14px 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+select:hover, .glass-input[tagName="select"]:hover {
+  border-color: var(--accent-cyan);
+  background-color: var(--table-row-hover);
+}
+
+select:focus, .glass-input[tagName="select"]:focus {
+  outline: none;
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+}
+
+/* Estilos de las opciones de la lista desplegable */
+select option {
+  background: var(--bg-dark-base);
+  color: var(--text-main);
+  font-size: 14px;
+  padding: 14px;
+}
+
+select option:checked, select option:hover {
+  background: var(--accent-cyan) !important;
+  color: var(--btn-text-color) !important;
+}
+
+/* Para compatibilidad extendida en Webkit (Chrome/Safari/Edge) para listas desplegables */
+select::-webkit-scrollbar {
+  width: 6px;
+}
+select::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
 }
 
 /* --- ESTILOS DE IMPRESIÓN (PDF Export) --- */

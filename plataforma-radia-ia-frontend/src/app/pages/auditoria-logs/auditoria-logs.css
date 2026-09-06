@@ -15,7 +15,7 @@
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 5px;
-  background: linear-gradient(90deg, #fff, #a5d8ff);
+  background: var(--gradient-title);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -37,7 +37,7 @@
   bottom: 30px;
   left: 40px;
   width: 2px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--border-color);
 }
 
 .timeline-item {
@@ -56,8 +56,8 @@
   justify-content: center;
   margin-right: 20px;
   flex-shrink: 0;
-  background: #1a1f2b;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-dark-base);
+  border: 2px solid var(--border-color);
 }
 
 .log-login { border-color: #00ff88; color: #00ff88; }
@@ -67,8 +67,8 @@
 .log-default { border-color: #888; color: #888; }
 
 .timeline-content {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 15px 20px;
   flex: 1;
@@ -82,15 +82,15 @@
 }
 
 .timeline-header strong {
-  color: #fff;
+  color: var(--text-main);
 }
 
 .timeline-action {
   font-size: 12px;
   padding: 3px 8px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #ddd;
+  background: var(--table-row-hover);
+  color: var(--text-main);
 }
 
 .timeline-time {
@@ -100,7 +100,7 @@
 }
 
 .timeline-detail {
-  color: #aaa;
+  color: var(--text-main);
   font-size: 14px;
   margin: 0;
 }

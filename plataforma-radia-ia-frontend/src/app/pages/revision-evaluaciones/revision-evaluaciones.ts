@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DiagnosticoService } from '../../services/diagnostico';
 import { AcademicService } from '../../services/academic';
 import { AuthService } from '../../services/auth';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-revision-evaluaciones',
@@ -29,7 +30,8 @@ export class RevisionEvaluacionesComponent implements OnInit {
     private diagnosticoService: DiagnosticoService,
     private academicService: AcademicService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertService: AlertService
   ) {}
 
   ngOnInit(): void {
@@ -128,7 +130,7 @@ export class RevisionEvaluacionesComponent implements OnInit {
       },
       error: (err) => {
         this.eliminando = false;
-        alert(err.error?.message || 'Error al invalidar');
+        this.alertService.error("Error", err.error?.message || 'Error al invalidar');
         this.cdr.markForCheck();
       }
     });

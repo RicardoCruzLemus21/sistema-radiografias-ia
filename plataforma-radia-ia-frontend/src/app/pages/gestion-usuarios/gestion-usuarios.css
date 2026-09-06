@@ -15,7 +15,7 @@
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 5px;
-  background: linear-gradient(90deg, #fff, #a5d8ff);
+  background: var(--gradient-title);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -34,27 +34,27 @@
 .users-table {
   width: 100%;
   border-collapse: collapse;
-  color: #ddd;
+  color: var(--text-main);
 }
 
 .users-table th {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--table-row-hover);
   padding: 15px 20px;
   text-align: left;
   font-weight: 600;
   font-size: 14px;
   color: var(--text-muted);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .users-table td {
   padding: 15px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-color);
   font-size: 14px;
 }
 
 .users-table tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--table-row-hover);
 }
 
 .role-badge {
@@ -65,15 +65,15 @@
 }
 
 .badge-admin {
-  background: rgba(0, 255, 136, 0.1);
-  color: #00ff88;
-  border: 1px solid rgba(0, 255, 136, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: var(--success-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .badge-student {
-  background: rgba(0, 229, 255, 0.1);
+  background: rgba(14, 165, 233, 0.1);
   color: var(--accent-cyan);
-  border: 1px solid rgba(0, 229, 255, 0.3);
+  border: 1px solid rgba(14, 165, 233, 0.3);
 }
 
 .actions-cell {
@@ -82,17 +82,30 @@
 }
 
 .btn-edit {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-highlight);
+  color: var(--text-main);
   padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
+  font-weight: 600;
 }
 
 .btn-edit:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--accent-cyan);
+  color: #fff;
+  border-color: var(--accent-cyan);
+}
+
+.course-badge {
+  background: var(--input-bg);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .btn-delete {
@@ -118,7 +131,7 @@
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--modal-backdrop-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
@@ -133,7 +146,7 @@
   background: var(--bg-panel);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--modal-shadow);
   border: 1px solid var(--border-color);
 }
 
@@ -202,27 +215,25 @@
 
 input[type="text"],
 input[type="email"],
-input[type="password"],
-select {
+input[type="password"] {
   width: 100%;
   padding: 12px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   font-family: inherit;
   box-sizing: border-box;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-input:focus, select:focus {
+input:focus {
   outline: none;
   border-color: var(--accent-cyan);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
 }
 
-select option {
-  background: #1a1a1a;
-  color: #fff;
-}
+
 
 /* Buscador */
 .search-bar-container {
@@ -233,8 +244,8 @@ select option {
   padding: 12px 20px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
+  background: var(--input-bg);
+  color: var(--text-main);
   font-size: 16px;
   transition: all 0.3s ease;
   box-sizing: border-box;
@@ -269,7 +280,7 @@ details.glass-panel {
   transition: all 0.3s ease;
 }
 details[open].glass-panel {
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: var(--panel-shadow);
   border: 1px solid var(--accent-cyan);
 }
 .accordion-header {
@@ -278,8 +289,8 @@ details[open].glass-panel {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(0, 0, 0, 0.2);
-  color: #fff;
+  background: var(--input-bg);
+  color: var(--text-main);
   font-size: 16px;
   list-style: none;
 }
@@ -287,7 +298,7 @@ details[open].glass-panel {
   display: none;
 }
 .accordion-header:hover {
-  background: rgba(0, 229, 255, 0.1);
+  background: var(--table-row-hover);
 }
 .badge-count {
   background: var(--accent-cyan);
@@ -301,14 +312,7 @@ details[open].glass-panel {
   padding: 0;
   border-top: 1px solid var(--border-color);
 }
-.course-badge {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-size: 13px;
-  color: #eee;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
+
 .no-results {
   padding: 20px;
   text-align: center;

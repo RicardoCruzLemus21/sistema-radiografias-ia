@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth'; 
 import { FormsModule } from '@angular/forms';
@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   correo: string = '';
   contrasena: string = '';
   errorMensaje: string = '';
@@ -21,11 +21,29 @@ export class LoginComponent {
   nuevaContrasena: string = '';
   confirmarContrasena: string = '';
 
+  temaActual: string = 'darkglass';
+
   constructor(
     private authService: AuthService, 
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
+
+  ngOnInit() {
+    const savedTheme = localStorage.getItem('radia_theme');
+    if (savedTheme) {
+      this.temaActual = savedTheme;
+      document.documentElement.setAttribute('data-theme', this.temaActual);
+    } else {
+      document.documentElement.setAttribute('data-theme', 'darkglass');
+    }
+  }
+
+  toggleTema() {
+    this.temaActual = this.temaActual === 'darkglass' ? 'light' : 'darkglass';
+    document.documentElement.setAttribute('data-theme', this.temaActual);
+    localStorage.setItem('radia_theme', this.temaActual);
+  }
 
   limpiarError() {
     this.errorMensaje = '';

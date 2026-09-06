@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DiagnosticoService } from '../../services/diagnostico';
 import { AuthService } from '../../services/auth';
 import { ClinicalService } from '../../services/clinical';
+import { AlertService } from '../../services/alert.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -42,7 +43,8 @@ export class RetroalimentacionIa implements OnInit {
     private diagnosticoService: DiagnosticoService,
     private clinicalService: ClinicalService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertService: AlertService
   ) {}
 
   ngOnInit(): void {
@@ -103,7 +105,7 @@ export class RetroalimentacionIa implements OnInit {
       error: (err) => {
         console.error("Error al generar IA:", err);
         this.cargandoIA = false;
-        alert("Ocurrió un error al procesar la radiografía con IA.");
+        this.alertService.error("Error", "Ocurrió un error al procesar la radiografía con IA.");
       }
     });
   }
@@ -128,7 +130,7 @@ export class RetroalimentacionIa implements OnInit {
   enviarLikert() {
     const respuestasPendientes = this.encuesta.filter(e => e.puntaje === 0);
     if (respuestasPendientes.length > 0) {
-      alert("Por favor, responde a todas las preguntas antes de enviar.");
+      this.alertService.warning("Respuestas Incompletas", "Por favor, responde a todas las preguntas antes de enviar.");
       return;
     }
 
@@ -153,7 +155,7 @@ export class RetroalimentacionIa implements OnInit {
       error: (err) => {
         console.error("Error guardando Likert", err);
         this.guardandoLikert = false;
-        alert("Ocurrió un error guardando tu evaluación.");
+        this.alertService.error("Error", "Ocurrió un error guardando tu evaluación.");
         this.volverAlDashboard();
       }
     });

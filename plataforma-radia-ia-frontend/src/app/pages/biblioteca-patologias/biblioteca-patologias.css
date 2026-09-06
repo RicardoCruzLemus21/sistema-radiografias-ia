@@ -6,7 +6,7 @@
 }
 
 .header-section h2 {
-  color: #fff;
+  color: var(--text-main);
   font-size: 24px;
   margin: 0 0 10px 0;
   letter-spacing: 1px;
@@ -25,8 +25,8 @@
 }
 
 .patologia-card {
-  background: rgba(11, 14, 20, 0.8);
-  border: 1px solid rgba(0, 229, 255, 0.2);
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 25px;
   display: flex;
@@ -92,7 +92,7 @@
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--modal-backdrop-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   display: flex;
@@ -106,7 +106,7 @@
   background: var(--bg-panel);
   border-radius: 12px;
   padding: 30px;
-  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--modal-shadow);
   border: 1px solid var(--border-color);
   max-height: 90vh;
   overflow-y: auto;
@@ -122,7 +122,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 15px;
 }
 
@@ -151,7 +151,7 @@
 
 .modal-header h3 {
   margin: 0;
-  color: #fff;
+  color: var(--text-main);
   font-size: 24px;
   letter-spacing: 0.5px;
 }
@@ -196,9 +196,9 @@
   width: 100%;
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: #000;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--border-color);
+  background: var(--bg-dark-base);
+  box-shadow: var(--panel-shadow);
 }
 
 .rx-image {
@@ -235,9 +235,9 @@
 }
 
 .meta-badge {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #ccc;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -264,15 +264,15 @@
 .spinner-ai {
   width: 60px;
   height: 60px;
-  border: 4px solid rgba(165, 216, 255, 0.1);
-  border-top-color: #a5d8ff;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--accent-cyan);
   border-radius: 50%;
   animation: spin 1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
   margin-bottom: 25px;
 }
 
 .ai-text {
-  color: #a5d8ff;
+  color: var(--accent-cyan);
   font-size: 15px;
   letter-spacing: 0.5px;
   animation: pulse 1.5s ease-in-out infinite;
@@ -290,21 +290,21 @@
 
 /* Custom Scrollbar */
 .ai-content-pro::-webkit-scrollbar { width: 6px; }
-.ai-content-pro::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-.ai-content-pro::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
-.ai-content-pro::-webkit-scrollbar-thumb:hover { background: rgba(0, 229, 255, 0.5); }
+.ai-content-pro::-webkit-scrollbar-track { background: var(--input-bg); border-radius: 4px; }
+.ai-content-pro::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+.ai-content-pro::-webkit-scrollbar-thumb:hover { background: var(--border-highlight); }
 
 .info-card {
-  background: rgba(15, 20, 30, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 18px 20px;
   transition: background 0.3s, border-color 0.3s;
 }
 
 .info-card:hover {
-  background: rgba(20, 25, 35, 0.8);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: var(--table-row-hover);
+  border-color: var(--border-highlight);
 }
 
 .card-header {
@@ -323,7 +323,7 @@
 }
 
 .info-card p {
-  color: #e0e0e0;
+  color: var(--text-main);
   font-size: 14.5px;
   line-height: 1.6;
   margin: 0;
@@ -332,7 +332,7 @@
 .info-card ul {
   margin: 0;
   padding-left: 20px;
-  color: #e0e0e0;
+  color: var(--text-main);
 }
 
 .info-card li {
@@ -362,7 +362,7 @@
   font-style: italic;
   font-weight: 500;
   font-size: 16px !important;
-  color: #fff !important;
+  color: var(--text-main) !important;
 }
 
 /* Two columns group */
@@ -382,7 +382,7 @@
   align-items: center;
   margin-top: 25px;
   padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-color);
 }
 
 .ai-badge {
