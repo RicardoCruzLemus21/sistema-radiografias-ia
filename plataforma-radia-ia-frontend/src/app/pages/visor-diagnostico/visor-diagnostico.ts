@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DiagnosticoService } from '../../services/diagnostico';
 import { AuthService } from '../../services/auth';
 import { ClinicalService } from '../../services/clinical';
+import { AlertService } from '../../services/alert.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -43,7 +44,8 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
     private diagnosticoService: DiagnosticoService,
     private clinicalService: ClinicalService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertService: AlertService
   ) {}
 
   ngOnInit(): void {
@@ -141,7 +143,7 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
     const patologiasSeleccionadas = this.patologias.filter(p => p.seleccionada).map(p => p.id);
     
     if (patologiasSeleccionadas.length === 0) {
-      alert("Por favor, selecciona al menos una patología antes de enviar el diagnóstico.");
+      this.alertService.warning("Selección Requerida", "Por favor, selecciona al menos una patología antes de enviar el diagnóstico.");
       return;
     }
 
@@ -172,7 +174,7 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error("Error al enviar diagnóstico:", err);
-        alert("Ocurrió un error al enviar el diagnóstico. Por favor intenta nuevamente.");
+        this.alertService.error("Error", "Ocurrió un error al enviar el diagnóstico. Por favor intenta nuevamente.");
       }
     });
   }

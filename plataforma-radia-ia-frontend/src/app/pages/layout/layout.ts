@@ -19,6 +19,7 @@ export class LayoutComponent implements OnInit {
   isEstudiante: boolean = false;
   notificacionesNoLeidas: number = 0;
   temaActual: string = 'darkglass';
+  isSidebarCollapsed: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -56,7 +57,7 @@ export class LayoutComponent implements OnInit {
   }
 
   cargarTema(): void {
-    const temaGuardado = localStorage.getItem('tema-radia') || 'darkglass';
+    const temaGuardado = localStorage.getItem('radia_theme') || 'darkglass';
     this.temaActual = temaGuardado;
     document.documentElement.setAttribute('data-theme', temaGuardado);
   }
@@ -64,7 +65,11 @@ export class LayoutComponent implements OnInit {
   cambiarTema(tema: string): void {
     this.temaActual = tema;
     document.documentElement.setAttribute('data-theme', tema);
-    localStorage.setItem('tema-radia', tema);
+    localStorage.setItem('radia_theme', tema);
+  }
+
+  toggleSidebar(): void {
+    this.isSidebarCollapsed = !this.isSidebarCollapsed;
   }
 
   cerrarSesion(): void {

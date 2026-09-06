@@ -6,7 +6,7 @@
 }
 
 .header-section h2 {
-  color: #fff;
+  color: var(--text-main);
   font-size: 24px;
   margin: 0 0 10px 0;
   letter-spacing: 1px;
@@ -27,8 +27,8 @@
 }
 
 .kpi-card {
-  background: rgba(11, 14, 20, 0.8);
-  border: 1px solid rgba(0, 229, 255, 0.2);
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -67,7 +67,7 @@
 }
 
 .kpi-value {
-  color: #fff;
+  color: var(--text-main);
   font-size: 24px;
   font-weight: bold;
   margin-top: 5px;
@@ -113,14 +113,14 @@
 
 .radia-table td {
   padding: 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #fff;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main);
   font-size: 14px;
   vertical-align: middle;
 }
 
 .radia-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--table-row-hover);
 }
 
 .badge {
@@ -160,14 +160,14 @@
 
 .btn-action:hover {
   background: var(--accent-cyan);
-  color: #000;
+  color: var(--btn-text-color);
 }
 
 .empty-state {
   text-align: center;
   padding: 40px;
   color: var(--text-muted);
-  background: rgba(0,0,0,0.2);
+  background: var(--input-bg);
   border-radius: 8px;
 }
 

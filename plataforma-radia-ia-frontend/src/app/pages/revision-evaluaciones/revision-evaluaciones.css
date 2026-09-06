@@ -12,7 +12,7 @@
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 5px;
-  background: linear-gradient(90deg, #fff, #a5d8ff);
+  background: var(--gradient-title);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -41,12 +41,12 @@
   align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .eval-student {
   font-weight: 600;
-  color: #fff;
+  color: var(--text-main);
   font-size: 16px;
 }
 
@@ -62,7 +62,7 @@
 }
 
 .eval-justification, .eval-feedback {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--input-bg);
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 15px;
@@ -76,19 +76,19 @@
 .eval-justification label, .eval-feedback label {
   display: block;
   font-size: 12px;
-  color: #888;
+  color: var(--text-muted);
   margin-bottom: 5px;
   text-transform: uppercase;
   font-weight: 600;
 }
 
 .eval-feedback label {
-  color: #00ff88;
+  color: var(--success-green);
 }
 
 .eval-justification p, .eval-feedback p {
   font-size: 14px;
-  color: #ddd;
+  color: var(--text-main);
   margin: 0;
   line-height: 1.5;
 }
@@ -120,7 +120,7 @@
 }
 
 .modal-subtitle {
-  color: #ccc;
+  color: var(--text-muted);
   font-size: 14px;
 }
 
@@ -128,9 +128,9 @@ textarea {
   width: 100%;
   padding: 12px;
   border-radius: 8px;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
   font-family: inherit;
   resize: vertical;
 }
@@ -144,7 +144,7 @@ textarea:focus {
 .modal-backdrop {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--modal-backdrop-bg);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
   display: flex;
@@ -159,7 +159,7 @@ textarea:focus {
   background: var(--bg-panel);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--modal-shadow);
   border: 1px solid var(--border-color);
 }
 

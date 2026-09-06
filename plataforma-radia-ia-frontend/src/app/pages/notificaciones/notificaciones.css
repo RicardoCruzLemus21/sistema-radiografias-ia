@@ -6,7 +6,7 @@
 }
 
 .header-section h2 {
-  color: #fff;
+  color: var(--text-main);
   font-size: 24px;
   margin: 0 0 10px 0;
   letter-spacing: 1px;
@@ -25,8 +25,8 @@
 }
 
 .notificacion-item {
-  background: rgba(11, 14, 20, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
   display: flex;
@@ -37,7 +37,7 @@
 
 .notificacion-item.no-leida {
   border-left: 4px solid var(--accent-cyan);
-  background: rgba(0, 229, 255, 0.05);
+  background: var(--table-row-hover);
 }
 
 .notificacion-icon {
@@ -69,7 +69,7 @@
 }
 
 .notificacion-header h3 {
-  color: #fff;
+  color: var(--text-main);
   font-size: 16px;
   margin: 0;
 }
@@ -80,7 +80,7 @@
 }
 
 .notificacion-content p {
-  color: #ccc;
+  color: var(--text-main);
   font-size: 14px;
   line-height: 1.5;
   margin: 0;
@@ -106,7 +106,7 @@
 
 .btn-leida:hover {
   background: var(--accent-cyan);
-  color: #000;
+  color: var(--btn-text-color);
 }
 
 /* Empty State */
@@ -114,7 +114,7 @@
   text-align: center;
   padding: 50px;
   color: var(--text-muted);
-  background: rgba(0,0,0,0.2);
+  background: var(--input-bg);
   border-radius: 8px;
   display: flex;
   flex-direction: column;

@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClinicalService } from '../../services/clinical';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-gestion-casos',
@@ -66,7 +67,8 @@ export class GestionCasosCatedratico implements OnInit {
 
   constructor(
     private clinicalService: ClinicalService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private alertService: AlertService
   ) {}
 
   ngOnInit(): void {
@@ -329,7 +331,7 @@ export class GestionCasosCatedratico implements OnInit {
       error: (err) => {
         console.error('Error al eliminar caso:', err);
         this.eliminandoCaso = false;
-        alert(err.error?.message || 'Error al eliminar el caso clínico. Verifica si tiene evaluaciones asociadas.');
+        this.alertService.error("Error al eliminar", err.error?.message || 'Error al eliminar el caso clínico. Verifica si tiene evaluaciones asociadas.');
       }
     });
   }
