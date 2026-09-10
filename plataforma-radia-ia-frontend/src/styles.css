@@ -146,6 +146,12 @@ body {
   background: var(--text-muted);
 }
 
+.readonly-input {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
 .btn-cancel {
   background-color: transparent;
   color: var(--text-muted);
@@ -221,36 +227,50 @@ body {
 }
 
 /* ==========================================
-   ESTILOS GLOBALES DE FORMULARIOS (SELECTS)
+   ESTILOS GLOBALES DE FORMULARIOS (SELECTS) Y HEADER ACTIONS
    ========================================== */
-select, .glass-input[tagName="select"] {
+
+/* Contenedor de acciones en los headers para evitar solapamiento con el Theme Toggle */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-right: 85px; /* Espacio para el botón flotante de tema */
+}
+
+select, .glass-input, .glass-input[tagName="select"] {
   width: 100%;
   padding: 12px 40px 12px 16px;
   border-radius: 8px;
-  background-color: var(--input-bg);
-  border: 1px solid var(--border-color);
+  background-color: var(--bg-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-highlight);
   color: var(--text-main);
   font-family: inherit;
+  font-weight: 500;
+  font-size: 14px;
   box-sizing: border-box;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L13 1" stroke="%23888888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+  background-image: url('data:image/svg+xml;charset=US-ASCII,<svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1L7 7L13 1" stroke="%230ea5e9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
   background-repeat: no-repeat;
   background-position: right 16px center;
   background-size: 14px 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-select:hover, .glass-input[tagName="select"]:hover {
+select:hover, .glass-input:hover {
   border-color: var(--accent-cyan);
-  background-color: var(--table-row-hover);
+  box-shadow: 0 4px 15px var(--shadow-accent);
 }
 
-select:focus, .glass-input[tagName="select"]:focus {
+select:focus, .glass-input:focus {
   outline: none;
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 0 0 3px var(--shadow-accent);
 }
 
 /* Estilos de las opciones de la lista desplegable */
@@ -268,10 +288,10 @@ select option:checked, select option:hover {
 
 /* Para compatibilidad extendida en Webkit (Chrome/Safari/Edge) para listas desplegables */
 select::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 select::-webkit-scrollbar-thumb {
-  background: var(--border-color);
+  background: var(--accent-cyan);
   border-radius: 4px;
 }
 

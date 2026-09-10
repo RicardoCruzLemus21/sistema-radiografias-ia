@@ -45,9 +45,11 @@ const listarCatalogos = async (req, res) => {
         // Hacemos el SELECT a la Tabla 9 usando el Diccionario
         // Agregamos "false AS seleccionada" para que los checkboxes en Angular nazcan desmarcados
         const query = `
-            SELECT 
-                ${COLUMNAS.ID_PATOLOGIA} AS id, 
+            SELECT
+                ${COLUMNAS.ID_PATOLOGIA} AS id,
                 ${COLUMNAS.NOMBRE_PATOLOGIA} AS nombre,
+                descripcion_breve,
+                descripcion,
                 false AS seleccionada
             FROM ${TABLAS.CATALOGO_PATOLOGIAS}
         `;

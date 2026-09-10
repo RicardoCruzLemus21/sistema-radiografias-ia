@@ -6,7 +6,7 @@
       <p>Repositorio de pacientes simulados y estudios diagnósticos para el entrenamiento estudiantil.</p>
     </div>
     <div class="header-actions">
-      <button class="btn-primary-glow" (click)="abrirModalCrear()">
+      <button class="btn-primary" (click)="abrirModalCrear()">
         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         Registrar Nuevo Caso Clínico
       </button>
@@ -65,7 +65,7 @@
     </div>
   </section>
 
-  <!-- Grid de Casos Clínicos para Catedrático (SIN BOTÓN DE EVALUAR) -->
+  <!-- Grid de Casos Clínicos para Docente (SIN BOTÓN DE EVALUAR) -->
   <section class="cases-grid">
     <div class="case-card glass-panel" *ngFor="let caso of casosFiltrados">
       
@@ -114,11 +114,11 @@
     <div class="empty-cases glass-panel" *ngIf="casosFiltrados.length === 0">
       <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--text-muted)" stroke-width="1.5" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
       <p>No se encontraron casos clínicos con los filtros aplicados.</p>
-      <button class="btn-primary-glow" (click)="abrirModalCrear()">+ Registrar Primer Caso</button>
+      <button class="btn-primary" (click)="abrirModalCrear()">+ Registrar Primer Caso</button>
     </div>
   </section>
 
-  <!-- MODAL: REGISTRAR NUEVO CASO CLÍNICO & PACIENTE (CATEDRÁTICO) -->
+  <!-- MODAL: REGISTRAR NUEVO CASO CLÍNICO & PACIENTE (DOCENTE) -->
   <div class="modal-backdrop" *ngIf="modalCrearAbierto" (click)="cerrarModalCrear()">
     <div class="modal-card modal-lg glass-panel" (click)="$event.stopPropagation()">
       
@@ -152,7 +152,7 @@
             <div class="form-grid-3">
               <div class="form-group">
                 <label>Código del Paciente *</label>
-                <input type="text" [(ngModel)]="nuevoCaso.codigo_paciente" name="codigo_paciente" placeholder="Ej: PAC-004" required>
+                <input type="text" [(ngModel)]="nuevoCaso.codigo_paciente" name="codigo_paciente" placeholder="Generando..." readonly class="glass-input readonly-input" required>
               </div>
 
               <div class="form-group">
@@ -162,7 +162,8 @@
 
               <div class="form-group">
                 <label>Género *</label>
-                <select [(ngModel)]="nuevoCaso.genero" name="genero">
+                <select [(ngModel)]="nuevoCaso.genero" name="genero" class="glass-input" required>
+                  <option value="" disabled selected>-- Seleccionar --</option>
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
                   <option value="Otro">Otro</option>
@@ -211,7 +212,11 @@
               <div class="form-group">
                 <label>Subir Archivo de Imagen (PNG, JPG, DICOM)</label>
                 <input type="file" id="rx-upload" (change)="onArchivoSeleccionado($event)" accept="image/*" class="hidden-file-input">
-                <label for="rx-upload" class="custom-file-upload">
+                <label for="rx-upload" class="custom-file-upload"
+                       [class.drag-active]="isDragging"
+                       (dragover)="onDragOver($event)"
+                       (dragleave)="onDragLeave($event)"
+                       (drop)="onDrop($event)">
                   <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
                   <span>{{ nombreArchivoSeleccionado ? nombreArchivoSeleccionado : 'Seleccionar archivo o arrastrar aquí...' }}</span>
                 </label>
@@ -233,7 +238,7 @@
 
       <div class="modal-footer">
         <button type="button" class="btn-cancel" (click)="cerrarModalCrear()">Cancelar</button>
-        <button type="button" class="btn-primary-glow" (click)="guardarNuevoCaso()" [disabled]="guardandoCaso">
+        <button type="button" class="btn-primary" (click)="guardarNuevoCaso()" [disabled]="guardandoCaso">
           <span *ngIf="!guardandoCaso">Guardar Caso en Base de Datos</span>
           <span *ngIf="guardandoCaso">Guardando en MySQL...</span>
         </button>
@@ -303,6 +308,9 @@
         <button class="btn-primary" (click)="cerrarDetalleCaso()">Cerrar Ficha</button>
       </div>
 
+    </div>
+  </div>
+
   <!-- MODAL: EDITAR CASO -->
   <div class="modal-backdrop" *ngIf="modalEditarAbierto" (click)="cerrarModalEditar()">
     <div class="modal-card modal-lg glass-panel" (click)="$event.stopPropagation()">
@@ -358,7 +366,7 @@
       </div>
       <div class="modal-footer">
         <button class="btn-cancel" (click)="cerrarModalEditar()">Cancelar</button>
-        <button class="btn-primary-glow" (click)="guardarEdicionCaso()" [disabled]="guardandoEdicion">
+        <button class="btn-primary" (click)="guardarEdicionCaso()" [disabled]="guardandoEdicion">
           {{ guardandoEdicion ? 'Guardando...' : 'Guardar Cambios' }}
         </button>
       </div>
