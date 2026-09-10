@@ -85,10 +85,12 @@ const crearCasoCompleto = async (req, res) => {
         }
 
         const id_catedratico = req.usuario?.id_usuario || 1; // Fallback
+        const id_curso = req.body.id_curso || 1; // Fallback
         const datosCompletos = {
             ...req.body,
             ruta_imagen,
-            id_catedratico
+            id_catedratico,
+            id_curso
         };
 
         const resultado = await clinicalService.crearCasoCompleto(datosCompletos);
@@ -174,7 +176,10 @@ const obtenerInfoPatologiaIA = async (req, res) => {
         const infoJSON = await clinicalService.generarInfoPatologia(patologia);
         res.status(200).json({ status: 'success', data: infoJSON });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
+        // "No encontrada" / "aún no generada" son estados esperados, no fallos del servidor:
+        // usamos 404 para que el interceptor global no dispare la alerta genérica de "Error de Servidor".
+        const esContenidoNoDisponible = error.message.includes('no ha sido generado') || error.message.includes('no encontrada en el catálogo');
+        res.status(esContenidoNoDisponible ? 404 : 500).json({ status: 'error', message: error.message });
     }
 };
 

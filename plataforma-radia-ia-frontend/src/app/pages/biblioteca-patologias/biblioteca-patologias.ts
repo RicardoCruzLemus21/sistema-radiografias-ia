@@ -64,10 +64,13 @@ export class BibliotecaPatologias implements OnInit {
       error: (err) => {
         console.error('Error obteniendo info de IA:', err);
         this.cargandoIA = false;
+        const noDisponible = err.status === 404;
         this.infoIA = {
-          definicion: 'Error al conectar con la Inteligencia Artificial.',
+          definicion: noDisponible
+            ? 'El contenido educativo de esta patología todavía no está disponible.'
+            : 'No se pudo cargar la información de esta patología.',
           signos_radiologicos: [],
-          diagnostico_diferencial: 'Por favor intenta nuevamente en unos momentos.'
+          diagnostico_diferencial: 'Por favor intenta nuevamente más tarde.'
         };
         this.cdr.markForCheck();
       }

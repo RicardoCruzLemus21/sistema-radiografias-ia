@@ -109,8 +109,8 @@
     <div class="accordion-container">
       <details class="glass-panel">
         <summary class="accordion-header">
-          <strong>Catedráticos / Docentes</strong>
-          <span class="badge-count">{{ catedraticosUsuarios.length }} catedráticos</span>
+          <strong>Docentes</strong>
+          <span class="badge-count">{{ catedraticosUsuarios.length }} docentes</span>
         </summary>
         <div class="accordion-body">
           <table class="users-table">
@@ -137,7 +137,7 @@
                 </td>
               </tr>
               <tr *ngIf="catedraticosUsuarios.length === 0">
-                <td colspan="5" class="text-center">No hay catedráticos encontrados.</td>
+                <td colspan="5" class="text-center">No hay docentes encontrados.</td>
               </tr>
             </tbody>
           </table>
@@ -152,7 +152,7 @@
       <details class="glass-panel">
         <summary class="accordion-header">
           <div style="display: flex; flex-direction: column; gap: 4px;">
-            <strong>Catedrático: {{ cat }}</strong>
+            <strong>Docente: {{ cat }}</strong>
             <span style="font-size: 13px; color: var(--text-muted); font-weight: normal;">
               Carnet: {{ infoCatedraticos[cat]?.carnet || 'N/A' }} | Email: {{ infoCatedraticos[cat]?.email || 'N/A' }} | Curso: {{ infoCatedraticos[cat]?.curso || 'N/A' }}
             </span>
@@ -195,7 +195,7 @@
     <div class="accordion-container" *ngIf="estudiantesSinAsignar.length > 0">
       <details class="glass-panel">
         <summary class="accordion-header">
-          <strong>Estudiantes Sin Asignar a Catedrático</strong>
+          <strong>Estudiantes Sin Asignar a Docente</strong>
           <span class="badge-count">{{ estudiantesSinAsignar.length }} estudiantes</span>
         </summary>
         <div class="accordion-body">
@@ -340,9 +340,9 @@
         <!-- ASIGNACIÓN CONDICIONAL DE ESTUDIANTE -->
         <ng-container *ngIf="nuevoUsuario.id_rol == idRolEstudiante">
           <div class="form-group">
-            <label>Asignar a Catedrático</label>
+            <label>Asignar a Docente</label>
             <select [(ngModel)]="nuevoUsuario.id_catedratico" (change)="onCatedraticoChange()" class="glass-input">
-              <option value="">-- Selecciona un Catedrático --</option>
+              <option value="">-- Selecciona un Docente --</option>
               <option *ngFor="let cat of catedraticosUsuarios" [value]="cat.id">
                 {{ cat.nombre }} (Carnet: {{ cat.carnet || 'N/A' }})
               </option>
@@ -358,7 +358,7 @@
               </option>
             </select>
             <small *ngIf="cursosDisponibles.length === 0" style="color: #ffaa00; margin-top: 5px; display: block;">
-              Este catedrático aún no tiene cursos registrados.
+              Este docente aún no tiene cursos registrados.
             </small>
           </div>
         </ng-container>

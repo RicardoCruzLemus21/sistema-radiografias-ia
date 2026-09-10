@@ -1,6 +1,5 @@
 const pool = require('../config/database');
 const dict = require('../config/dbDictionary');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // 1. Crear el paciente simulado
 const crearPaciente = async (datosPaciente) => {
@@ -119,57 +118,35 @@ const eliminarCaso = async (id_caso) => {
     }
 };
 
-// 10. Generar Info de Patología con Gemini
+// 10. Obtener Info de Patología: elige al azar una de las variantes pre-generadas por IA.
+// La generación con Gemini se hace de forma independiente (scripts_temporales/generar_variantes_patologias.js),
+// nunca en esta ruta, para que el estudiante nunca dependa de la disponibilidad ni la cuota de la IA.
 const generarInfoPatologia = async (patologia) => {
-    try {
-        if (!process.env.GEMINI_API_KEY) throw new Error("API Key de Gemini no configurada");
+    const [catalogoRows] = await pool.query(
+        `SELECT ficha_ia_json FROM ${dict.TABLAS.CATALOGO_PATOLOGIAS} WHERE ${dict.COLUMNAS.NOMBRE_PATOLOGIA} = ?`,
+        [patologia]
+    );
 
-        const apiKey = process.env.GEMINI_API_KEY.trim();
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-flash-latest",
-            generationConfig: {
-                responseMimeType: "application/json"
-            }
-        });
-
-        const prompt = "Actúa como un médico radiólogo experto y profesor universitario. Explica la patología radiológica: " + patologia + ".\n" +
-            "Devuelve tu respuesta estrictamente en formato JSON válido, en idioma español, sin bloques de código markdown, con la siguiente estructura exacta:\n" +
-            "{\n" +
-            "  \"definicion\": \"Descripción médica clara y profesional de la patología.\",\n" +
-            "  \"fisiopatologia\": \"Breve explicación de cómo y por qué ocurre esta patología a nivel fisiológico o anatómico.\",\n" +
-            "  \"signos_radiologicos\": [\"Signo radiológico 1\", \"Signo radiológico 2\", \"Signo radiológico 3\"],\n" +
-            "  \"presentacion_clinica\": \"Breve lista de los síntomas más comunes con los que se presenta el paciente.\",\n" +
-            "  \"epidemiologia\": \"Información sobre qué tipo de pacientes suelen padecerla o factores de riesgo principales.\",\n" +
-            "  \"diagnostico_diferencial\": \"Otras patologías que se ven similares en Rayos X y cómo distinguirlas de esta.\",\n" +
-            "  \"dato_clave\": \"Una frase corta, mnemónico o perla clínica memorable para que un estudiante no olvide esta patología.\"\n" +
-            "}";
-
-        let retries = 3;
-        while (retries > 0) {
-            try {
-                const result = await model.generateContent(prompt);
-                const responseText = result.response.text();
-                
-                // Limpiar backticks de markdown si Gemini los incluye por error
-                const cleanText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-                return JSON.parse(cleanText);
-            } catch (apiError) {
-                if (apiError.status === 503 || apiError.status === 429 || apiError.message.includes('503') || apiError.message.includes('429')) {
-                    retries--;
-                    console.log(`⚠️ Servidores de Gemini saturados (HTTP ${apiError.status || 503}). Reintentando en 3 segundos... (${retries} intentos restantes)`);
-                    if (retries === 0) throw apiError;
-                    await new Promise(res => setTimeout(res, 3000));
-                } else {
-                    throw apiError;
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Error generando info con Gemini:', error);
-        throw new Error('No se pudo generar la información de la patología con IA.');
+    if (catalogoRows.length === 0) {
+        throw new Error('Patología no encontrada en el catálogo.');
     }
+
+    let variantes = [];
+    if (catalogoRows[0].ficha_ia_json) {
+        try {
+            const parseado = JSON.parse(catalogoRows[0].ficha_ia_json);
+            variantes = Array.isArray(parseado) ? parseado : [parseado];
+        } catch (e) {
+            variantes = [];
+        }
+    }
+
+    if (variantes.length === 0) {
+        throw new Error('El contenido educativo de esta patología todavía no ha sido generado. Intenta más tarde.');
+    }
+
+    const indiceAleatorio = Math.floor(Math.random() * variantes.length);
+    return variantes[indiceAleatorio];
 };
 
 

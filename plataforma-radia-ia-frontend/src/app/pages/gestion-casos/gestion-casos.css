@@ -484,6 +484,13 @@
   border-color: var(--accent-cyan);
 }
 
+.custom-file-upload.drag-active {
+  background: rgba(0, 229, 255, 0.25);
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+  transform: scale(1.02);
+}
+
 .custom-file-upload span {
   white-space: nowrap;
   overflow: hidden;

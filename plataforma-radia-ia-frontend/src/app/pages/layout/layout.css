@@ -163,11 +163,13 @@
 .sidebar-footer { margin-top: auto; }
 .logout:hover { background: rgba(255, 77, 77, 0.1); color: var(--error-red); }
 
-/* Botón Flotante para cambiar tema */
+/* Botón Flotante para cambiar tema.
+   Anclado a la esquina inferior derecha (zona libre en todos los módulos) y con
+   z-index por debajo de los modales (1000) para que nunca se dibuje encima de ellos. */
 .floating-theme-toggle {
-  position: absolute;
-  top: 45px;
-  right: 40px;
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
   width: 44px;
   height: 44px;
   background: var(--bg-panel);
@@ -177,7 +179,7 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  z-index: 1000;
+  z-index: 40;
   color: var(--accent-cyan);
   box-shadow: var(--panel-shadow);
   transition: all var(--transition-normal);

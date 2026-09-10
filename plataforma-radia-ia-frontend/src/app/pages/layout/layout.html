@@ -25,7 +25,7 @@
         <!-- Inyecta los datos reales -->
         <span class="user-name">{{ nombreUsuarioActual }}</span>
         <span class="user-role" [ngClass]="{'role-admin': isAdmin, 'role-catedratico': isCatedratico, 'role-estudiante': isEstudiante}">
-          {{ rolUsuarioActual | uppercase }}
+          {{ isAdmin ? 'ADMINISTRADOR' : (isCatedratico ? 'DOCENTE' : 'ESTUDIANTE') }}
         </span>
       </div>
     </div>
@@ -53,7 +53,7 @@
         </a>
       </ng-container>
 
-      <!-- MENÚ PARA CATEDRÁTICOS -->
+      <!-- MENÚ PARA DOCENTES -->
       <ng-container *ngIf="isCatedratico">
         <a routerLink="/sistema/catedratico" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Rendimiento Alumnos' : null">
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
