@@ -18,6 +18,7 @@ import { environment } from '../../../environments/environment';
 export class RetroalimentacionIa implements OnInit {
   
   idCasoActual: string | null = '';
+  idRadiografiaActual: number | null = null;
   idEvaluacion: string | null = '';
   patologiasEstudiante: string = '';
   cargandoIA: boolean = true;
@@ -59,6 +60,8 @@ export class RetroalimentacionIa implements OnInit {
             if (casoRes.data && casoRes.data.ruta_imagen) {
               this.imagenOriginal = casoRes.data.ruta_imagen.startsWith('http') ? casoRes.data.ruta_imagen : `${environment.apiUrl}${casoRes.data.ruta_imagen}`;
             }
+            // El motor de IA necesita el ID de la radiografía, no el ID del caso (son secuencias distintas).
+            this.idRadiografiaActual = casoRes.data?.id_radiografia || null;
             this.inicializarSimulacion();
           });
         } else {
@@ -83,7 +86,7 @@ export class RetroalimentacionIa implements OnInit {
   simularProcesamientoIA() {
     const payloadIA = {
       id_evaluacion: this.idEvaluacion,
-      id_radiografia: this.idCasoActual
+      id_radiografia: this.idRadiografiaActual
     };
 
     this.diagnosticoService.procesarInferencia(payloadIA).subscribe({

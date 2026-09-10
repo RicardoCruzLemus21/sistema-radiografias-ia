@@ -40,18 +40,15 @@ export class LayoutComponent implements OnInit {
     this.isEstudiante = this.authService.isEstudiante();
 
     if (this.isEstudiante) {
+      // Se suscribe al contador compartido: se actualiza solo cuando se marca una
+      // notificación como leída desde cualquier pantalla, sin recargar la página.
+      this.extraService.noLeidas$.subscribe(count => this.notificacionesNoLeidas = count);
       this.cargarNotificaciones();
     }
   }
 
   cargarNotificaciones(): void {
     this.extraService.getNotificaciones().subscribe({
-      next: (res: any) => {
-        if (res && res.data) {
-          const noLeidas = res.data.filter((n: any) => !n.leida);
-          this.notificacionesNoLeidas = noLeidas.length;
-        }
-      },
       error: (err) => console.error("Error al cargar notificaciones globales:", err)
     });
   }

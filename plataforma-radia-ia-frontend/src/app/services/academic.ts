@@ -98,4 +98,18 @@ export class AcademicService {
       headers: this.authService.getAuthHeaders()
     });
   }
+
+  // Edita los datos básicos de un curso (nombre, semestre, año)
+  editarCurso(id_curso: number | string, datos: any): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/curso/${id_curso}`, datos, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Elimina un curso (y en cascada sus casos, evaluaciones y matrículas asociadas)
+  eliminarCurso(id_curso: number | string): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/curso/${id_curso}`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
 }

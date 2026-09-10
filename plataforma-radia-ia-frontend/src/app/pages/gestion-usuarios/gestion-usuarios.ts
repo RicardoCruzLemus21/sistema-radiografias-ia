@@ -227,6 +227,7 @@ export class GestionUsuariosComponent implements OnInit {
       },
       error: (err) => {
         this.eliminandoUsuario = false;
+        this.cerrarModalEliminar();
         this.alertService.error("Error al eliminar", err.error?.message || 'Error al eliminar usuario. Puede que tenga evaluaciones o cursos asociados.');
       }
     });

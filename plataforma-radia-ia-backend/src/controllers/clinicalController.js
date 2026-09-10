@@ -49,22 +49,27 @@ const obtenerWorklist = async (req, res) => {
     try {
         const id_estudiante = req.usuario.id_usuario;
         
-        // Hacemos un JOIN dinámico utilizando estrictamente el Diccionario de Datos
+        // Hacemos un JOIN dinámico utilizando estrictamente el Diccionario de Datos.
+        // El estado se calcula comprobando si ya existe una evaluación de este estudiante
+        // para el caso (antes estaba fijo en 'Pendiente' y nunca cambiaba).
         const query = `
-            SELECT 
-                c.${COLUMNAS.ID_CASO} AS id, 
-                p.${COLUMNAS.CODIGO_PACIENTE} AS paciente, 
-                p.${COLUMNAS.EDAD}, 
-                c.${COLUMNAS.TITULO_CASO} AS estudio, 
+            SELECT
+                c.${COLUMNAS.ID_CASO} AS id,
+                p.${COLUMNAS.CODIGO_PACIENTE} AS paciente,
+                p.${COLUMNAS.EDAD},
+                c.${COLUMNAS.TITULO_CASO} AS estudio,
                 DATE_FORMAT(CURRENT_DATE, '%Y-%m-%d') AS fecha,
-                'Pendiente' AS estado
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM ${TABLAS.EVALUACIONES_ESTUDIANTES} ee
+                    WHERE ee.${COLUMNAS.ID_CASO} = c.${COLUMNAS.ID_CASO} AND ee.${COLUMNAS.ID_ESTUDIANTE} = ?
+                ) THEN 'Completado' ELSE 'Pendiente' END AS estado
             FROM ${TABLAS.CASOS} c
             JOIN ${TABLAS.PACIENTES} p ON c.${COLUMNAS.ID_PACIENTE} = p.${COLUMNAS.ID_PACIENTE}
             INNER JOIN ${TABLAS.ASIGNACIONES} ae ON c.${COLUMNAS.ID_CURSO} = ae.${COLUMNAS.ID_CURSO}
             WHERE ae.${COLUMNAS.ID_ESTUDIANTE} = ?
         `;
-        
-        const [rows] = await db.query(query, [id_estudiante]);
+
+        const [rows] = await db.query(query, [id_estudiante, id_estudiante]);
         res.json(rows);
     } catch (error) {
         console.error('Error obteniendo la Worklist:', error);

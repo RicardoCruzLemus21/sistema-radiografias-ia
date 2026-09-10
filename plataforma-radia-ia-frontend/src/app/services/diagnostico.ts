@@ -10,7 +10,7 @@ import { environment } from '../../environments/environment';
 export class DiagnosticoService {
   private apiUrl = `${environment.apiUrl}/api/diagnostico`;
   private iaUrl = `${environment.apiUrl}/api/ia`;
-  private metricsUrl = `${environment.apiUrl}/api/metrics`;
+  private metricsUrl = `${environment.apiUrl}/api/metricas`;
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -53,5 +53,20 @@ export class DiagnosticoService {
   guardarLikert(datos: any): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.post<any>(`${this.metricsUrl}/likert`, datos, { headers });
+  }
+
+  // Obtener el catálogo de criterios de la rúbrica
+  getCatalogosMetricas(): Observable<any> {
+    return this.http.get<any>(`${this.metricsUrl}/catalogos`, { headers: this.authService.getAuthHeaders() });
+  }
+
+  // Obtener las calificaciones de rúbrica ya guardadas para una evaluación (o los criterios vacíos si aún no se calificó)
+  getCalificacionesRubrica(id_evaluacion: number): Observable<any> {
+    return this.http.get<any>(`${this.metricsUrl}/rubrica/evaluacion/${id_evaluacion}`, { headers: this.authService.getAuthHeaders() });
+  }
+
+  // Guardar las calificaciones de la rúbrica de una evaluación
+  guardarRubrica(datos: any): Observable<any> {
+    return this.http.post<any>(`${this.metricsUrl}/rubrica`, datos, { headers: this.authService.getAuthHeaders() });
   }
 }
