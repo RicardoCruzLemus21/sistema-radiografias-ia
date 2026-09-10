@@ -12,6 +12,18 @@
     </div>
   </header>
 
+  <!-- PANEL: MI CURSO -->
+  <section class="controls-bar glass-panel" *ngIf="cursoActual" style="justify-content: space-between; align-items: center;">
+    <div>
+      <strong>{{ cursoActual.nombre_curso }}</strong>
+      <span class="text-muted" style="margin-left: 10px;">{{ cursoActual.semestre }} &bull; {{ cursoActual.anio }}</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="btn-cancel" (click)="abrirModalEditarCurso()">Editar Curso</button>
+      <button class="btn-cancel" style="background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.3);" (click)="abrirModalEliminarCurso()">Eliminar Curso</button>
+    </div>
+  </section>
+
   <section class="controls-bar glass-panel">
     <div class="search-box">
       <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -28,6 +40,7 @@
             <th>Estudiante</th>
             <th>Correo Electrónico</th>
             <th>Estado en Curso</th>
+            <th class="text-center">Acciones</th>
         </thead>
         <tbody>
           <tr *ngFor="let alumno of alumnosFiltrados">
@@ -43,6 +56,10 @@
               <span class="badge" [ngClass]="{'badge-good': alumno.estado === 'Sobresaliente', 'badge-avg': alumno.estado === 'Promedio', 'badge-bad': alumno.estado === 'En Riesgo', 'badge-none': alumno.estado === 'Sin Evaluar'}">
                 {{ alumno.estado | uppercase }}
               </span>
+            </td>
+            <td class="text-center">
+              <button class="btn-cancel" style="padding: 6px 12px; font-size: 12px;" (click)="abrirModalEditarAlumno(alumno)">Editar</button>
+              <button class="btn-cancel" style="padding: 6px 12px; font-size: 12px; background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); margin-left: 6px;" (click)="abrirModalEliminarAlumno(alumno)">Eliminar</button>
             </td>
           </tr>
           <tr *ngIf="alumnosFiltrados.length === 0">
@@ -84,6 +101,104 @@
         <button class="btn-cancel" (click)="cerrarModalRegistro()">Cancelar</button>
         <button class="btn-primary" (click)="guardarNuevoAlumno()" [disabled]="guardandoAlumno">
           {{ guardandoAlumno ? 'Registrando...' : 'Matricular Estudiante' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR CURSO -->
+  <div class="modal-backdrop" *ngIf="modalEditarCursoAbierto" (click)="cerrarModalEditarCurso()">
+    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Curso</h3>
+        <button class="btn-close" (click)="cerrarModalEditarCurso()">×</button>
+      </div>
+      <div class="modal-body form-body">
+        <div class="form-group">
+          <label>Nombre del Curso</label>
+          <input type="text" [(ngModel)]="cursoEditando.nombre_curso" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Semestre</label>
+          <input type="text" [(ngModel)]="cursoEditando.semestre" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Año</label>
+          <input type="number" [(ngModel)]="cursoEditando.anio" class="glass-input">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalEditarCurso()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarEdicionCurso()" [disabled]="guardandoCurso">
+          {{ guardandoCurso ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ELIMINAR CURSO -->
+  <div class="modal-backdrop" *ngIf="modalEliminarCursoAbierto" (click)="cerrarModalEliminarCurso()">
+    <div class="modal-card glass-panel" style="max-width: 420px;" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 style="color: #ff4444;">Eliminar Curso</h3>
+        <button class="btn-close" (click)="cerrarModalEliminarCurso()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro que deseas eliminar <strong>{{ cursoActual?.nombre_curso }}</strong>?</p>
+        <p class="text-muted" style="margin-top: 10px;">
+          Esta acción es irreversible: se eliminarán también <strong>todos los casos clínicos, radiografías y evaluaciones de estudiantes</strong> asociados a este curso, y todos tus alumnos quedarán desmatriculados.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalEliminarCurso()">Cancelar</button>
+        <button class="btn-primary" style="background: #ff4444;" (click)="confirmarEliminarCurso()" [disabled]="eliminandoCurso">
+          {{ eliminandoCurso ? 'Eliminando...' : 'Sí, eliminar curso' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR ALUMNO -->
+  <div class="modal-backdrop" *ngIf="modalEditarAlumnoAbierto" (click)="cerrarModalEditarAlumno()">
+    <div class="modal-card registro-modal glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Editar Estudiante</h3>
+        <button class="btn-close" (click)="cerrarModalEditarAlumno()">×</button>
+      </div>
+      <div class="modal-body form-body">
+        <div class="form-group">
+          <label>Nombre Completo</label>
+          <input type="text" [(ngModel)]="alumnoEditando.nombre_completo" class="glass-input">
+        </div>
+        <div class="form-group">
+          <label>Correo Electrónico</label>
+          <input type="email" [(ngModel)]="alumnoEditando.correo_electronico" class="glass-input">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalEditarAlumno()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarEdicionAlumno()" [disabled]="guardandoEdicionAlumno">
+          {{ guardandoEdicionAlumno ? 'Guardando...' : 'Guardar Cambios' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ELIMINAR ALUMNO -->
+  <div class="modal-backdrop" *ngIf="modalEliminarAlumnoAbierto" (click)="cerrarModalEliminarAlumno()">
+    <div class="modal-card glass-panel" style="max-width: 420px;" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 style="color: #ff4444;">Eliminar Estudiante</h3>
+        <button class="btn-close" (click)="cerrarModalEliminarAlumno()">×</button>
+      </div>
+      <div class="modal-body">
+        <p>¿Deseas eliminar a <strong>{{ alumnoAEliminar?.nombre }}</strong> de tus secciones?</p>
+        <p class="text-muted" style="margin-top: 10px;">El estudiante se desvinculará de tus cursos. Sus evaluaciones ya registradas no se borran.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalEliminarAlumno()">Cancelar</button>
+        <button class="btn-primary" style="background: #ff4444;" (click)="confirmarEliminarAlumno()" [disabled]="eliminandoAlumno">
+          {{ eliminandoAlumno ? 'Eliminando...' : 'Sí, eliminar' }}
         </button>
       </div>
     </div>

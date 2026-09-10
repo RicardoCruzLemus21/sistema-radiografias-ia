@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ClinicalService } from '../../services/clinical';
 import { AlertService } from '../../services/alert.service';
 import { AcademicService } from '../../services/academic';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-gestion-casos',
@@ -27,14 +28,14 @@ export class GestionCasosCatedratico implements OnInit {
   mensajeError: string = '';
 
   // Formulario nuevo caso
+  // Nota: titulo_caso, nivel_dificultad y motivo_consulta ya no se piden en este formulario
+  // (para que el estudiante no vea pistas del diagnóstico en su Worklist antes de evaluar el caso).
+  // Se generan con valores neutrales en guardarNuevoCaso().
   nuevoCaso = {
     codigo_paciente: '',
     edad: null as number | null,
     genero: '',
     antecedentes_medicos: '',
-    titulo_caso: '',
-    nivel_dificultad: 'Intermedio',
-    motivo_consulta: '',
     tipo_proyeccion: 'Tórax PA (Posteroanterior)',
     id_curso: null as number | null
   };
@@ -65,10 +66,8 @@ export class GestionCasosCatedratico implements OnInit {
     nivel_dificultad: ''
   };
 
-  // Estado para Eliminar Caso
-  modalEliminarAbierto: boolean = false;
+  // Estado para Eliminar Caso (la confirmación usa SweetAlert, no un modal propio)
   eliminandoCaso: boolean = false;
-  casoAEliminar: any = null;
 
   constructor(
     private clinicalService: ClinicalService,
@@ -124,6 +123,15 @@ export class GestionCasosCatedratico implements OnInit {
     this.casos = [];
   }
 
+  // El backend guarda rutas relativas (ej. /uploads/radiografias/x.jpg) que solo
+  // existen en el origen del backend (environment.apiUrl), no en el del frontend (ng serve).
+  // Sin este prefijo, el navegador intenta cargar la imagen desde el propio Angular y falla.
+  getImagenUrl(ruta: string | null | undefined): string {
+    const fallback = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80';
+    if (!ruta) return fallback;
+    return ruta.startsWith('http') ? ruta : `${environment.apiUrl}${ruta}`;
+  }
+
   aplicarFiltros(): void {
     let res = [...this.casos];
 
@@ -156,9 +164,6 @@ export class GestionCasosCatedratico implements OnInit {
       edad: null,
       genero: '',
       antecedentes_medicos: '',
-      titulo_caso: '',
-      nivel_dificultad: 'Intermedio',
-      motivo_consulta: '',
       tipo_proyeccion: 'Tórax PA (Posteroanterior)',
       id_curso: this.misCursos.length > 0 ? this.misCursos[0].id_curso : null
     };
@@ -236,8 +241,8 @@ export class GestionCasosCatedratico implements OnInit {
   }
 
   guardarNuevoCaso(): void {
-    if (!this.nuevoCaso.codigo_paciente || !this.nuevoCaso.edad || !this.nuevoCaso.genero || !this.nuevoCaso.titulo_caso || !this.nuevoCaso.motivo_consulta) {
-      this.mensajeError = 'Por favor complete todos los campos obligatorios del paciente y del caso clínico.';
+    if (!this.nuevoCaso.codigo_paciente || !this.nuevoCaso.edad || !this.nuevoCaso.genero) {
+      this.mensajeError = 'Por favor complete todos los campos obligatorios del paciente.';
       return;
     }
 
@@ -250,14 +255,17 @@ export class GestionCasosCatedratico implements OnInit {
     this.mensajeError = '';
     this.mensajeExito = '';
 
+    // El título y el motivo de consulta ya no se solicitan en el formulario (para no revelar
+    // pistas del diagnóstico al estudiante en su Worklist antes de evaluar el caso). Se generan
+    // con valores neutrales; nivel de dificultad queda fijo en "Intermedio" por defecto.
     const formData = new FormData();
     formData.append('codigo_paciente', this.nuevoCaso.codigo_paciente);
     formData.append('edad', this.nuevoCaso.edad?.toString() || '0');
     formData.append('genero', this.nuevoCaso.genero);
     formData.append('antecedentes_medicos', this.nuevoCaso.antecedentes_medicos || 'Sin antecedentes registrados');
-    formData.append('titulo_caso', this.nuevoCaso.titulo_caso);
-    formData.append('nivel_dificultad', this.nuevoCaso.nivel_dificultad);
-    formData.append('motivo_consulta', this.nuevoCaso.motivo_consulta);
+    formData.append('titulo_caso', `Caso Clínico ${this.nuevoCaso.codigo_paciente}`);
+    formData.append('nivel_dificultad', 'Intermedio');
+    formData.append('motivo_consulta', 'Sin motivo de consulta registrado.');
     formData.append('tipo_proyeccion', this.nuevoCaso.tipo_proyeccion);
     formData.append('id_curso', this.nuevoCaso.id_curso.toString());
 
@@ -339,23 +347,24 @@ export class GestionCasosCatedratico implements OnInit {
   }
 
   // --- ELIMINAR CASO ---
-  abrirModalEliminar(caso: any): void {
-    this.casoAEliminar = caso;
+  // Usa únicamente SweetAlert (confirmDanger) para la confirmación, en vez de un modal HTML
+  // propio + SweetAlert para el resultado: así solo se ve un tipo de ventana en todo el flujo.
+  async abrirModalEliminar(caso: any): Promise<void> {
     this.cerrarDetalleCaso();
-    this.modalEliminarAbierto = true;
-  }
 
-  cerrarModalEliminar(): void {
-    this.modalEliminarAbierto = false;
-    this.casoAEliminar = null;
-  }
+    const confirmado = await this.alertService.confirmDanger(
+      'Confirmar Eliminación',
+      `¿Estás seguro de que deseas eliminar permanentemente el caso clínico "${caso.titulo}"? Esta acción no se puede deshacer y fallará si ya hay evaluaciones de estudiantes en este caso.`,
+      'Sí, Eliminar'
+    );
 
-  confirmarEliminarCaso(): void {
+    if (!confirmado) return;
+
     this.eliminandoCaso = true;
-    this.clinicalService.eliminarCaso(this.casoAEliminar.id).subscribe({
+    this.clinicalService.eliminarCaso(caso.id).subscribe({
       next: () => {
         this.eliminandoCaso = false;
-        this.cerrarModalEliminar();
+        this.alertService.success('Caso eliminado', 'El caso clínico se eliminó correctamente.');
         this.cargarCasos(); // Recargar la lista
       },
       error: (err) => {

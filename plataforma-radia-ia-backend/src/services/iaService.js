@@ -119,12 +119,14 @@ const procesarResultadoYConcordancia = async (datosPeticion) => {
         }
 
         // 5. Guardar el veredicto de la IA y la Concordancia en la BD mediante SP Transaccional
+        // El orden debe coincidir exactamente con la firma del SP:
+        // (p_id_evaluacion, p_id_radiografia, p_id_patologia_detectada, p_probabilidad_porcentaje, p_ruta_mapa_calor, p_porcentaje_concordancia, p_nivel_precision)
         const [resIAArray] = await pool.query('CALL sp_guardar_resultado_ia_y_concordancia(?, ?, ?, ?, ?, ?, ?)', [
-            id_radiografia, 
-            claseDetectada.id_patologia, 
-            probabilidad_porcentaje, 
-            '/uploads/mapas_calor/default.png',
             id_evaluacion,
+            id_radiografia,
+            claseDetectada.id_patologia,
+            probabilidad_porcentaje,
+            '/uploads/mapas_calor/default.png',
             porcentaje_concordancia,
             nivel_precision
         ]);

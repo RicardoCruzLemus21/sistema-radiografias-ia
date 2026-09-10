@@ -70,7 +70,7 @@
     <div class="case-card glass-panel" *ngFor="let caso of casosFiltrados">
       
       <div class="case-card-img-wrapper" (click)="abrirDetalleCaso(caso)">
-        <img [src]="caso.ruta_imagen || 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80'" alt="Radiografía del caso" class="case-img">
+        <img [src]="getImagenUrl(caso.ruta_imagen)" alt="Radiografía del caso" class="case-img">
         <div class="img-badge-overlay">{{ caso.proyeccion || 'Tórax PA' }}</div>
         <div class="hover-overlay">
           <span><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Ver Radiografía</span>
@@ -177,34 +177,9 @@
             </div>
           </div>
 
-          <!-- SECCIÓN 2: DETALLES DEL CASO CLÍNICO -->
+          <!-- SECCIÓN 2: RADIOGRAFÍA -->
           <div class="form-section">
-            <h4 class="form-section-title">2. CASO CLÍNICO & ESTUDIO</h4>
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label>Título del Caso / Diagnóstico Referencial *</label>
-                <input type="text" [(ngModel)]="nuevoCaso.titulo_caso" name="titulo_caso" placeholder="Ej: Neumonía Lobar Inferior Derecha" required>
-              </div>
-
-              <div class="form-group">
-                <label>Nivel de Dificultad *</label>
-                <select [(ngModel)]="nuevoCaso.nivel_dificultad" name="nivel_dificultad">
-                  <option value="Básico">Básico</option>
-                  <option value="Intermedio">Intermedio</option>
-                  <option value="Avanzado">Avanzado</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Motivo de Consulta y Cuadro Clínico *</label>
-              <textarea [(ngModel)]="nuevoCaso.motivo_consulta" name="motivo_consulta" placeholder="Ej: Paciente acude a urgencias por presentar fiebre cuantificada en 39°C, tos con expectoración mucopurulenta y dolor en punta de costado derecho..." rows="3" required></textarea>
-            </div>
-          </div>
-
-          <!-- SECCIÓN 3: RADIOGRAFÍA -->
-          <div class="form-section">
-            <h4 class="form-section-title">3. MATRIZ RADIOGRÁFICA</h4>
+            <h4 class="form-section-title">2. MATRIZ RADIOGRÁFICA</h4>
             
             <div class="form-grid-1">
               <!-- El motor de IA se encargará de determinar la proyección óptima en base al diagnóstico (Tórax por defecto) -->
@@ -267,7 +242,7 @@
       <div class="modal-body modal-split">
         <div class="split-left">
           <div class="rx-viewer-box">
-            <img [src]="casoSeleccionado?.ruta_imagen || 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80'" alt="Radiografía del caso" class="rx-full-img">
+            <img [src]="getImagenUrl(casoSeleccionado?.ruta_imagen)" alt="Radiografía del caso" class="rx-full-img">
             <span class="proyeccion-tag">{{ casoSeleccionado?.proyeccion }}</span>
           </div>
         </div>
@@ -373,22 +348,7 @@
     </div>
   </div>
 
-  <!-- MODAL: ELIMINAR CASO -->
-  <div class="modal-backdrop" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
-    <div class="modal-card modal-sm glass-panel" style="max-width: 400px;" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Confirmar Eliminación</h3>
-      </div>
-      <div class="modal-body">
-        <p>¿Estás seguro de que deseas eliminar permanentemente el caso clínico <strong>{{ casoAEliminar?.titulo }}</strong>? Esta acción no se puede deshacer y fallará si ya hay evaluaciones de estudiantes en este caso.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="cerrarModalEliminar()">Cancelar</button>
-        <button class="btn-primary" (click)="confirmarEliminarCaso()" style="background: #ff4444;" [disabled]="eliminandoCaso">
-          {{ eliminandoCaso ? 'Eliminando...' : 'Sí, Eliminar' }}
-        </button>
-      </div>
-    </div>
-  </div>
+  <!-- La confirmación de eliminar caso ahora usa SweetAlert (alertService.confirmDanger)
+       en vez de un modal HTML propio, para que todo el flujo use un único tipo de ventana. -->
 
 </div>

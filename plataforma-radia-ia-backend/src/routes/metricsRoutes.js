@@ -15,4 +15,7 @@ router.get('/catalogos', verificarToken, metricsController.listarCatalogosMetric
 // Endpoint para obtener promedios de Likert (Dashboard Catedrático)
 router.get('/likert/resultados', verificarToken, metricsController.obtenerResultadosLikert);
 
+// Endpoint para obtener las calificaciones de rúbrica ya guardadas de una evaluación
+router.get('/rubrica/evaluacion/:id_evaluacion', verificarToken, metricsController.obtenerCalificacionesEvaluacion);
+
 module.exports = router;

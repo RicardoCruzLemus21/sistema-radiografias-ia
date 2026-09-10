@@ -40,9 +40,21 @@ const obtenerResultadosLikert = async (req, res) => {
     }
 };
 
+const obtenerCalificacionesEvaluacion = async (req, res) => {
+    try {
+        const { id_evaluacion } = req.params;
+        const calificaciones = await metricsService.obtenerCalificacionesEvaluacion(id_evaluacion);
+        res.status(200).json({ status: 'success', data: calificaciones });
+    } catch (error) {
+        console.error("Error al obtener calificaciones de rúbrica:", error);
+        res.status(500).json({ status: 'error', message: "Error interno al cargar las calificaciones." });
+    }
+};
+
 module.exports = {
     registrarRubrica,
     registrarLikert,
     listarCatalogosMetricas,
-    obtenerResultadosLikert
+    obtenerResultadosLikert,
+    obtenerCalificacionesEvaluacion
 };

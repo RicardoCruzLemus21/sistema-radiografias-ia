@@ -31,6 +31,7 @@
         <button class="btn-primary" (click)="abrirModalFeedback(ev)">
           {{ ev.feedback_profesor ? 'Editar Feedback' : 'Añadir Feedback' }}
         </button>
+        <button class="btn-primary" (click)="abrirModalRubrica(ev)">Calificar Rúbrica</button>
         <button class="btn-danger" (click)="abrirModalEliminar(ev.id)">Invalidar Intento</button>
       </div>
     </div>
@@ -79,6 +80,41 @@
         <button class="btn-cancel" (click)="cerrarModalEliminar()">Cancelar</button>
         <button class="btn-danger" (click)="confirmarEliminar()" [disabled]="eliminando">
           {{ eliminando ? 'Invalidando...' : 'Sí, invalidar intento' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CALIFICAR RÚBRICA -->
+  <div class="modal-backdrop" *ngIf="modalRubricaAbierto" (click)="cerrarModalRubrica()">
+    <div class="modal-card glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Calificación por Rúbrica</h3>
+        <button class="btn-close" (click)="cerrarModalRubrica()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-subtitle">Estudiante: <strong>{{ evaluacionRubricaActual?.estudiante }}</strong> &bull; Caso: {{ evaluacionRubricaActual?.caso }}</p>
+
+        <div *ngIf="cargandoRubrica" class="spinner">Cargando criterios...</div>
+
+        <div *ngIf="!cargandoRubrica && criteriosRubrica.length === 0" class="empty-state">
+          No hay criterios de rúbrica definidos en el catálogo.
+        </div>
+
+        <div *ngIf="!cargandoRubrica && criteriosRubrica.length > 0">
+          <div class="form-group mt-3" *ngFor="let c of criteriosRubrica">
+            <label>{{ c.nombre_criterio }} (peso: {{ c.peso_porcentaje }} pts)</label>
+            <input type="number" min="0" [max]="c.peso_porcentaje" [(ngModel)]="c.puntaje_obtenido" placeholder="Puntaje obtenido (0 - {{ c.peso_porcentaje }})">
+          </div>
+          <p class="modal-subtitle" style="margin-top: 15px;">
+            <strong>Total: {{ totalRubrica() }} / {{ totalMaximoRubrica() }} pts</strong>
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalRubrica()">Cancelar</button>
+        <button class="btn-primary" (click)="guardarCalificacionesRubrica()" [disabled]="guardandoRubrica || cargandoRubrica || criteriosRubrica.length === 0">
+          {{ guardandoRubrica ? 'Guardando...' : 'Guardar Calificación' }}
         </button>
       </div>
     </div>
