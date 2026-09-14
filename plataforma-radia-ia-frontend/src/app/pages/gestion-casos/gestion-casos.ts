@@ -18,8 +18,19 @@ export class GestionCasosCatedratico implements OnInit {
   casos: any[] = [];
   casosFiltrados: any[] = [];
   filtroTexto: string = '';
-  filtroDificultad: string = 'TODAS';
+  filtroEstado: string = 'TODOS'; // Cambiado de filtroDificultad
   cargando: boolean = false;
+
+  patologias = [
+    { nombre: 'Atelectasia', seleccionada: false },
+    { nombre: 'Cardiomegalia', seleccionada: false },
+    { nombre: 'Derrame Pleural', seleccionada: false },
+    { nombre: 'Infiltracion', seleccionada: false },
+    { nombre: 'Neumonia', seleccionada: false },
+    { nombre: 'Neumotorax', seleccionada: false },
+    { nombre: 'Nodulos', seleccionada: false },
+    { nombre: 'Normal', seleccionada: false }
+  ];
 
   // Estado para el modal de Crear Caso
   modalCrearAbierto: boolean = false;
@@ -144,15 +155,15 @@ export class GestionCasosCatedratico implements OnInit {
       );
     }
 
-    if (this.filtroDificultad !== 'TODAS') {
-      res = res.filter(c => c.nivel_dificultad?.toUpperCase() === this.filtroDificultad.toUpperCase());
+    if (this.filtroEstado !== 'TODOS') {
+      res = res.filter(c => c.estado?.toUpperCase() === this.filtroEstado.toUpperCase());
     }
 
     this.casosFiltrados = res;
   }
 
-  setFiltroDificultad(dif: string): void {
-    this.filtroDificultad = dif;
+  setFiltroEstado(estado: string): void {
+    this.filtroEstado = estado;
     this.aplicarFiltros();
   }
 
@@ -167,6 +178,9 @@ export class GestionCasosCatedratico implements OnInit {
       tipo_proyeccion: 'Tórax PA (Posteroanterior)',
       id_curso: this.misCursos.length > 0 ? this.misCursos[0].id_curso : null
     };
+
+    // Reset checkboxes
+    this.patologias.forEach(p => p.seleccionada = false);
 
     if (this.misCursos.length === 0) {
       this.alertService.warning(
@@ -268,6 +282,12 @@ export class GestionCasosCatedratico implements OnInit {
     formData.append('motivo_consulta', 'Sin motivo de consulta registrado.');
     formData.append('tipo_proyeccion', this.nuevoCaso.tipo_proyeccion);
     formData.append('id_curso', this.nuevoCaso.id_curso.toString());
+
+    // Añadimos los hallazgos marcados por el docente (patologias.seleccionada = true)
+    const hallazgosSeleccionados = this.patologias.filter(p => p.seleccionada).map(p => p.nombre);
+    if (hallazgosSeleccionados.length > 0) {
+      formData.append('hallazgos_docente', JSON.stringify(hallazgosSeleccionados));
+    }
 
     if (this.archivoSeleccionado) {
       formData.append('imagen_rx', this.archivoSeleccionado);
