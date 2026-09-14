@@ -34,7 +34,8 @@ const crearCasoCompleto = async (datos) => {
         motivo_consulta,
         nivel_dificultad,
         tipo_proyeccion,
-        ruta_imagen
+        ruta_imagen,
+        hallazgos_docente // Array de patologías enviadas por el docente
     } = datos;
 
     try {
@@ -46,6 +47,23 @@ const crearCasoCompleto = async (datos) => {
 
         const ids = resultado[0][0];
 
+        // Modificación RADIA-EDU: Actualizar el caso para que sea 'pendiente' y origen 'docente'
+        let hallazgosJSON = null;
+        if (hallazgos_docente) {
+            try {
+                // Puede venir como array o como string JSON desde FormData
+                const arr = typeof hallazgos_docente === 'string' ? JSON.parse(hallazgos_docente) : hallazgos_docente;
+                if (Array.isArray(arr)) hallazgosJSON = JSON.stringify(arr);
+            } catch(e) {
+                console.error("Error parseando hallazgos_docente:", e);
+            }
+        }
+
+        await pool.query(
+            "UPDATE Casos_Clinicos SET origen = 'docente', estado = 'pendiente', hallazgos_docente = ? WHERE id_caso = ?",
+            [hallazgosJSON, ids.id_caso]
+        );
+
         return {
             id_caso: ids.id_caso,
             id_paciente: ids.id_paciente,
@@ -55,7 +73,7 @@ const crearCasoCompleto = async (datos) => {
             titulo_caso,
             tipo_proyeccion,
             ruta_imagen,
-            mensaje: "Caso clínico y radiografía registrados exitosamente en la plataforma."
+            mensaje: "El caso ha sido propuesto y añadido a la Cola de Procesamiento IA."
         };
     } catch (error) {
         throw error;
@@ -64,8 +82,30 @@ const crearCasoCompleto = async (datos) => {
 
 // 5. Obtener todos los casos con información completa para gestión del catedrático
 const obtenerCasosDetallados = async (id_catedratico) => {
-    const [casos] = await pool.query('CALL sp_obtener_casos_detallados(?)', [id_catedratico]);
-    return casos[0];
+    const query = `
+        SELECT 
+            c.id_caso AS id,
+            c.id_paciente,
+            c.titulo_caso AS titulo,
+            c.motivo_consulta,
+            c.nivel_dificultad,
+            c.origen,
+            c.estado,
+            c.hallazgos_docente,
+            p.codigo_paciente AS paciente,
+            p.edad,
+            p.genero,
+            p.antecedentes_medicos AS antecedentes,
+            r.tipo_proyeccion,
+            r.ruta_imagen
+        FROM Casos_Clinicos c
+        JOIN Pacientes_Simulados p ON c.id_paciente = p.id_paciente
+        LEFT JOIN Radiografias r ON c.id_caso = r.id_caso
+        WHERE c.id_curso IN (SELECT id_curso FROM Cursos_Secciones WHERE id_catedratico = ?)
+        ORDER BY c.id_caso DESC
+    `;
+    const [casos] = await pool.query(query, [id_catedratico]);
+    return casos;
 };
 
 // 6. Obtener caso por ID

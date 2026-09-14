@@ -7,9 +7,19 @@
         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         Volver a la Worklist
       </button>
-      <h2>EVALUACIÓN CLÍNICA: <span class="highlight">{{ idCasoActual }}</span></h2>
+      <h2>CASO CLÍNICO: <span class="highlight">{{ idCasoActual }}</span></h2>
     </div>
-    <div class="header-right">
+    <!-- Stepper Visual -->
+    <div class="stepper-indicator">
+      <div class="step" [class.active]="faseActual >= 1">1. Lectura a Ciegas</div>
+      <div class="step-divider"></div>
+      <div class="step" [class.active]="faseActual >= 2">2. Verdad (NIH)</div>
+      <div class="step-divider"></div>
+      <div class="step" [class.active]="faseActual >= 3">3. Opinión IA</div>
+      <div class="step-divider"></div>
+      <div class="step" [class.active]="faseActual >= 4">4. Discusión</div>
+    </div>
+    <div class="header-right" *ngIf="faseActual === 1">
       <span class="timer">{{ tiempoDisplay }}</span>
     </div>
   </header>
@@ -24,48 +34,160 @@
         <button title="Ajustar Brillo/Contraste" (click)="ajustarContraste()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
         <button title="Zoom" (click)="hacerZoom()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg></button>
         <button title="Invertir Colores" (click)="toggleInvert()" [ngClass]="{'active': isInverted}"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
+        <button title="Borrar Marca" *ngIf="marcadorEstudiante && faseActual === 1" (click)="clearMarker()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
       </div>
       
-      <div class="image-container" style="position: relative;">
-        <!-- Metadatos Clínicos Dinámicos (Estilo DICOM) -->
-        <div class="dicom-metadata" *ngIf="casoDetalle" style="position: absolute; top: 10px; left: 10px; color: #00ff88; font-family: monospace; font-size: 11px; z-index: 5; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">
-          <div>P: {{ casoDetalle.codigo_paciente || idCasoActual }} / RADIA-OS</div>
-          <div>Edad: {{ casoDetalle.edad || 'N/A' }} años / M</div>
-          <div>Mod: CR / {{ casoDetalle.tipo_proyeccion || 'Tórax AP' }}</div>
-          <div>kVp: 120 / mAs: 3.5</div>
+      <!-- Contenedor Interactivo -->
+      <div class="image-container" style="position: relative; cursor: crosshair; overflow: hidden;"
+           (mousedown)="onImageMouseDown($event)" 
+           (mousemove)="onImageMouseMove($event)" 
+           (mouseup)="onImageMouseUp($event)">
+           
+        <!-- Grad-CAM IA (Fase 3 y 4) -->
+        <div class="heatmap-overlay" *ngIf="faseActual >= 3"></div>
+
+        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image" 
+             [class.heatmap-effect]="faseActual >= 3"
+             [ngStyle]="{'transform': 'scale(' + zoomLevel + ')', 'filter': (isInverted ? 'invert(1) ' : 'grayscale(100%) ') + 'brightness(' + brightness + ') contrast(' + contrast + ')'}" 
+             style="transition: transform 0.3s ease, filter 0.3s ease; user-select: none;" draggable="false">
+
+        <!-- Marca del Estudiante -->
+        <div *ngIf="marcadorEstudiante" class="user-marker"
+             [ngStyle]="{'left.px': marcadorEstudiante.x, 'top.px': marcadorEstudiante.y, 'width.px': marcadorEstudiante.width, 'height.px': marcadorEstudiante.height, 'border-radius': marcadorEstudiante.type === 'point' ? '50%' : '0'}"
+             style="position: absolute; border: 2px solid #00ff88; background: rgba(0, 255, 136, 0.2); pointer-events: none; z-index: 10;">
+             <span style="position: absolute; top: -20px; left: 0; background: #00ff88; color: #000; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px;">Tú</span>
         </div>
 
-        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image" [ngStyle]="{'transform': 'scale(' + zoomLevel + ')', 'filter': (isInverted ? 'invert(1) ' : 'grayscale(100%) ') + 'brightness(' + brightness + ') contrast(' + contrast + ')'}" style="transition: transform 0.3s ease, filter 0.3s ease;">
+        <!-- Marca de Verdad de Referencia (NIH) (Fase 2, 3, 4) -->
+        <div *ngIf="faseActual >= 2 && resultadoFase2?.bbox" class="nih-marker"
+             [ngStyle]="{'left.px': resultadoFase2.bbox.x, 'top.px': resultadoFase2.bbox.y, 'width.px': resultadoFase2.bbox.width, 'height.px': resultadoFase2.bbox.height}"
+             style="position: absolute; border: 2px solid #ff4757; background: rgba(255, 71, 87, 0.1); pointer-events: none; z-index: 9;">
+             <span style="position: absolute; top: -20px; left: 0; background: #ff4757; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px;">Radiólogo (NIH)</span>
+        </div>
+
       </div>
     </section>
 
-    <!-- COLUMNA DERECHA: Formulario de Diagnóstico -->
+    <!-- COLUMNA DERECHA: Fases Educativas -->
     <aside class="diagnostic-panel glass-panel">
       
-      <div class="panel-section">
-        <h3>1. SELECCIÓN DE HALLAZGOS PATOLÓGICOS</h3>
-        <p class="helper-text">Seleccione las múltiples áreas afectadas mediante las casillas de verificación. Este método elimina clics innecesarios frente a las listas tradicionales.</p>
-        
-        <!-- Checkboxes generados dinámicamente -->
-        <div class="checkbox-grid">
-          <label class="checkbox-container" *ngFor="let patologia of patologias">
-            <input type="checkbox" [(ngModel)]="patologia.seleccionada">
-            <span class="checkmark"></span>
-            {{ patologia.nombre }}
-          </label>
+      <!-- ================= FASE 1: LECTURA A CIEGAS ================= -->
+      <div *ngIf="faseActual === 1" class="fase-container">
+        <div class="panel-section">
+          <h3>1. SELECCIÓN DE HALLAZGOS PATOLÓGICOS</h3>
+          <p class="helper-text">Selecciona las anomalías que observas. Haz clic en la radiografía para marcar la zona exacta (arrastra para dibujar un rectángulo).</p>
+          <div class="checkbox-grid">
+            <label class="checkbox-container" *ngFor="let patologia of patologias">
+              <input type="checkbox" [(ngModel)]="patologia.seleccionada">
+              <span class="checkmark"></span>
+              {{ patologia.nombre }}
+            </label>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h3>2. NIVEL DE CONFIANZA</h3>
+          <p class="helper-text">¿Qué tan seguro estás de tu diagnóstico?</p>
+          <div class="slider-container">
+            <input type="range" min="0" max="100" [(ngModel)]="nivelConfianza" class="slider" id="confianzaSlider">
+            <div class="slider-value" [ngStyle]="{'color': nivelConfianza < 33 ? '#ff4757' : (nivelConfianza < 66 ? '#f59e0b' : '#00ff88')}">
+              {{ nivelConfianza }}% ({{ nivelConfianza < 33 ? 'Baja' : (nivelConfianza < 66 ? 'Media' : 'Alta') }})
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <h3>3. JUSTIFICACIÓN CLÍNICA</h3>
+          <textarea [(ngModel)]="justificacionClinica" placeholder="Ej. Se observa opacidad homogénea..." rows="3"></textarea>
+        </div>
+
+        <div class="panel-actions">
+          <button class="btn-primary" (click)="enviarDiagnostico()" style="width: 100%;">
+            BLOQUEAR RESPUESTA Y VER VERDAD
+          </button>
         </div>
       </div>
 
-      <div class="panel-section">
-        <h3>2. JUSTIFICACIÓN CLÍNICA</h3>
-        <p class="helper-text">Redacte el sustento clínico de las patologías seleccionadas basándose en las opacidades y patrones observados.</p>
-        <textarea [(ngModel)]="justificacionClinica" placeholder="Ej. Se observa opacidad homogénea en el lóbulo inferior derecho..." rows="5"></textarea>
+      <!-- ================= FASE 2: VERDAD DE REFERENCIA ================= -->
+      <div *ngIf="faseActual === 2" class="fase-container fade-in">
+        <div class="panel-section">
+          <h3>VERDAD DE REFERENCIA (NIH)</h3>
+          <p class="helper-text">Estas son las etiquetas reales extraídas del informe radiológico original.</p>
+          
+          <div class="alert-box" style="background: rgba(255, 71, 87, 0.1); border-color: rgba(255,71,87,0.3); color: #ff4757; margin-top: 15px;">
+            <strong>Diagnóstico Real:</strong> {{ resultadoFase2?.etiquetas_nih?.join(', ') || 'Sin hallazgos' }}
+          </div>
+          
+          <p class="helper-text highlight-box" style="margin-top: 15px;">
+            Observa el recuadro rojo en la imagen. Ese es el Bounding Box (BBox) trazado por el radiólogo profesional. ¿Coincide con tu marca verde?
+          </p>
+        </div>
+
+        <div class="panel-actions" style="margin-top: auto;">
+          <button class="btn-primary" (click)="avanzarFase3()" style="width: 100%;">
+            ¿QUÉ OPINÓ LA IA? (FASE 3)
+          </button>
+        </div>
       </div>
 
-      <div class="panel-actions">
-        <button class="btn-primary" (click)="enviarDiagnostico()">
-          ENVIAR DIAGNÓSTICO ESTUDIANTIL
-        </button>
+      <!-- ================= FASE 3: OPINIÓN DE LA IA ================= -->
+      <div *ngIf="faseActual === 3" class="fase-container fade-in">
+        <div class="panel-section">
+          <h3>OPINIÓN DEL MODELO IA</h3>
+          <p class="helper-text">El modelo no es perfecto, es tu compañero de estudio. Observa dónde prestó atención (Mapa de calor Grad-CAM).</p>
+          
+          <div class="accuracy-section" style="margin-top: 20px;">
+            <h2 class="percentage" style="color: var(--accent-cyan);">{{ resultadoFase3?.probabilidad }}%</h2>
+            <span class="percentage-label">Confianza del Modelo en: <strong>{{ resultadoFase3?.prediccion }}</strong></span>
+          </div>
+
+          <p class="helper-text highlight-box" style="margin-top: 15px;">
+            Las zonas iluminadas en colores cálidos sobre la radiografía indican qué píxeles utilizó la red neuronal para tomar su decisión.
+          </p>
+        </div>
+
+        <div class="panel-actions" style="margin-top: auto;">
+          <button class="btn-primary" (click)="avanzarFase4()" style="width: 100%;">
+            IR A DISCUSIÓN Y PUNTUACIÓN (FASE 4)
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= FASE 4: DISCUSIÓN Y EVALUACIÓN ================= -->
+      <div *ngIf="faseActual === 4" class="fase-container fade-in">
+        <div class="panel-section">
+          <h3>EVALUACIÓN EN TRES EJES</h3>
+          
+          <div class="score-card">
+            <h4>Eje 1: Diagnóstico</h4>
+            <p class="helper-text">¿Acertaste las etiquetas del NIH?</p>
+            <div class="alert-box" style="background: rgba(0, 255, 136, 0.1); border-color: rgba(0,255,136,0.3); color: #00ff88; padding: 10px;">
+              ✅ Tienes una coincidencia parcial con la verdad.
+            </div>
+          </div>
+
+          <div class="score-card" style="margin-top: 15px;">
+            <h4>Eje 2: Localización</h4>
+            <p class="helper-text">¿Miraste en el lugar correcto?</p>
+            <div class="alert-box" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245,158,11,0.3); color: #f59e0b; padding: 10px;">
+              ⚠️ Tu marca está cerca, pero no cubre completamente el BBox del radiólogo.
+            </div>
+          </div>
+
+          <div class="score-card" style="margin-top: 15px;">
+            <h4>Eje 3: Calibración</h4>
+            <p class="helper-text">Confianza vs Realidad</p>
+            <div class="alert-box" style="background: rgba(0, 229, 255, 0.1); border-color: rgba(0,229,255,0.3); color: var(--accent-cyan); padding: 10px;">
+              🧠 Declaraste una confianza del {{ nivelConfianza }}%. Esto está bien calibrado dado tu nivel de acierto.
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-actions" style="margin-top: auto;">
+          <button class="btn-primary" (click)="volverAlDashboard()" style="width: 100%;">
+            FINALIZAR CASO
+          </button>
+        </div>
       </div>
 
     </aside>

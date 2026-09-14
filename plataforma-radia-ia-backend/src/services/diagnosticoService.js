@@ -2,14 +2,15 @@ const pool = require('../config/database');
 const dict = require('../config/dbDictionary');
 
 const guardarEvaluacionEstudiante = async (bodyData) => {
-    // 1. Extraemos los datos basándonos en tu script SQL real
     const { 
         id_estudiante, 
         id_caso, 
         tiempo_analisis_segundos, 
         justificacion_clinica, 
         patologias, 
-        regiones    
+        regiones,
+        nivel_confianza,
+        marcador_estudiante
     } = bodyData;
 
     if (!id_estudiante || !id_caso) {
@@ -29,6 +30,12 @@ const guardarEvaluacionEstudiante = async (bodyData) => {
         ]);
         const id_evaluacion = resEvaluacionArray[0][0].id_evaluacion;
 
+        // Actualizamos los campos nuevos que no soporta el SP original (Mock MVP)
+        await connection.query(
+            'UPDATE Evaluaciones_Estudiantes SET nivel_confianza = ?, marcador_estudiante = ? WHERE id_evaluacion = ?',
+            [nivel_confianza || 0, marcador_estudiante ? JSON.stringify(marcador_estudiante) : null, id_evaluacion]
+        );
+
         if (patologias && patologias.length > 0) {
             for (const id_patologia of patologias) {
                 const [resPatologiaArray] = await pool.query('CALL sp_crear_detalle_hallazgo(?, ?)', [id_evaluacion, id_patologia]);
@@ -45,9 +52,19 @@ const guardarEvaluacionEstudiante = async (bodyData) => {
         await connection.commit();
         connection.release();
 
+        // MOCK MVP: Devolver datos simulados para Fase 2 (Verdad) y Fase 3 (IA)
         return {
             id_evaluacion,
-            mensaje: "Diagnóstico guardado respetando la estructura estricta de MySQL."
+            mensaje: "Diagnóstico guardado respetando la estructura estricta de MySQL.",
+            fase2_verdad: {
+                etiquetas_nih: ["Infiltración", "Cardiomegalia"],
+                bbox: { x: 150, y: 120, width: 80, height: 90 }
+            },
+            fase3_ia: {
+                prediccion: "Infiltración",
+                probabilidad: 88,
+                gradcam_mock: "https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80" // Imagen placeholder para MVP
+            }
         };
 
     } catch (error) {

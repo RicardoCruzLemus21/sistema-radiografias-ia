@@ -8,7 +8,7 @@
     <div class="header-actions">
       <button class="btn-primary" (click)="abrirModalCrear()">
         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Registrar Nuevo Caso Clínico
+        Proponer Caso (Cola IA)
       </button>
     </div>
   </header>
@@ -58,10 +58,9 @@
     </div>
 
     <div class="filter-chips">
-      <button [class.active]="filtroDificultad === 'TODAS'" (click)="setFiltroDificultad('TODAS')">Todas</button>
-      <button [class.active]="filtroDificultad === 'BÁSICO'" (click)="setFiltroDificultad('BÁSICO')">Básico</button>
-      <button [class.active]="filtroDificultad === 'INTERMEDIO'" (click)="setFiltroDificultad('INTERMEDIO')">Intermedio</button>
-      <button [class.active]="filtroDificultad === 'AVANZADO'" (click)="setFiltroDificultad('AVANZADO')">Avanzado</button>
+      <button [class.active]="filtroEstado === 'TODOS'" (click)="setFiltroEstado('TODOS')">Todos los Estados</button>
+      <button [class.active]="filtroEstado === 'PENDIENTE'" (click)="setFiltroEstado('PENDIENTE')">🟠 Pendientes IA</button>
+      <button [class.active]="filtroEstado === 'DISPONIBLE'" (click)="setFiltroEstado('DISPONIBLE')">🟢 Disponibles</button>
     </div>
   </section>
 
@@ -81,11 +80,10 @@
         <div class="case-meta-top">
           <span class="patient-code">{{ caso.paciente }}</span>
           <span class="difficulty-pill" [ngClass]="{
-            'diff-basico': (caso.nivel_dificultad || '').toLowerCase().includes('b'),
-            'diff-intermedio': (caso.nivel_dificultad || '').toLowerCase().includes('i'),
-            'diff-avanzado': (caso.nivel_dificultad || '').toLowerCase().includes('a')
+            'diff-basico': caso.estado === 'pendiente',
+            'diff-avanzado': caso.estado === 'disponible'
           }">
-            {{ caso.nivel_dificultad || 'Intermedio' }}
+            {{ caso.estado === 'pendiente' ? '🟠 Pendiente IA' : '🟢 Disponible' }}
           </span>
         </div>
 
@@ -204,6 +202,19 @@
               <div class="preview-img-container">
                 <img [src]="imagenPreviewUrl" alt="Vista previa de radiografía" class="preview-img">
               </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 3: DECLARACIÓN DE HALLAZGOS (DOCENTE) -->
+          <div class="form-section">
+            <h4 class="form-section-title">3. HALLAZGOS CONSIDERADOS</h4>
+            <p class="text-muted" style="margin-bottom: 10px; font-size: 0.9em;">Selecciona las anomalías que consideras presentes en esta placa. Al guardarlo, entrará a la Cola de Procesamiento IA.</p>
+            <div class="checkbox-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <label class="checkbox-container" *ngFor="let patologia of patologias">
+                <input type="checkbox" [(ngModel)]="patologia.seleccionada" [name]="'patologia_' + patologia.nombre">
+                <span class="checkmark" style="margin-right: 8px;"></span>
+                {{ patologia.nombre }}
+              </label>
             </div>
           </div>
 

@@ -1,0 +1,40 @@
+==== Corrida: vie 11/09/2026 20:25:28.50 ==== 
+==== Corrida: dom 13/09/2026  6:00:14.60 ==== 
+✅ Conexión exitosa a MySQL (Esquema: radia_ia_schema)
+
+--- Normal: 0/10 variantes existentes ---
+  [FALLO] variante 1: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.
+
+--- Neumonía: 1/10 variantes existentes ---
+  [FALLO] variante 2: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.
+
+--- Derrame Pleural: 0/10 variantes existentes ---
+  [FALLO] variante 1: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.
+
+--- Cardiomegalia: 0/10 variantes existentes ---
+  [FALLO] variante 1: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.
+
+--- Nódulos: 0/10 variantes existentes ---
+  [OK] variante 1/10 (6492ms) guardada.
+  [FALLO] variante 2: [GoogleGenerativeAI Error]: Error fetching from https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent: [503 Service Unavailable] This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.
+
+--- Neumotórax: 0/10 variantes existentes ---
+  [OK] variante 1/10 (42519ms) guardada.
+  [CUOTA AGOTADA] Se detiene el script. Progreso guardado: 1/10 para "Neumotórax".
+
+--- Atelectasia: 0/10 variantes existentes ---
+
+--- Infiltración: 0/10 variantes existentes ---
+
+=== RESUMEN FINAL (variantes guardadas por patología) ===
+Normal: 0/10
+Neumonía: 1/10
+Derrame Pleural: 0/10
+Cardiomegalia: 0/10
+Nódulos: 1/10
+Neumotórax: 1/10
+Atelectasia: 0/10
+Infiltración: 0/10
+TOTAL: 3/80
+
+La cuota diaria de Gemini se agotó durante esta corrida. Vuelve a correr este script mañana para continuar donde quedó.
