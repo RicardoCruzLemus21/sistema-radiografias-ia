@@ -146,6 +146,26 @@ const obtenerCasoPorId = async (req, res) => {
     }
 };
 
+const obtenerCasoEstudiante = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const caso = await clinicalService.obtenerCasoEstudianteSeguro(id);
+        res.status(200).json({ status: 'success', data: caso });
+    } catch (error) {
+        res.status(404).json({ status: 'error', message: error.message });
+    }
+};
+
+const registrarRespuesta = async (req, res) => {
+    try {
+        const resultadoFase2y3 = await clinicalService.guardarRespuestaEstudiante(req.body);
+        res.status(200).json({ status: 'success', data: resultadoFase2y3 });
+    } catch (error) {
+        console.error('Error registrando respuesta:', error);
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 const obtenerSiguienteCodigoPaciente = async (req, res) => {
     try {
         const codigo = await clinicalService.obtenerSiguienteCodigoPaciente();
@@ -188,6 +208,56 @@ const obtenerInfoPatologiaIA = async (req, res) => {
     }
 };
 
+const obtenerBancoCasosIA = async (req, res) => {
+    try {
+        const casos = await clinicalService.obtenerBancoCasosIA(req.query);
+        res.status(200).json({ status: 'success', data: casos });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+const asignarCasosBanco = async (req, res) => {
+    try {
+        const { id_curso, ids_casos } = req.body;
+        if (!id_curso || !ids_casos || !Array.isArray(ids_casos)) {
+            return res.status(400).json({ status: 'error', message: 'Datos incompletos' });
+        }
+        const resultado = await clinicalService.asignarCasosBanco(id_curso, ids_casos);
+        res.status(200).json({ status: 'success', data: resultado });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+const componerEjercicio = async (req, res) => {
+    try {
+        const resultado = await clinicalService.componerEjercicio(req.body);
+        res.status(200).json({ status: 'success', data: resultado });
+    } catch (error) {
+        res.status(400).json({ status: 'error', message: error.message });
+    }
+};
+
+const obtenerMetricasModelo = async (req, res) => {
+    try {
+        const metricas = await clinicalService.obtenerMetricasModelo();
+        res.status(200).json({ status: 'success', data: metricas });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+const obtenerEstadisticasEstudiante = async (req, res) => {
+    try {
+        const id_estudiante = req.usuario.id_usuario;
+        const estadisticas = await clinicalService.obtenerEstadisticasEstudiante(id_estudiante);
+        res.status(200).json({ status: 'success', data: estadisticas });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
 module.exports = {
     registrarPaciente,
     armarCaso,
@@ -196,8 +266,15 @@ module.exports = {
     crearCasoCompleto,
     listarCasosCatedratico,
     obtenerCasoPorId,
+    obtenerCasoEstudiante,
+    registrarRespuesta,
     obtenerSiguienteCodigoPaciente,
     editarCaso,
     eliminarCaso,
-    obtenerInfoPatologiaIA
+    obtenerInfoPatologiaIA,
+    obtenerBancoCasosIA,
+    asignarCasosBanco,
+    componerEjercicio,
+    obtenerMetricasModelo,
+    obtenerEstadisticasEstudiante
 };

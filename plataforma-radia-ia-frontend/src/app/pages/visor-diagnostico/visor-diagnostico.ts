@@ -27,6 +27,8 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
   marcadorEstudiante: any = null;
   resultadoFase2: any = null;
   resultadoFase3: any = null;
+  puntajesEstudiante: any = null;
+  enviandoDiagnostico: boolean = false;
   
   // Modos de interacción en la imagen
   isDrawing: boolean = false;
@@ -69,7 +71,7 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
   }
 
   cargarDatosCaso() {
-    this.clinicalService.getCasoPorId(this.idCasoActual).subscribe({
+    this.clinicalService.getCasoSeguroEstudiante(this.idCasoActual).subscribe({
       next: (res) => {
         if (res.data) {
           this.casoDetalle = res.data;
@@ -84,6 +86,7 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al cargar datos del caso:', err);
+        this.alertService.error('Error', 'No se pudo cargar el caso. ' + (err.error?.message || ''));
       }
     });
   }
@@ -237,9 +240,24 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
       return;
     }
 
-    // Calcula el tiempo real transcurrido en segundos
+    const idUsuarioDinamico = this.authService.getIdUsuario();
+    if (!idUsuarioDinamico) {
+      this.alertService.error('Sesión no válida', 'No se pudo identificar tu usuario. Vuelve a iniciar sesión antes de enviar el diagnóstico.');
+      return;
+    }
+
     const tiempoTranscurrido = Math.floor((Date.now() - this.horaInicioAnalisis) / 1000);
-    const idUsuarioDinamico = this.authService.getIdUsuario() || 2; // Fallback a 2 si falla
+
+    const imgEl = document.querySelector('.image-container') as HTMLElement;
+    let marcadorRelativo = null;
+    if (this.marcadorEstudiante && imgEl) {
+      marcadorRelativo = {
+        x: this.marcadorEstudiante.x / imgEl.clientWidth,
+        y: this.marcadorEstudiante.y / imgEl.clientHeight,
+        w: this.marcadorEstudiante.width / imgEl.clientWidth,
+        h: this.marcadorEstudiante.height / imgEl.clientHeight
+      };
+    }
 
     const payload = {
       id_estudiante: idUsuarioDinamico,
@@ -247,26 +265,55 @@ export class VisorDiagnostico implements OnInit, OnDestroy {
       tiempo_analisis_segundos: tiempoTranscurrido > 0 ? tiempoTranscurrido : 1,
       justificacion_clinica: this.justificacionClinica,
       patologias: patologiasSeleccionadas,
-      regiones: [],
       nivel_confianza: this.nivelConfianza,
-      marcador_estudiante: this.marcadorEstudiante
+      marcador_estudiante: marcadorRelativo
     };
 
-    this.diagnosticoService.evaluarCaso(payload).subscribe({
+    if (this.timerInterval) clearInterval(this.timerInterval);
+
+    this.enviandoDiagnostico = true;
+
+    this.clinicalService.enviarDiagnosticoFase1(payload).subscribe({
       next: (res) => {
-        // Almacenamos los mocks devueltos por el backend
-        if(res.fase2_verdad) this.resultadoFase2 = res.fase2_verdad;
-        if(res.fase3_ia) this.resultadoFase3 = res.fase3_ia;
-        
-        // Detener el temporizador ya que terminó el análisis a ciegas
-        if (this.timerInterval) clearInterval(this.timerInterval);
-        
-        this.alertService.toast("Evaluación registrada. Pasando a Fase 2.", "success");
-        this.avanzarFase2(); // Flujo natural al terminar Fase 1
+        this.enviandoDiagnostico = false;
+        if (res.data) {
+          const truthData = res.data;
+
+          this.resultadoFase2 = {
+            etiquetas_nih: truthData.etiquetas_nih,
+            bbox: truthData.bbox
+          };
+
+          // El modelo puede dar 0 (abstención), 1 o más opiniones ordenadas por probabilidad.
+          // Cada opinión ya trae su propia precision_esperada calculada (ver RESULTADOS_Y_DEFENSA_RADIA.md:
+          // "no se dice que el paciente tiene X, se dice que el modelo lo señala y acierta ~Y% de las veces").
+          const opinionesOrdenadas = [...(truthData.opinion_modelo || [])].sort((a: any, b: any) => b.probabilidad - a.probabilidad);
+          const opiniones = opinionesOrdenadas.map((op: any) => ({
+            patologia: op.patologia,
+            probabilidadPct: Math.round(op.probabilidad * 100),
+            precisionEsperadaPct: op.precision_esperada != null ? Math.round(op.precision_esperada * 100) : null,
+            gradcamUrl: truthData.gradcam && truthData.gradcam[op.patologia]
+              ? `${environment.apiUrl}/${truthData.gradcam[op.patologia]}`
+              : null
+          }));
+
+          this.resultadoFase3 = {
+            abstiene: !!truthData.modelo_se_abstiene,
+            opiniones
+          };
+
+          if (truthData.puntajes) {
+            this.puntajesEstudiante = truthData.puntajes;
+          }
+
+          this.alertService.success('Guardado', 'Respuesta bloqueada. Avanzando a la Fase 2.');
+          this.avanzarFase2();
+        }
       },
       error: (err) => {
-        console.error("Error al enviar diagnóstico:", err);
-        this.alertService.error("Error", "Ocurrió un error al enviar el diagnóstico. Por favor intenta nuevamente.");
+        this.enviandoDiagnostico = false;
+        this.alertService.error('Error', 'No se pudo guardar la evaluación.');
+        console.error(err);
       }
     });
   }

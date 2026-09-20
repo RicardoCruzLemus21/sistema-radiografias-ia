@@ -575,3 +575,281 @@
 .info-group p { margin: 0; font-size: 13px; color: var(--text-main); }
 .clinical-box { background: var(--input-bg); padding: 10px 12px; border-radius: 6px; border: 1px solid var(--border-color); color: var(--text-main) !important; font-size: 12px !important; line-height: 1.4; }
 .text-highlight { color: var(--accent-cyan); }
+
+/* ========================================================
+   MODAL: BANCO DE CASOS (PANTALLA COMPLETA)
+   ======================================================== */
+.modal-full {
+  width: 95vw !important;
+  max-width: 1400px !important;
+  height: 90vh !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.banco-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 24px;
+}
+
+.banco-filters {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-group label {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.banco-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: var(--bg-dark-base); /* Fondo más oscuro para contrastar las rx */
+}
+
+/* Estado de Carga */
+.banco-loading, .banco-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  gap: 15px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-radius: 50%;
+  border-top-color: var(--accent-cyan);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Grid de Banco */
+.banco-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.banco-card {
+  background: var(--bg-panel);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.banco-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+}
+
+.banco-card.selected {
+  border-color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+
+.banco-img-wrapper {
+  position: relative;
+  height: 220px;
+  background: #000;
+}
+
+.banco-img-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.9;
+}
+
+.banco-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  color: #fff;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.banco-card:hover .banco-overlay {
+  opacity: 1;
+}
+
+.banco-card.selected .banco-overlay {
+  opacity: 1;
+  background: rgba(0, 255, 136, 0.15);
+}
+
+.banco-info {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.banco-info h4 {
+  font-size: 14px;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.banco-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.banco-hallazgos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.hallazgo-badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #ccc;
+}
+
+/* Panel Inferior: Carrito */
+.banco-carrito-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--sidebar-bg);
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.carrito-status {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.carrito-icon {
+  position: relative;
+  color: var(--accent-cyan);
+}
+
+.carrito-icon .badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.carrito-text {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.carrito-text strong {
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.carrito-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.curso-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.curso-selector label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* ==========================================
+   SKELETON / LAZY LOADING DE IMÁGENES
+   ========================================== */
+
+/* La imagen empieza invisible y aparece con fade-in al cargar */
+.banco-img-wrapper img {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banco-img-wrapper img.img-visible {
+  opacity: 0.9;
+}
+
+/* El banco-img-wrapper necesita position:relative para el posicionamiento absoluto */
+.banco-img-wrapper {
+  position: relative;
+}
+
+/* Skeleton shimmer animation */
+.img-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--bg-panel) 25%,
+    rgba(255,255,255,0.07) 50%,
+    var(--bg-panel) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.img-skeleton.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes skeleton-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+

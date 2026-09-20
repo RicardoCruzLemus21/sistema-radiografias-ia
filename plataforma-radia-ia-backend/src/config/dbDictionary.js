@@ -24,6 +24,7 @@ module.exports = {
         EVALUACIONES_ESTUDIANTES: 'Evaluaciones_Estudiantes',
         DETALLE_HALLAZGOS: 'Detalle_Hallazgos_Estudiante',
         LOCALIZACION_LESIONES: 'Localizacion_Lesiones_Estudiante',
+        METRICAS_MODELO_PATOLOGIA: 'Metricas_Modelo_Patologia',
 
         // Módulo 5: Inferencia de IA
         RESULTADOS_IA: 'Resultados_IA',
@@ -43,6 +44,9 @@ module.exports = {
         PLANTILLAS_CORREOS: 'Plantillas_Correos'
     },
     COLUMNAS: {
+        // Módulo 1
+        DEBE_CAMBIAR_CONTRASENA: 'debe_cambiar_contrasena',
+
         // Módulo 2
         ID_CURSO: 'id_curso',
         ID_CATEDRATICO: 'id_catedratico',
@@ -70,17 +74,33 @@ module.exports = {
         NIVEL_DIFICULTAD: 'nivel_dificultad',
         TIPO_PROYECCION: 'tipo_proyeccion',
         RUTA_IMAGEN: 'ruta_imagen',
+        ORIGEN_CASO: 'origen',                 // 'docente' | 'nih'
+        ESTADO_CASO: 'estado',                 // 'pendiente' | 'disponible'
+        HALLAZGOS_DOCENTE: 'hallazgos_docente', // JSON: verdad de referencia + salida del modelo
 
         // Módulo 4
         ID_EVALUACION: 'id_evaluacion',
         ID_PATOLOGIA: 'id_patologia',
         NOMBRE_PATOLOGIA: 'nombre_patologia',
+        FICHA_IA_JSON: 'ficha_ia_json',        // Catalogo_Patologias: cache de fichas generadas con Gemini
         ID_REGION: 'id_region',
         NOMBRE_REGION: 'nombre_region',
         ID_DETALLE_HALLAZGO: 'id_detalle_hallazgo',
         TIEMPO_ANALISIS: 'tiempo_analisis_segundos',
         JUSTIFICACION: 'justificacion_clinica',
+        NIVEL_CONFIANZA: 'nivel_confianza',
+        MARCADOR_ESTUDIANTE: 'marcador_estudiante', // JSON: {x,y,width,height,type}
+        EJE1_DIAGNOSTICO: 'eje1_diagnostico',
+        EJE2_LOCALIZACION: 'eje2_localizacion',
+        EJE3_CALIBRACION: 'eje3_calibracion',
         FECHA_EVALUACION: 'fecha_evaluacion',
+
+        // Métricas reales del modelo por patología (RESULTADOS_Y_DEFENSA_RADIA.md)
+        AUC: 'auc',
+        LOCALIZACION_PCT: 'localizacion_pct',
+        PRECISION_VALOR: 'precision_valor',
+        SE_ABSTIENE_SIEMPRE: 'se_abstiene_siempre',
+        NOTA_CLINICA: 'nota_clinica',
 
         // Módulo 5
         ID_RESULTADO_IA: 'id_resultado_ia',
