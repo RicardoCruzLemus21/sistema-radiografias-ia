@@ -337,3 +337,42 @@ select::-webkit-scrollbar-thumb {
     text-shadow: none !important;
   }
 }
+
+/* ===========================================
+   GLOBAL: Tablas responsivas en todos los dashboards
+   Se aplica a cualquier contenedor de tabla en la app.
+   El sidebar usa CSS Grid — sin min-width:0 en .main-content
+   el área de contenido no cede al contraer/expandir.
+   El .table-container maneja el scroll horizontal internamente
+   para que el resto de la página no se desplace.
+   =========================================== */
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+}
+
+/* Todas las tablas tienen un mínimo de 780px para que las columnas
+   nunca queden aplastadas. Si el contenedor es más angosto, aparece
+   una scrollbar dentro del panel, no en toda la página. */
+.table-container table,
+.worklist-table,
+.casos-table,
+.usuarios-table,
+.auditoria-table,
+.evaluaciones-table {
+  min-width: 780px;
+  width: 100%;
+}
+
+/* Los page-containers de cada vista usan width: 100% en lugar de
+   un max-width fijo, para que siempre se adapten al espacio disponible. */
+.dashboard-container,
+.page-container,
+.gestion-container,
+.auditoria-container,
+.biblioteca-container,
+.notificaciones-container,
+.rendimiento-container {
+  width: 100%;
+  min-width: 0;
+}
