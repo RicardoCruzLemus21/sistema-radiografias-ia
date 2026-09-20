@@ -13,6 +13,14 @@ router.get('/casos-admin', clinicalController.listarCasosCatedratico);
 router.get('/caso/:id', clinicalController.obtenerCasoPorId);
 router.get('/next-paciente', clinicalController.obtenerSiguienteCodigoPaciente);
 router.get('/library/:patologia', clinicalController.obtenerInfoPatologiaIA);
+router.get('/banco-casos-ia', clinicalController.obtenerBancoCasosIA);
+router.post('/banco-casos-ia/componer', clinicalController.componerEjercicio);
+router.get('/metricas-modelo', clinicalController.obtenerMetricasModelo);
+router.get('/estadisticas-estudiante', clinicalController.obtenerEstadisticasEstudiante);
+
+// Endpoints de Estudiante (Flujo Educativo Fase 1)
+router.get('/caso/:id/estudiante', clinicalController.obtenerCasoEstudiante);
+router.post('/respuestas', clinicalController.registrarRespuesta);
 // =========================================================
 
 // Endpoints POST individuales
@@ -22,6 +30,9 @@ router.post('/radiografia', upload.single('imagen'), clinicalController.subirIma
 
 // Endpoint POST Maestro: Crear Paciente + Caso + Subir Rx en un solo paso
 router.post('/crear-completo', upload.single('imagen_rx'), clinicalController.crearCasoCompleto);
+
+// Endpoint POST: Asignar casos del Banco NIH a un curso
+router.post('/evaluaciones', clinicalController.asignarCasosBanco);
 
 // Endpoints CRUD adicionales (Editar y Eliminar)
 router.put('/caso/:id', clinicalController.editarCaso);

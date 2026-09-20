@@ -15,9 +15,9 @@ import { ExtraService } from '../../services/extra';
 export class DashboardEstudiante implements OnInit {
   
   estadisticas = {
-    casosResueltos: 2,
-    precisionPromedio: 88,
-    casosPendientes: 3
+    casosResueltos: 0,
+    precisionPromedio: 0,
+    casosPendientes: 0
   };
 
   worklist: any[] = [];
@@ -50,6 +50,20 @@ export class DashboardEstudiante implements OnInit {
   ngOnInit(): void {
     this.cargarWorklistReal();
     this.cargarNotificaciones();
+    this.cargarEstadisticasReales();
+  }
+
+  cargarEstadisticasReales() {
+    this.clinicalService.getEstadisticasEstudiante().subscribe({
+      next: (res: any) => {
+        if (res && res.data) {
+          this.estadisticas.casosResueltos = res.data.casos_resueltos || 0;
+          this.estadisticas.precisionPromedio = res.data.precision_promedio || 0;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err) => console.error('Error al cargar estadísticas del estudiante:', err)
+    });
   }
 
   cargarWorklistReal() {

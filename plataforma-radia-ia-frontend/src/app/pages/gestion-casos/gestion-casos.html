@@ -6,9 +6,9 @@
       <p>Repositorio de pacientes simulados y estudios diagnósticos para el entrenamiento estudiantil.</p>
     </div>
     <div class="header-actions">
-      <button class="btn-primary" (click)="abrirModalCrear()">
-        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Proponer Caso (Cola IA)
+      <button class="btn-primary" (click)="abrirBancoCasos()">
+        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Asignar Casos NIH
       </button>
     </div>
   </header>
@@ -59,8 +59,8 @@
 
     <div class="filter-chips">
       <button [class.active]="filtroEstado === 'TODOS'" (click)="setFiltroEstado('TODOS')">Todos los Estados</button>
-      <button [class.active]="filtroEstado === 'PENDIENTE'" (click)="setFiltroEstado('PENDIENTE')">🟠 Pendientes IA</button>
-      <button [class.active]="filtroEstado === 'DISPONIBLE'" (click)="setFiltroEstado('DISPONIBLE')">🟢 Disponibles</button>
+      <button [class.active]="filtroEstado === 'PENDIENTE'" (click)="setFiltroEstado('PENDIENTE')">Pendientes IA</button>
+      <button [class.active]="filtroEstado === 'DISPONIBLE'" (click)="setFiltroEstado('DISPONIBLE')">Disponibles</button>
     </div>
   </section>
 
@@ -83,7 +83,7 @@
             'diff-basico': caso.estado === 'pendiente',
             'diff-avanzado': caso.estado === 'disponible'
           }">
-            {{ caso.estado === 'pendiente' ? '🟠 Pendiente IA' : '🟢 Disponible' }}
+            {{ caso.estado === 'pendiente' ? 'Pendiente IA' : 'Disponible' }}
           </span>
         </div>
 
@@ -112,126 +112,177 @@
     <div class="empty-cases glass-panel" *ngIf="casosFiltrados.length === 0">
       <svg viewBox="0 0 24 24" width="48" height="48" stroke="var(--text-muted)" stroke-width="1.5" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
       <p>No se encontraron casos clínicos con los filtros aplicados.</p>
-      <button class="btn-primary" (click)="abrirModalCrear()">+ Registrar Primer Caso</button>
+      <button class="btn-primary" (click)="abrirBancoCasos()">+ Asignar Casos NIH</button>
     </div>
   </section>
 
-  <!-- MODAL: REGISTRAR NUEVO CASO CLÍNICO & PACIENTE (DOCENTE) -->
-  <div class="modal-backdrop" *ngIf="modalCrearAbierto" (click)="cerrarModalCrear()">
-    <div class="modal-card modal-lg glass-panel" (click)="$event.stopPropagation()">
+  <!-- MODAL: BANCO DE CASOS NIH (PANTALLA COMPLETA) -->
+  <div class="modal-backdrop banco-modal-backdrop" *ngIf="bancoModalAbierto" (click)="cerrarBancoCasos()">
+    <div class="modal-card modal-full glass-panel" (click)="$event.stopPropagation()">
       
-      <div class="modal-header">
+      <!-- ENCABEZADO Y FILTROS -->
+      <div class="modal-header banco-header">
         <div class="modal-title-box">
           <div class="modal-icon-badge">
-            <svg viewBox="0 0 24 24" width="20" height="20" stroke="var(--accent-cyan)" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="var(--accent-cyan)" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
           </div>
           <div>
-            <h3>Nuevo Caso Clínico y Paciente Simulado</h3>
-            <p class="text-muted">Creación de reactivo radiológico para la plataforma educativa RADIA-IA</p>
+            <h3>Banco de Casos NIH</h3>
+            <p class="text-muted">Explora y selecciona casos reales para tu evaluación</p>
           </div>
         </div>
-        <button class="btn-close" (click)="cerrarModalCrear()">&times;</button>
-      </div>
-
-      <div class="modal-body">
         
-        <div class="alert-success" *ngIf="mensajeExito">
-          ✅ {{ mensajeExito }}
-        </div>
-        <div class="alert-error" *ngIf="mensajeError">
-          ⚠️ {{ mensajeError }}
-        </div>
-
-        <form class="create-case-form" (ngSubmit)="guardarNuevoCaso()">
-          
-          <!-- SECCIÓN 1: DATOS DEL PACIENTE -->
-          <div class="form-section">
-            <h4 class="form-section-title">1. PACIENTE SIMULADO</h4>
-            <div class="form-grid-3">
-              <div class="form-group">
-                <label>Código del Paciente *</label>
-                <input type="text" [(ngModel)]="nuevoCaso.codigo_paciente" name="codigo_paciente" placeholder="Generando..." readonly class="glass-input readonly-input" required>
-              </div>
-
-              <div class="form-group">
-                <label>Edad (años) *</label>
-                <input type="number" [(ngModel)]="nuevoCaso.edad" name="edad" min="1" max="120" required>
-              </div>
-
-              <div class="form-group">
-                <label>Género *</label>
-                <select [(ngModel)]="nuevoCaso.genero" name="genero" class="glass-input" required>
-                  <option value="" disabled selected>-- Seleccionar --</option>
-                  <option value="M">Masculino</option>
-                  <option value="F">Femenino</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Antecedentes Médicos Relevantes</label>
-              <textarea [(ngModel)]="nuevoCaso.antecedentes_medicos" name="antecedentes_medicos" placeholder="Ej: Tabaquismo activo por 15 años, hipertensión arterial grado I..." rows="2"></textarea>
-            </div>
+        <div class="banco-filters">
+          <div class="filter-group">
+            <label>Patología Principal:</label>
+            <select [(ngModel)]="filtroBancoPatologia" (change)="cambiarFiltroBanco()" class="glass-input">
+              <option *ngFor="let pat of patologias" [value]="pat.nombre">{{ pat.nombre }}</option>
+            </select>
           </div>
+          <div class="filter-group">
+            <label>Dificultad:</label>
+            <select [(ngModel)]="filtroBancoDificultad" (change)="cambiarFiltroBanco()" class="glass-input">
+              <option value="Basico">Básico</option>
+              <option value="Intermedio">Intermedio</option>
+              <option value="Avanzado">Avanzado</option>
+            </select>
+          </div>
+          <button class="btn-close" (click)="cerrarBancoCasos()">&times;</button>
+        </div>
+      </div>
 
-          <!-- SECCIÓN 2: RADIOGRAFÍA -->
-          <div class="form-section">
-            <h4 class="form-section-title">2. MATRIZ RADIOGRÁFICA</h4>
+      <!-- COMPOSICIÓN AUTOMÁTICA: prellena el carrito con una mezcla diana + normales + distractores.
+           El docente puede seguir agregando/quitando casos a mano en la grilla de abajo. -->
+      <div class="banco-composicion glass-panel" style="margin: 15px 20px; padding: 15px 20px; border-radius: 10px;">
+        <h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--accent-cyan);">Composición Automática del Ejercicio</h4>
+
+        <div class="form-group" style="position: relative;">
+          <label style="font-size: 12px;">Patologías objetivo:</label>
+          <button type="button" class="glass-input" style="width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" (click)="mostrarDropdownPatologias = !mostrarDropdownPatologias">
+            <span>{{ textoPatologiasObjetivo() }}</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+
+          <div *ngIf="mostrarDropdownPatologias" class="glass-panel" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 20; margin-top: 4px; padding: 10px; border-radius: 8px; max-height: 220px; overflow-y: auto;">
+            <label class="checkbox-container" *ngFor="let pat of patologiasObjetivo" style="font-size: 13px; display: flex; align-items: center; gap: 8px; padding: 6px 4px;">
+              <input type="checkbox" [(ngModel)]="pat.seleccionada">
+              <span class="checkmark"></span>
+              {{ pat.nombre }}
+            </label>
+            <button type="button" class="btn-primary" style="width: 100%; margin-top: 8px; padding: 6px;" (click)="mostrarDropdownPatologias = false">Listo</button>
+          </div>
+        </div>
+
+        <div class="form-grid-3" style="display: flex; gap: 15px; margin-top: 12px; flex-wrap: wrap;">
+          <div class="form-group" style="flex: 1; min-width: 140px;">
+            <label style="font-size: 12px;">Nivel máximo</label>
+            <select [(ngModel)]="criteriosComposicion.nivel_dificultad" class="glass-input">
+              <option value="Básico">Básico</option>
+              <option value="Intermedio">Básico + Intermedio</option>
+              <option value="Avanzado">Todos los niveles</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 120px;">
+            <label style="font-size: 12px;">N.º de casos</label>
+            <input type="number" [(ngModel)]="criteriosComposicion.total_casos" min="1" max="50" class="glass-input">
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 120px;">
+            <label style="font-size: 12px;">% Normales</label>
+            <input type="number" [(ngModel)]="criteriosComposicion.porcentaje_normales" min="0" max="100" class="glass-input">
+          </div>
+          <div class="form-group" style="display: flex; align-items: flex-end;">
+            <button class="btn-primary" [disabled]="componiendoEjercicio" (click)="componerAutomaticamente()">
+              {{ componiendoEjercicio ? 'Componiendo...' : 'Componer Automáticamente' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUADRÍCULA DE IMÁGENES -->
+      <div class="modal-body banco-body">
+        
+        <div class="banco-loading" *ngIf="cargandoBanco">
+          <div class="spinner"></div>
+          <p>Cargando casos desde el servidor...</p>
+        </div>
+        
+        <div class="banco-empty" *ngIf="!cargandoBanco && bancoCasos.length === 0">
+          <p>No se encontraron casos del NIH para estos filtros.</p>
+        </div>
+
+        <div class="banco-grid" *ngIf="!cargandoBanco && bancoCasos.length > 0">
+          <div class="banco-card" 
+               *ngFor="let caso of bancoCasos; trackBy: trackByCaso" 
+               [class.selected]="esCasoSeleccionado(caso.id_caso)"
+               (click)="toggleSeleccionCaso(caso)">
+               
+            <div class="banco-img-wrapper">
+              <!-- Skeleton que se muestra mientras la imagen carga -->
+              <div class="img-skeleton" [class.hidden]="caso._imgLoaded"></div>
+              
+              <img 
+                [src]="getImagenUrl(caso.ruta_imagen)" 
+                alt="Radiografía"
+                loading="lazy"
+                [class.img-visible]="caso._imgLoaded"
+                (load)="caso._imgLoaded = true"
+                (error)="onImageError($event, caso)">
+              
+              <div class="banco-overlay">
+                <svg *ngIf="esCasoSeleccionado(caso.id_caso)" viewBox="0 0 24 24" width="40" height="40" stroke="#00ff88" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span *ngIf="!esCasoSeleccionado(caso.id_caso)">Haz clic para seleccionar</span>
+              </div>
+            </div>
             
-            <div class="form-grid-1">
-              <!-- El motor de IA se encargará de determinar la proyección óptima en base al diagnóstico (Tórax por defecto) -->
-
-              <div class="form-group">
-                <label>Subir Archivo de Imagen (PNG, JPG, DICOM)</label>
-                <input type="file" id="rx-upload" (change)="onArchivoSeleccionado($event)" accept="image/*" class="hidden-file-input">
-                <label for="rx-upload" class="custom-file-upload"
-                       [class.drag-active]="isDragging"
-                       (dragover)="onDragOver($event)"
-                       (dragleave)="onDragLeave($event)"
-                       (drop)="onDrop($event)">
-                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                  <span>{{ nombreArchivoSeleccionado ? nombreArchivoSeleccionado : 'Seleccionar archivo o arrastrar aquí...' }}</span>
-                </label>
+            <div class="banco-info">
+              <h4>{{ caso.titulo_caso }}</h4>
+              <p class="banco-meta"><strong>Paciente:</strong> {{ caso.edad }} años, {{ caso.genero }}</p>
+              
+              <!-- Mostrar hallazgos de forma limpia -->
+              <div class="banco-hallazgos">
+                <span class="hallazgo-badge" *ngFor="let h of caso.hallazgos_docente">{{ h }}</span>
               </div>
             </div>
-
-            <!-- Vista Previa de la Imagen -->
-            <div class="preview-box">
-              <span>Vista Previa de Radiografía:</span>
-              <div class="preview-img-container">
-                <img [src]="imagenPreviewUrl" alt="Vista previa de radiografía" class="preview-img">
-              </div>
-            </div>
+            
           </div>
-
-          <!-- SECCIÓN 3: DECLARACIÓN DE HALLAZGOS (DOCENTE) -->
-          <div class="form-section">
-            <h4 class="form-section-title">3. HALLAZGOS CONSIDERADOS</h4>
-            <p class="text-muted" style="margin-bottom: 10px; font-size: 0.9em;">Selecciona las anomalías que consideras presentes en esta placa. Al guardarlo, entrará a la Cola de Procesamiento IA.</p>
-            <div class="checkbox-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-              <label class="checkbox-container" *ngFor="let patologia of patologias">
-                <input type="checkbox" [(ngModel)]="patologia.seleccionada" [name]="'patologia_' + patologia.nombre">
-                <span class="checkmark" style="margin-right: 8px;"></span>
-                {{ patologia.nombre }}
-              </label>
-            </div>
-          </div>
-
-        </form>
-
+        </div>
+        
       </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn-cancel" (click)="cerrarModalCrear()">Cancelar</button>
-        <button type="button" class="btn-primary" (click)="guardarNuevoCaso()" [disabled]="guardandoCaso">
-          <span *ngIf="!guardandoCaso">Guardar Caso en Base de Datos</span>
-          <span *ngIf="guardandoCaso">Guardando en MySQL...</span>
-        </button>
+      <!-- PANEL INFERIOR: CARRITO DE SELECCIÓN -->
+      <div class="modal-footer banco-carrito-panel">
+        <div class="carrito-status">
+          <div class="carrito-icon">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+            <span class="badge" *ngIf="casosSeleccionados.length > 0">{{ casosSeleccionados.length }}</span>
+          </div>
+          <div class="carrito-text">
+            <span *ngIf="casosSeleccionados.length === 0">Ningún caso seleccionado</span>
+            <span *ngIf="casosSeleccionados.length > 0"><strong>{{ casosSeleccionados.length }} casos</strong> en tu bandeja de asignación</span>
+          </div>
+        </div>
+        
+        <div class="carrito-actions">
+          <div class="curso-selector" *ngIf="casosSeleccionados.length > 0">
+            <label>Asignar al curso:</label>
+            <select [(ngModel)]="cursoSeleccionado" class="glass-input">
+              <option *ngFor="let c of misCursos" [value]="c.id_curso">{{ c.nombre }}</option>
+            </select>
+          </div>
+          
+          <button class="btn-cancel" (click)="cerrarBancoCasos()">Cancelar</button>
+          <button class="btn-primary" 
+                  [disabled]="casosSeleccionados.length === 0 || guardandoEjercicio" 
+                  (click)="publicarEjercicio()">
+            <span *ngIf="!guardandoEjercicio">Publicar Ejercicio</span>
+            <span *ngIf="guardandoEjercicio">Asignando...</span>
+          </button>
+        </div>
       </div>
-
+      
     </div>
   </div>
+
 
   <!-- MODAL: VER FICHA DEL CASO / RADIOGRAFÍA DETALLADA -->
   <div class="modal-backdrop" *ngIf="modalDetalleAbierto" (click)="cerrarDetalleCaso()">
@@ -267,6 +318,16 @@
           <div class="info-group">
             <label>Nivel de Dificultad</label>
             <span class="difficulty-pill diff-intermedio">{{ casoSeleccionado?.nivel_dificultad || 'Intermedio' }}</span>
+          </div>
+
+          <div class="info-group">
+            <label>Verdad de Referencia (Hallazgos)</label>
+            <p class="clinical-box" *ngIf="obtenerEtiquetasVerdad(casoSeleccionado).length > 0">
+              {{ obtenerEtiquetasVerdad(casoSeleccionado).join(', ') }}
+            </p>
+            <p class="clinical-box" style="color: #888;" *ngIf="obtenerEtiquetasVerdad(casoSeleccionado).length === 0">
+              Sin hallazgos registrados todavía.
+            </p>
           </div>
 
           <div class="info-group">

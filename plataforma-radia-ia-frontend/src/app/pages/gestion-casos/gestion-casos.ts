@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClinicalService } from '../../services/clinical';
@@ -32,32 +32,41 @@ export class GestionCasosCatedratico implements OnInit {
     { nombre: 'Normal', seleccionada: false }
   ];
 
-  // Estado para el modal de Crear Caso
-  modalCrearAbierto: boolean = false;
-  guardandoCaso: boolean = false;
-  mensajeExito: string = '';
-  mensajeError: string = '';
-
-  // Formulario nuevo caso
-  // Nota: titulo_caso, nivel_dificultad y motivo_consulta ya no se piden en este formulario
-  // (para que el estudiante no vea pistas del diagnóstico en su Worklist antes de evaluar el caso).
-  // Se generan con valores neutrales en guardarNuevoCaso().
-  nuevoCaso = {
-    codigo_paciente: '',
-    edad: null as number | null,
-    genero: '',
-    antecedentes_medicos: '',
-    tipo_proyeccion: 'Tórax PA (Posteroanterior)',
-    id_curso: null as number | null
-  };
-
-  // Cursos reales del catedrático (reemplaza el id_curso hardcodeado)
+  // === ESTADO PARA EL BANCO DE CASOS (EL "CARRITO") ===
+  bancoModalAbierto: boolean = false;
+  bancoCasos: any[] = [];
+  casosSeleccionados: any[] = []; // El carrito de compras
+  filtroBancoPatologia: string = 'Normal';
+  filtroBancoDificultad: string = 'Basico';
+  cargandoBanco: boolean = false;
+  guardandoEjercicio: boolean = false;
+  cursoSeleccionado: number | null = null;
   misCursos: any[] = [];
 
-  archivoSeleccionado: File | null = null;
-  nombreArchivoSeleccionado: string = '';
-  imagenPreviewUrl: string = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80';
-  isDragging: boolean = false;
+  // === COMPOSICIÓN AUTOMÁTICA (híbrido: prellena el carrito, el docente lo sigue ajustando a mano) ===
+  patologiasObjetivo = [
+    { nombre: 'Atelectasia', seleccionada: false },
+    { nombre: 'Cardiomegalia', seleccionada: false },
+    { nombre: 'Derrame Pleural', seleccionada: false },
+    { nombre: 'Infiltracion', seleccionada: false },
+    { nombre: 'Neumonia', seleccionada: false },
+    { nombre: 'Neumotorax', seleccionada: false },
+    { nombre: 'Nodulos', seleccionada: false }
+  ];
+  criteriosComposicion = {
+    nivel_dificultad: 'Avanzado', // incluye Básico+Intermedio+Avanzado por defecto
+    total_casos: 10,
+    porcentaje_normales: 30 // se muestra como % entero en el input, se divide entre 100 al enviar
+  };
+  componiendoEjercicio: boolean = false;
+  mostrarDropdownPatologias: boolean = false;
+
+  textoPatologiasObjetivo(): string {
+    const seleccionadas = this.patologiasObjetivo.filter(p => p.seleccionada).map(p => p.nombre);
+    if (seleccionadas.length === 0) return 'Selecciona patologías objetivo...';
+    if (seleccionadas.length <= 2) return seleccionadas.join(', ');
+    return `${seleccionadas.length} patologías seleccionadas`;
+  }
 
   // Estado para el modal de Ver Detalle
   modalDetalleAbierto: boolean = false;
@@ -84,6 +93,7 @@ export class GestionCasosCatedratico implements OnInit {
     private clinicalService: ClinicalService,
     private academicService: AcademicService,
     private cdr: ChangeDetectorRef,
+    private ngZone: NgZone,
     private alertService: AlertService
   ) {}
 
@@ -138,10 +148,22 @@ export class GestionCasosCatedratico implements OnInit {
   // existen en el origen del backend (environment.apiUrl), no en el del frontend (ng serve).
   // Sin este prefijo, el navegador intenta cargar la imagen desde el propio Angular y falla.
   getImagenUrl(ruta: string | null | undefined): string {
-    const fallback = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80';
-    if (!ruta) return fallback;
+    if (!ruta) return '';
     return ruta.startsWith('http') ? ruta : `${environment.apiUrl}${ruta}`;
   }
+
+  // Maneja errores de carga de imagen: muestra un placeholder SVG de radiografía
+  onImageError(event: any, caso: any): void {
+    caso._imgLoaded = true; // Oculta el skeleton también cuando hay error
+    caso._imgError = true;
+    event.target.src = `data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='220' viewBox='0 0 280 220'%3E%3Crect width='280' height='220' fill='%231a1a2e'/%3E%3Crect x='40' y='30' width='200' height='160' rx='8' fill='%23252545' stroke='%2333335a' stroke-width='1'/%3E%3Ccircle cx='140' cy='100' r='35' fill='none' stroke='%23334155' stroke-width='2'/%3E%3Ccircle cx='140' cy='100' r='20' fill='none' stroke='%23334155' stroke-width='1.5'/%3E%3Cpath d='M100 100 L180 100 M140 60 L140 140' stroke='%23334155' stroke-width='1.5'/%3E%3Ctext x='140' y='175' text-anchor='middle' fill='%23475569' font-size='10' font-family='sans-serif'%3EImagen no disponible%3C/text%3E%3C/svg%3E`;
+  }
+
+  // trackBy para ngFor: evita re-renderizar tarjetas que no cambiaron
+  trackByCaso(index: number, caso: any): number {
+    return caso.id_caso;
+  }
+
 
   aplicarFiltros(): void {
     let res = [...this.casos];
@@ -167,156 +189,150 @@ export class GestionCasosCatedratico implements OnInit {
     this.aplicarFiltros();
   }
 
-  abrirModalCrear(): void {
-    this.mensajeExito = '';
-    this.mensajeError = '';
-    this.nuevoCaso = {
-      codigo_paciente: 'Cargando...',
-      edad: null,
-      genero: '',
-      antecedentes_medicos: '',
-      tipo_proyeccion: 'Tórax PA (Posteroanterior)',
-      id_curso: this.misCursos.length > 0 ? this.misCursos[0].id_curso : null
-    };
-
-    // Reset checkboxes
-    this.patologias.forEach(p => p.seleccionada = false);
-
+  // ==========================================
+  // FLUJO DE CREACIÓN DE EJERCICIOS (BANCO NIH)
+  // ==========================================
+  
+  abrirBancoCasos(): void {
     if (this.misCursos.length === 0) {
       this.alertService.warning(
         'Sin cursos asignados',
-        'No tienes ningún curso creado todavía. Crea un curso antes de registrar casos clínicos.'
+        'No tienes ningún curso asignado todavía. Pide a un administrador que te asigne un curso antes de crear ejercicios.'
       );
+      return;
     }
+    
+    // Seleccionar el primer curso por defecto si no hay uno seleccionado
+    if (!this.cursoSeleccionado) {
+      this.cursoSeleccionado = this.misCursos[0].id_curso;
+    }
+    
+    this.casosSeleccionados = [];
+    this.bancoModalAbierto = true;
+    this.cargarBanco();
+  }
 
-    this.clinicalService.getNextPacienteCode().subscribe({
-      next: (resp) => {
-        if (resp.data) {
-          this.nuevoCaso.codigo_paciente = resp.data;
+  cerrarBancoCasos(): void {
+    this.bancoModalAbierto = false;
+  }
+
+  cargarBanco(): void {
+    this.cargandoBanco = true;
+    this.cdr.detectChanges(); // forzar que el spinner aparezca de inmediato
+    this.clinicalService.getBancoCasosIA(this.filtroBancoPatologia, this.filtroBancoDificultad).subscribe({
+      next: (resp: any) => {
+        // NgZone.run garantiza que Angular actualice la vista sin esperar un evento
+        this.ngZone.run(() => {
+          this.bancoCasos = resp.data || [];
+          this.cargandoBanco = false;
           this.cdr.detectChanges();
-        }
+        });
       },
-      error: (err) => {
-        console.error('Error obteniendo siguiente código', err);
-        this.nuevoCaso.codigo_paciente = `PAC-${Date.now()}`; // Fallback si el backend falla
-        this.cdr.detectChanges();
+      error: (err: any) => {
+        this.ngZone.run(() => {
+          console.error('Error cargando banco:', err);
+          this.alertService.error('Error', 'No se pudo cargar el banco de casos. Verifica tu conexión.');
+          this.cargandoBanco = false;
+          this.cdr.detectChanges();
+        });
       }
     });
-    this.imagenPreviewUrl = 'https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=600&q=80';
-    this.archivoSeleccionado = null;
-    this.nombreArchivoSeleccionado = '';
-    this.modalCrearAbierto = true;
   }
 
-  cerrarModalCrear(): void {
-    this.modalCrearAbierto = false;
+  cambiarFiltroBanco(): void {
+    this.cargarBanco();
   }
 
-  onDragOver(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging = true;
-  }
-
-  onDragLeave(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging = false;
-  }
-
-  onDrop(event: DragEvent): void {
-    event.preventDefault();
-    event.stopPropagation();
-    this.isDragging = false;
-    
-    if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length > 0) {
-      this.procesarArchivo(event.dataTransfer.files[0]);
+  async componerAutomaticamente(): Promise<void> {
+    const objetivos = this.patologiasObjetivo.filter(p => p.seleccionada).map(p => p.nombre);
+    if (objetivos.length === 0) {
+      this.alertService.warning('Selecciona al menos una patología', 'Marca una o más patologías objetivo para componer el ejercicio.');
+      return;
     }
-  }
 
-  onArchivoSeleccionado(event: any): void {
-    const file = event.target?.files?.[0];
-    this.procesarArchivo(file);
-  }
+    if (this.casosSeleccionados.length > 0) {
+      const confirmado = await this.alertService.confirm(
+        'Reemplazar selección actual',
+        `Ya tienes ${this.casosSeleccionados.length} caso(s) en tu bandeja. Componer automáticamente reemplazará esa selección. ¿Continuar?`,
+        'Sí, reemplazar'
+      );
+      if (!confirmado) return;
+    }
 
-  procesarArchivo(file: File | undefined | null): void {
-    if (file) {
-      this.archivoSeleccionado = file;
-      this.nombreArchivoSeleccionado = file.name;
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.imagenPreviewUrl = e.target.result;
+    this.componiendoEjercicio = true;
+    this.clinicalService.componerEjercicio({
+      patologias_objetivo: objetivos,
+      nivel_dificultad: this.criteriosComposicion.nivel_dificultad,
+      total_casos: this.criteriosComposicion.total_casos,
+      porcentaje_normales: this.criteriosComposicion.porcentaje_normales / 100
+    }).subscribe({
+      next: (resp: any) => {
+        this.componiendoEjercicio = false;
+        const { casos, resumen } = resp.data;
+        this.casosSeleccionados = casos;
         this.cdr.detectChanges();
-      };
-      reader.readAsDataURL(file);
+
+        if (resumen.obtenidos < resumen.solicitados) {
+          this.alertService.warning(
+            'Composición parcial',
+            `Se encontraron ${resumen.obtenidos} de ${resumen.solicitados} casos solicitados (${resumen.diana} diana, ${resumen.normales} normales, ${resumen.distractores} distractores). Puedes completar el resto a mano desde la grilla.`
+          );
+        } else {
+          this.alertService.success(
+            'Ejercicio compuesto',
+            `${resumen.diana} diana, ${resumen.normales} normales y ${resumen.distractores} distractores agregados a tu bandeja. Puedes ajustar la selección antes de publicar.`
+          );
+        }
+      },
+      error: (err: any) => {
+        this.componiendoEjercicio = false;
+        this.alertService.error('Error al componer', err.error?.message || 'No se pudo componer el ejercicio automáticamente.');
+      }
+    });
+  }
+
+  esCasoSeleccionado(id_caso: number): boolean {
+    return this.casosSeleccionados.some(c => c.id_caso === id_caso);
+  }
+
+  toggleSeleccionCaso(caso: any): void {
+    const index = this.casosSeleccionados.findIndex(c => c.id_caso === caso.id_caso);
+    if (index === -1) {
+      // Agregar al carrito
+      this.casosSeleccionados.push(caso);
     } else {
-      this.nombreArchivoSeleccionado = '';
+      // Remover del carrito
+      this.casosSeleccionados.splice(index, 1);
     }
   }
 
-  guardarNuevoCaso(): void {
-    if (!this.nuevoCaso.codigo_paciente || !this.nuevoCaso.edad || !this.nuevoCaso.genero) {
-      this.mensajeError = 'Por favor complete todos los campos obligatorios del paciente.';
+  publicarEjercicio(): void {
+    if (this.casosSeleccionados.length === 0) {
+      this.alertService.warning('Carrito Vacío', 'Debes seleccionar al menos un caso clínico para publicar.');
+      return;
+    }
+    if (!this.cursoSeleccionado) {
+      this.alertService.warning('Curso no seleccionado', 'Debes elegir un curso destino para este ejercicio.');
       return;
     }
 
-    if (!this.nuevoCaso.id_curso) {
-      this.mensajeError = 'No se pudo determinar tu curso. Verifica que tengas un curso asignado antes de registrar un caso.';
-      return;
-    }
+    this.guardandoEjercicio = true;
+    const ids_casos = this.casosSeleccionados.map(c => c.id_caso);
 
-    this.guardandoCaso = true;
-    this.mensajeError = '';
-    this.mensajeExito = '';
-
-    // El título y el motivo de consulta ya no se solicitan en el formulario (para no revelar
-    // pistas del diagnóstico al estudiante en su Worklist antes de evaluar el caso). Se generan
-    // con valores neutrales; nivel de dificultad queda fijo en "Intermedio" por defecto.
-    const formData = new FormData();
-    formData.append('codigo_paciente', this.nuevoCaso.codigo_paciente);
-    formData.append('edad', this.nuevoCaso.edad?.toString() || '0');
-    formData.append('genero', this.nuevoCaso.genero);
-    formData.append('antecedentes_medicos', this.nuevoCaso.antecedentes_medicos || 'Sin antecedentes registrados');
-    formData.append('titulo_caso', `Caso Clínico ${this.nuevoCaso.codigo_paciente}`);
-    formData.append('nivel_dificultad', 'Intermedio');
-    formData.append('motivo_consulta', 'Sin motivo de consulta registrado.');
-    formData.append('tipo_proyeccion', this.nuevoCaso.tipo_proyeccion);
-    formData.append('id_curso', this.nuevoCaso.id_curso.toString());
-
-    // Añadimos los hallazgos marcados por el docente (patologias.seleccionada = true)
-    const hallazgosSeleccionados = this.patologias.filter(p => p.seleccionada).map(p => p.nombre);
-    if (hallazgosSeleccionados.length > 0) {
-      formData.append('hallazgos_docente', JSON.stringify(hallazgosSeleccionados));
-    }
-
-    if (this.archivoSeleccionado) {
-      formData.append('imagen_rx', this.archivoSeleccionado);
-    }
-
-    this.clinicalService.crearCasoCompleto(formData).subscribe({
-      next: () => {
-        this.guardandoCaso = false;
-
-        // Cerramos el modal inmediatamente
-        this.cerrarModalCrear();
-
-        // Disparamos la alerta premium
+    this.clinicalService.asignarCasosBanco(this.cursoSeleccionado, ids_casos).subscribe({
+      next: (resp: any) => {
+        this.guardandoEjercicio = false;
+        this.cerrarBancoCasos();
         this.alertService.success(
-          '¡Caso Registrado!',
-          'El caso clínico y la radiografía se han guardado exitosamente en la base de datos.'
+          '¡Ejercicio Publicado!',
+          `Se han asignado ${resp.data?.copiados || this.casosSeleccionados.length} casos al curso exitosamente. Los estudiantes ya pueden resolverlos.`
         );
-
-        // Recargar los casos reales de la base de datos para mantener sincronización
-        this.cargarCasos();
+        this.cargarCasos(); // Recarga la lista de casos asignados en el dashboard principal
       },
-      error: (err) => {
-        this.guardandoCaso = false;
-        console.error('Error al registrar el caso clínico:', err);
-
-        // No se guarda nada en memoria: si el backend falla, el caso NO existe.
-        // Mostrar el error real evita que el catedrático crea que se guardó cuando no fue así.
-        this.mensajeError = err.error?.message || 'No se pudo guardar el caso clínico. Verifica los datos e inténtalo de nuevo.';
-        this.alertService.error('Error al Registrar', this.mensajeError);
+      error: (err: any) => {
+        this.guardandoEjercicio = false;
+        console.error('Error asignando casos:', err);
+        this.alertService.error('Error al Publicar', err.error?.message || 'Ocurrió un error al asignar los casos al curso.');
       }
     });
   }
@@ -324,6 +340,19 @@ export class GestionCasosCatedratico implements OnInit {
   abrirDetalleCaso(caso: any): void {
     this.casoSeleccionado = caso;
     this.modalDetalleAbierto = true;
+  }
+
+  // Verdad de referencia del caso (para que el docente audite qué patologías tiene marcadas antes
+  // de publicarlo). hallazgos_docente puede ser un array simple (caso creado a mano, aún sin IA) o
+  // un objeto con etiquetas_reales (caso del banco NIH).
+  obtenerEtiquetasVerdad(caso: any): string[] {
+    if (!caso?.hallazgos_docente) return [];
+    let info = caso.hallazgos_docente;
+    if (typeof info === 'string') {
+      try { info = JSON.parse(info); } catch { return []; }
+    }
+    if (Array.isArray(info)) return info;
+    return info?.etiquetas_reales || [];
   }
 
   cerrarDetalleCaso(): void {

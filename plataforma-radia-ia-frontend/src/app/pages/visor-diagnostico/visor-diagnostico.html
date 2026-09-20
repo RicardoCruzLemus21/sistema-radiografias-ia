@@ -43,11 +43,12 @@
            (mousemove)="onImageMouseMove($event)" 
            (mouseup)="onImageMouseUp($event)">
            
-        <!-- Grad-CAM IA (Fase 3 y 4) -->
-        <div class="heatmap-overlay" *ngIf="faseActual >= 3"></div>
+        <!-- Grad-CAM IA (Fase 3 y 4): mapa de calor de la opinión con mayor probabilidad -->
+        <div class="heatmap-overlay" *ngIf="faseActual >= 3 && resultadoFase3?.opiniones?.[0]?.gradcamUrl"
+             [ngStyle]="{'background-image': 'url(' + resultadoFase3.opiniones[0].gradcamUrl + ')'}"></div>
 
-        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image" 
-             [class.heatmap-effect]="faseActual >= 3"
+        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image"
+             [class.heatmap-effect]="faseActual >= 3 && resultadoFase3?.opiniones?.[0]?.gradcamUrl"
              [ngStyle]="{'transform': 'scale(' + zoomLevel + ')', 'filter': (isInverted ? 'invert(1) ' : 'grayscale(100%) ') + 'brightness(' + brightness + ') contrast(' + contrast + ')'}" 
              style="transition: transform 0.3s ease, filter 0.3s ease; user-select: none;" draggable="false">
 
@@ -102,8 +103,8 @@
         </div>
 
         <div class="panel-actions">
-          <button class="btn-primary" (click)="enviarDiagnostico()" style="width: 100%;">
-            BLOQUEAR RESPUESTA Y VER VERDAD
+          <button class="btn-primary" (click)="enviarDiagnostico()" [disabled]="enviandoDiagnostico" style="width: 100%;">
+            {{ enviandoDiagnostico ? 'GUARDANDO...' : 'BLOQUEAR RESPUESTA Y VER VERDAD' }}
           </button>
         </div>
       </div>
@@ -134,16 +135,38 @@
       <div *ngIf="faseActual === 3" class="fase-container fade-in">
         <div class="panel-section">
           <h3>OPINIÓN DEL MODELO IA</h3>
-          <p class="helper-text">El modelo no es perfecto, es tu compañero de estudio. Observa dónde prestó atención (Mapa de calor Grad-CAM).</p>
-          
-          <div class="accuracy-section" style="margin-top: 20px;">
-            <h2 class="percentage" style="color: var(--accent-cyan);">{{ resultadoFase3?.probabilidad }}%</h2>
-            <span class="percentage-label">Confianza del Modelo en: <strong>{{ resultadoFase3?.prediccion }}</strong></span>
+          <p class="helper-text">El modelo no es perfecto, es tu compañero de estudio: una segunda opinión falible, no un diagnóstico.</p>
+
+          <!-- El modelo se abstiene: esto es una fortaleza del diseño, no una falla -->
+          <div *ngIf="resultadoFase3?.abstiene" class="alert-box" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255,255,255,0.15); color: #ccc; padding: 15px; margin-top: 15px;">
+            <strong style="color: #fff;">🤐 El modelo se abstiene de opinar en este caso.</strong>
+            <p class="helper-text" style="margin-top: 8px;">
+              No es un error: el sistema solo emite juicio cuando su confianza supera un umbral calibrado para esa patología.
+              Prefiere guardar silencio antes que dar una opinión poco fiable que pueda desorientarte. Esto también enseña algo:
+              existen radiografías genuinamente ambiguas incluso para una herramienta automática.
+            </p>
           </div>
 
-          <p class="helper-text highlight-box" style="margin-top: 15px;">
-            Las zonas iluminadas en colores cálidos sobre la radiografía indican qué píxeles utilizó la red neuronal para tomar su decisión.
-          </p>
+          <!-- El modelo sí opina: una o más patologías ordenadas por probabilidad -->
+          <div *ngIf="!resultadoFase3?.abstiene" style="margin-top: 15px;">
+            <div class="accuracy-section" *ngFor="let op of resultadoFase3?.opiniones; let first = first" [style.margin-top.px]="first ? 0 : 15">
+              <h2 class="percentage" style="color: var(--accent-cyan);">{{ op.probabilidadPct }}%</h2>
+              <span class="percentage-label">El modelo señala: <strong>{{ op.patologia }}</strong></span>
+              <p class="helper-text" style="margin-top: 6px;">
+                <ng-container *ngIf="op.precisionEsperadaPct !== null; else sinPrecision">
+                  Acierta aproximadamente el {{ op.precisionEsperadaPct }}% de las veces que señala esto.
+                </ng-container>
+                <ng-template #sinPrecision>Sin dato de precisión calibrada para esta predicción.</ng-template>
+              </p>
+            </div>
+
+            <p class="helper-text highlight-box" style="margin-top: 15px;" *ngIf="resultadoFase3?.opiniones?.[0]?.gradcamUrl">
+              Las zonas iluminadas en colores cálidos sobre la radiografía indican qué píxeles utilizó la red neuronal para tomar su decisión.
+            </p>
+            <div class="alert-box" style="background: rgba(255,255,255,0.05); padding: 10px; color: #888; margin-top: 15px;" *ngIf="!resultadoFase3?.opiniones?.[0]?.gradcamUrl">
+              El modelo no generó un mapa de calor (Grad-CAM) para esta predicción.
+            </div>
+          </div>
         </div>
 
         <div class="panel-actions" style="margin-top: auto;">
@@ -157,28 +180,48 @@
       <div *ngIf="faseActual === 4" class="fase-container fade-in">
         <div class="panel-section">
           <h3>EVALUACIÓN EN TRES EJES</h3>
-          
-          <div class="score-card">
+
+          <div class="score-card" *ngIf="justificacionClinica">
+            <h4>Tu justificación clínica</h4>
+            <p class="helper-text" style="font-style: italic;">"{{ justificacionClinica }}"</p>
+          </div>
+
+          <div class="score-card" style="margin-top: 15px;" *ngIf="puntajesEstudiante">
             <h4>Eje 1: Diagnóstico</h4>
-            <p class="helper-text">¿Acertaste las etiquetas del NIH?</p>
-            <div class="alert-box" style="background: rgba(0, 255, 136, 0.1); border-color: rgba(0,255,136,0.3); color: #00ff88; padding: 10px;">
-              ✅ Tienes una coincidencia parcial con la verdad.
+            <p class="helper-text">Precisión de Etiquetas: {{ puntajesEstudiante.diagnostico }}%</p>
+            <div class="alert-box" 
+                 [ngStyle]="{'background': puntajesEstudiante.diagnostico >= 80 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
+                             'border-color': puntajesEstudiante.diagnostico >= 80 ? 'rgba(0,255,136,0.3)' : 'rgba(245,158,11,0.3)', 
+                             'color': puntajesEstudiante.diagnostico >= 80 ? '#00ff88' : '#f59e0b', 
+                             'padding': '10px'}">
+              {{ puntajesEstudiante.diagnostico >= 80 ? '✅ Excelente diagnóstico.' : (puntajesEstudiante.diagnostico > 0 ? '⚠️ Tienes una coincidencia parcial.' : '❌ Diagnóstico incorrecto.') }}
             </div>
           </div>
 
-          <div class="score-card" style="margin-top: 15px;">
+          <div class="score-card" style="margin-top: 15px;" *ngIf="puntajesEstudiante">
             <h4>Eje 2: Localización</h4>
-            <p class="helper-text">¿Miraste en el lugar correcto?</p>
-            <div class="alert-box" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245,158,11,0.3); color: #f59e0b; padding: 10px;">
-              ⚠️ Tu marca está cerca, pero no cubre completamente el BBox del radiólogo.
+            <p class="helper-text">Solapamiento de BBox (IoU): {{ puntajesEstudiante.localizacion !== null ? puntajesEstudiante.localizacion + '%' : 'N/A' }}</p>
+            <div *ngIf="puntajesEstudiante.localizacion !== null" class="alert-box" 
+                 [ngStyle]="{'background': puntajesEstudiante.localizacion >= 50 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
+                             'border-color': puntajesEstudiante.localizacion >= 50 ? 'rgba(0,255,136,0.3)' : 'rgba(245,158,11,0.3)', 
+                             'color': puntajesEstudiante.localizacion >= 50 ? '#00ff88' : '#f59e0b', 
+                             'padding': '10px'}">
+              {{ puntajesEstudiante.localizacion >= 50 ? '✅ Muy buena localización.' : '⚠️ Tu marca está lejos del hallazgo real.' }}
+            </div>
+            <div *ngIf="puntajesEstudiante.localizacion === null" class="alert-box" style="background: rgba(255, 255, 255, 0.05); padding: 10px; color: #888;">
+              Este caso del NIH no cuenta con un recuadro de referencia del radiólogo.
             </div>
           </div>
 
-          <div class="score-card" style="margin-top: 15px;">
+          <div class="score-card" style="margin-top: 15px;" *ngIf="puntajesEstudiante">
             <h4>Eje 3: Calibración</h4>
-            <p class="helper-text">Confianza vs Realidad</p>
-            <div class="alert-box" style="background: rgba(0, 229, 255, 0.1); border-color: rgba(0,229,255,0.3); color: var(--accent-cyan); padding: 10px;">
-              🧠 Declaraste una confianza del {{ nivelConfianza }}%. Esto está bien calibrado dado tu nivel de acierto.
+            <p class="helper-text">Puntaje de Confianza (Realidad - Percepción): {{ puntajesEstudiante.calibracion }}%</p>
+            <div class="alert-box" 
+                 [ngStyle]="{'background': puntajesEstudiante.calibracion >= 70 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+                             'border-color': puntajesEstudiante.calibracion >= 70 ? 'rgba(0,255,136,0.3)' : 'rgba(239,68,68,0.3)', 
+                             'color': puntajesEstudiante.calibracion >= 70 ? '#00ff88' : '#ef4444', 
+                             'padding': '10px'}">
+              {{ puntajesEstudiante.calibracion >= 70 ? '✅ Estás bien calibrado.' : '❌ Tu confianza no corresponde con tu desempeño (Sobreconfianza o Subconfianza).' }}
             </div>
           </div>
         </div>
