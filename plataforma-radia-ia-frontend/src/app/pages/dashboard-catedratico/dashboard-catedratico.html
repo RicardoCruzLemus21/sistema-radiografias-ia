@@ -6,6 +6,10 @@
       <p>Monitoreo continuo de competencias diagnósticas y concordancia con IA de los estudiantes.</p>
     </div>
     <div class="header-actions">
+        <button class="btn-primary btn-icon" (click)="abrirModalInforme()">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          Informe PDF
+        </button>
         <button class="btn-primary btn-icon" (click)="abrirModalLikert()">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
           Métricas Likert
@@ -205,7 +209,18 @@
             Este alumno aún no ha resuelto ningún caso clínico.
           </div>
 
-          <div *ngFor="let eval of estudianteSeleccionado.evaluaciones" class="eval-card glass-panel premium-card">
+          <!-- Un ejercicio = una carpeta desplegable con sus casos y el resultado del ejercicio -->
+          <div class="eval-carpeta" *ngFor="let carpeta of carpetasEvaluaciones" [class.abierta]="carpetasAbiertas.has(carpeta.clave)">
+            <button type="button" class="eval-carpeta-cabecera" (click)="alternarCarpeta(carpeta.clave)" [attr.aria-expanded]="carpetasAbiertas.has(carpeta.clave)">
+              <svg class="eval-carpeta-icono" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+              <span class="eval-carpeta-nombre">{{ carpeta.nombre }}</span>
+              <span class="eval-carpeta-casos">{{ carpeta.evaluaciones.length }} {{ carpeta.evaluaciones.length === 1 ? 'caso' : 'casos' }}</span>
+              <span class="eval-carpeta-resultado" [ngClass]="carpeta.promedio >= 80 ? 'res-alto' : (carpeta.promedio >= 50 ? 'res-medio' : 'res-bajo')">Precisión: {{ carpeta.promedio }}%</span>
+              <svg class="eval-carpeta-flecha" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+
+          <div class="eval-carpeta-cuerpo" *ngIf="carpetasAbiertas.has(carpeta.clave)">
+          <div *ngFor="let eval of carpeta.evaluaciones" class="eval-card glass-panel premium-card">
             <div class="eval-header-premium">
               <div class="eval-title-group">
                 <div class="eval-icon">
@@ -275,6 +290,8 @@
             </div>
 
           </div>
+          </div>
+          </div>
         </div>
 
         <div class="empty-evals" *ngIf="!estudianteSeleccionado?.evaluaciones || estudianteSeleccionado.evaluaciones.length === 0">
@@ -283,11 +300,68 @@
       </div>
 
       <div class="modal-footer">
+        <button class="btn-cancel" [disabled]="generandoInformeAlumno" (click)="generarInformeAlumno('descargar')">Descargar informe PDF</button>
+        <button class="btn-cancel" [disabled]="generandoInformeAlumno" (click)="generarInformeAlumno('ver')">
+          {{ generandoInformeAlumno ? 'Generando...' : 'Ver / Imprimir informe' }}
+        </button>
         <button class="btn-primary" (click)="cerrarModal()">Cerrar Expediente</button>
       </div>
     </div>
   </div>
 
+
+  <!-- MODAL: INFORME PDF DE CALIFICACIONES -->
+  <div class="modal-backdrop" *ngIf="modalInformeAbierto" (click)="cerrarModalInforme()">
+    <div class="modal-card informe-modal glass-panel" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Informe de calificaciones (PDF)</h3>
+        <button class="btn-close" (click)="cerrarModalInforme()" aria-label="Cerrar">×</button>
+      </div>
+
+      <div class="modal-body informe-cuerpo">
+        <div class="loading-state" *ngIf="cargandoEjerciciosInforme">
+          <div class="spinner"></div>
+          <p>Cargando ejercicios...</p>
+        </div>
+
+        <div class="no-data" *ngIf="!cargandoEjerciciosInforme && cursosInforme.length === 0">
+          Todavía no tienes ejercicios publicados. Crea uno desde el Banco de Casos para poder generar el informe.
+        </div>
+
+        <ng-container *ngIf="!cargandoEjerciciosInforme && cursosInforme.length > 0">
+          <div class="informe-campo">
+            <label for="informe-curso">Curso</label>
+            <select id="informe-curso" class="glass-input" [ngModel]="cursoInforme" (ngModelChange)="cursoInforme = $event; alCambiarCursoInforme()">
+              <option *ngFor="let c of cursosInforme" [ngValue]="c.id_curso">{{ c.nombre_curso }}</option>
+            </select>
+          </div>
+
+          <div class="informe-campo">
+            <div class="informe-lista-cab">
+              <label>Ejercicios a incluir</label>
+              <button type="button" class="link-btn-informe" (click)="alternarTodosEjerciciosInforme()">{{ todosEjerciciosMarcados ? 'Quitar todos' : 'Seleccionar todos' }}</button>
+            </div>
+            <label class="informe-ejercicio" *ngFor="let e of ejerciciosCurso" [class.marcado]="ejerciciosInforme.has(e.id_ejercicio)">
+              <input type="checkbox" [checked]="ejerciciosInforme.has(e.id_ejercicio)" (change)="alternarEjercicioInforme(e.id_ejercicio)">
+              <span class="informe-ejercicio-nombre">{{ e.nombre }}</span>
+              <span class="informe-ejercicio-casos">{{ e.total_casos }} {{ e.total_casos === 1 ? 'caso' : 'casos' }}</span>
+            </label>
+            <p class="helper-text" style="margin-top: 10px;">
+              Con un ejercicio se muestra su tabla de calificaciones. Con varios, cada uno tiene su tabla y se agrega un resumen consolidado por estudiante.
+            </p>
+          </div>
+        </ng-container>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="cerrarModalInforme()">Cancelar</button>
+        <button class="btn-cancel" [disabled]="generandoInforme || ejerciciosInforme.size === 0" (click)="generarInforme('descargar')">Descargar PDF</button>
+        <button class="btn-primary" [disabled]="generandoInforme || ejerciciosInforme.size === 0" (click)="generarInforme('ver')">
+          {{ generandoInforme ? 'Generando...' : 'Ver / Imprimir PDF' }}
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- MODAL: MÉTRICAS LIKERT -->
   <div class="modal-backdrop" *ngIf="modalLikertAbierto" (click)="cerrarModalLikert()">

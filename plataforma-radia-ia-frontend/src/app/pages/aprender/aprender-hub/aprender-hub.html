@@ -1,0 +1,65 @@
+<div class="aprender-pagina">
+
+  <header class="aprender-cabecera">
+    <h1>Ruta de aprendizaje</h1>
+    <p>Aprende cada patología paso a paso: primero la lección, luego compara con las que se le parecen y por último practica con casos reales del banco.
+      Lo que falles vuelve a aparecer en tu repaso justo cuando estás por olvidarlo.</p>
+  </header>
+
+  <div class="cargando-caja" *ngIf="cargando">Cargando tu ruta...</div>
+  <div class="vacio-caja error-texto" *ngIf="error">{{ error }}</div>
+
+  <ng-container *ngIf="datos">
+
+    <!-- Repaso y errores -->
+    <section class="accesos">
+      <div class="acceso glass-panel">
+        <div class="acceso-texto">
+          <h2>Repaso de hoy</h2>
+          <p *ngIf="datos.repaso.vencidas > 0"><strong>{{ datos.repaso.vencidas }}</strong> {{ datos.repaso.vencidas === 1 ? 'caso' : 'casos' }} por repasar ahora.</p>
+          <p *ngIf="datos.repaso.vencidas === 0 && datos.repaso.total > 0">Estás al día. Tu próximo repaso es el <strong>{{ datos.repaso.proxima | date:'d MMM y' }}</strong>.</p>
+          <p *ngIf="datos.repaso.total === 0">Todavía no tienes casos para repasar. Se agregan cuando fallas uno en un ejercicio o en la práctica.</p>
+        </div>
+        <button type="button" class="btn-primario" [disabled]="datos.repaso.vencidas === 0" (click)="irRepaso()">Empezar repaso</button>
+      </div>
+
+      <div class="acceso glass-panel">
+        <div class="acceso-texto">
+          <h2>Mis errores frecuentes</h2>
+          <p>Descubre qué patologías confundes más y qué te conviene reforzar primero.</p>
+        </div>
+        <button type="button" class="btn-secundario" (click)="irErrores()">Ver mis errores</button>
+      </div>
+    </section>
+
+    <p class="avance-general">
+      <strong>{{ resumenGeneral.dominadas }}</strong> de 8 dominadas · <strong>{{ resumenGeneral.enCurso }}</strong> en curso.
+      <span class="regla">Una patología se domina al ver su lección y su comparador, y acertar al menos {{ datos.reglas.umbral }} % en tus últimos casos guiados (mínimo {{ datos.reglas.min_intentos }}).</span>
+    </p>
+
+    <!-- Las 8 patologías -->
+    <section class="cuadricula">
+      <article class="clase-tarjeta glass-panel" *ngFor="let c of datos.clases" [style.--color-clase]="colorClase(c.clase)">
+        <header class="clase-cabecera">
+          <span class="clase-punto" [style.background]="colorClase(c.clase)"></span>
+          <h3>{{ nombreClase(c.clase) }}</h3>
+          <span class="estado-chip" [ngClass]="c.estado">{{ c.estado === 'nueva' ? 'Nueva' : c.estado === 'dominada' ? 'Dominada' : 'En curso' }}</span>
+        </header>
+
+        <ul class="pasos-lista">
+          <li [class.hecho]="c.leccion_vista"><span class="marca">{{ c.leccion_vista ? '✓' : '1' }}</span> Lección</li>
+          <li [class.hecho]="c.comparador_visto"><span class="marca">{{ c.comparador_visto ? '✓' : '2' }}</span> Comparador</li>
+          <li [class.hecho]="c.estado === 'dominada'">
+            <span class="marca">{{ c.estado === 'dominada' ? '✓' : '3' }}</span>
+            Casos guiados
+            <small *ngIf="c.intentos_guiados > 0">· {{ c.aciertos_guiados }} de {{ c.intentos_guiados }} acertados</small>
+          </li>
+        </ul>
+
+        <div class="barra" *ngIf="c.dominio !== null" title="Aciertos en tus últimos 10 casos guiados"><span [style.width.%]="c.dominio"></span></div>
+
+        <button type="button" class="btn-secundario" (click)="abrir(c.clase)">{{ textoBoton(c) }}</button>
+      </article>
+    </section>
+  </ng-container>
+</div>

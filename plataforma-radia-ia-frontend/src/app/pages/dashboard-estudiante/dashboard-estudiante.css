@@ -46,3 +46,52 @@
 /* Botón Evaluar Modernizado (hereda estilos base) */
 .btn-evaluar { background: rgba(6, 182, 212, 0.1); border: 1px solid var(--accent-cyan); color: var(--accent-cyan); padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); }
 .btn-evaluar:hover { background: var(--accent-cyan); color: var(--btn-text-color); box-shadow: 0 4px 12px var(--shadow-accent); transform: translateY(-2px); }
+/* Notificaciones: cada una lleva un check a la derecha que la marca como leída y la elimina */
+.notif-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; margin-bottom: 10px; border-radius: 4px; transition: background 0.3s ease; }
+.notif-item.no-leida { background: rgba(0, 255, 136, 0.1); border-left: 3px solid #00ff88; }
+.notif-contenido { flex: 1; min-width: 0; }
+.notif-titulo { display: block; font-size: 14px; color: var(--text-main); }
+.notif-mensaje { margin: 5px 0 0 0; font-size: 12px; color: var(--text-muted); overflow-wrap: anywhere; }
+.notif-fecha { display: block; margin-top: 4px; font-size: 10px; color: var(--text-muted); opacity: 0.75; }
+.btn-check-notif { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 1px solid #00c853; background: transparent; color: #00c853; cursor: pointer; transition: all 0.2s ease; }
+.btn-check-notif:hover:not(:disabled) { background: #00c853; color: #fff; transform: scale(1.08); }
+.btn-check-notif:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.btn-check-notif:disabled { opacity: 0.4; cursor: wait; }
+
+/* ========================================================
+   EJERCICIOS DESPLEGABLES EN LA WORKLIST
+   ======================================================== */
+.grupo-ejercicio + .grupo-ejercicio { border-top: 1px solid var(--border-color); }
+.grupo-cabecera {
+  width: 100%; display: flex; align-items: center; gap: 14px; padding: 18px 24px;
+  background: transparent; border: none; cursor: pointer; text-align: left; color: var(--text-main); font: inherit;
+}
+.grupo-cabecera:hover { background: var(--table-row-hover); }
+.grupo-cabecera:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: -2px; }
+.grupo-icono { color: var(--accent-cyan); flex-shrink: 0; }
+.grupo-nombre { font-size: 16px; font-weight: 700; flex: 1; }
+.grupo-progreso { display: flex; gap: 8px; flex-wrap: wrap; }
+.grupo-flecha { transition: transform 0.2s ease; color: var(--text-muted); }
+.grupo-ejercicio.abierto .grupo-flecha { transform: rotate(180deg); }
+
+/* Filtro de ejercicios (pendientes / completados) */
+.filtro-ejercicios { display: flex; gap: 6px; flex-wrap: wrap; }
+.filtro-ejercicios button {
+  padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-color);
+  background: transparent; color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.filtro-ejercicios button:hover { color: var(--text-main); border-color: var(--accent-cyan); }
+.filtro-ejercicios button.activo { background: var(--accent-cyan); border-color: var(--accent-cyan); color: var(--btn-text-color); }
+
+/* Resultado por caso y por ejercicio */
+.resultado-badge, .resultado-chip { display: inline-block; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; }
+.resultado-badge.res-alto, .resultado-chip.res-alto { background: rgba(16, 185, 129, 0.16); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+.resultado-badge.res-medio, .resultado-chip.res-medio { background: rgba(245, 158, 11, 0.16); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+.resultado-badge.res-bajo, .resultado-chip.res-bajo { background: rgba(239, 68, 68, 0.16); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+[data-theme="light"] .resultado-badge.res-alto, [data-theme="light"] .resultado-chip.res-alto { color: #047857; }
+[data-theme="light"] .resultado-badge.res-medio, [data-theme="light"] .resultado-chip.res-medio { color: #b45309; }
+[data-theme="light"] .resultado-badge.res-bajo, [data-theme="light"] .resultado-chip.res-bajo { color: #b91c1c; }
+.grupo-progreso .resultado-chip { text-transform: uppercase; letter-spacing: 0.5px; font-size: 11px; }
+
+.btn-retro { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); }
+.btn-retro:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); transform: translateY(-2px); }

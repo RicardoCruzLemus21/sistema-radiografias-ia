@@ -5,11 +5,11 @@ import { DashboardEstudiante } from './pages/dashboard-estudiante/dashboard-estu
 import { DashboardCatedratico } from './pages/dashboard-catedratico/dashboard-catedratico';
 import { GestionCasosCatedratico } from './pages/gestion-casos/gestion-casos';
 import { GestionEstudiantesCatedraticoComponent } from './pages/gestion-estudiantes-catedratico/gestion-estudiantes-catedratico';
+import { CodigoDocenteComponent } from './pages/codigo-docente/codigo-docente';
 import { VisorDiagnostico } from './pages/visor-diagnostico/visor-diagnostico';
 import { RetroalimentacionIa } from './pages/retroalimentacion-ia/retroalimentacion-ia';
 import { RendimientoEstudiante } from './pages/rendimiento-estudiante/rendimiento-estudiante';
 import { BibliotecaPatologias } from './pages/biblioteca-patologias/biblioteca-patologias';
-import { Notificaciones } from './pages/notificaciones/notificaciones';
 import { AuditoriaLogsComponent } from './pages/auditoria-logs/auditoria-logs';
 import { GestionUsuariosComponent } from './pages/gestion-usuarios/gestion-usuarios';
 import { RevisionEvaluacionesComponent } from './pages/revision-evaluaciones/revision-evaluaciones';
@@ -30,6 +30,7 @@ export const routes: Routes = [
       { path: 'catedratico', component: DashboardCatedratico, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'gestion-casos', component: GestionCasosCatedratico, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'gestion-estudiantes', component: GestionEstudiantesCatedraticoComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
+      { path: 'codigo-docente', component: CodigoDocenteComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'gestion-admin-usuarios', component: GestionUsuariosComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
       { path: 'revision-evaluaciones', component: RevisionEvaluacionesComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
       { path: 'auditoria', component: AuditoriaLogsComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
@@ -37,7 +38,15 @@ export const routes: Routes = [
       { path: 'resultado/:id', component: RetroalimentacionIa, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } }, 
       { path: 'mi-rendimiento', component: RendimientoEstudiante, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
       { path: 'biblioteca', component: BibliotecaPatologias, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
-      { path: 'notificaciones', component: Notificaciones },
+      // Módulo de aprendizaje
+      { path: 'aprender', loadComponent: () => import('./pages/aprender/aprender-hub/aprender-hub').then(m => m.AprenderHub), canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
+      { path: 'aprender/repaso', loadComponent: () => import('./pages/aprender/aprender-repaso/aprender-repaso').then(m => m.AprenderRepaso), canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
+      { path: 'aprender/:clase', loadComponent: () => import('./pages/aprender/aprender-patologia/aprender-patologia').then(m => m.AprenderPatologia), canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
+      // Revisión del contenido de aprendizaje (docente y administrador)
+      { path: 'contenido-aprendizaje', loadComponent: () => import('./pages/revision-contenido/revision-contenido').then(m => m.RevisionContenido), canActivate: [roleGuard], data: { expectedRoles: ['catedratico', 'admin'] } },
+      { path: 'mis-errores', loadComponent: () => import('./pages/aprender/mis-errores/mis-errores').then(m => m.MisErrores), canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
+      // Ficha del modelo de IA (gráficas). Carga diferida para no engordar el paquete inicial con Chart.js
+      { path: 'modelo', loadComponent: () => import('./pages/ficha-modelo/ficha-modelo').then(m => m.FichaModeloComponent), canActivate: [roleGuard], data: { expectedRoles: ['catedratico', 'admin'] } },
       { path: '', redirectTo: 'estudiante', pathMatch: 'full' }
     ]
   },

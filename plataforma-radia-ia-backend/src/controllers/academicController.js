@@ -1,4 +1,31 @@
 const academicService = require('../services/academicService');
+const informeService = require('../services/informeService');
+const informeEstudianteService = require('../services/informeEstudianteService');
+const codigoDocenteService = require('../services/codigoDocenteService');
+const auditService = require('../services/auditService');
+
+// Código que el docente comparte con sus estudiantes para que se registren solos
+const verMiCodigo = async (req, res) => {
+    try {
+        const id_docente = req.usuario.id_usuario;
+        const codigo = (await codigoDocenteService.obtenerCodigo(id_docente)) || (await codigoDocenteService.asignarCodigoNuevo(id_docente));
+        res.status(200).json({ status: 'success', data: { codigo_docente: codigo } });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'No se pudo obtener tu código de docente.' });
+    }
+};
+
+// Invalida el código anterior (por si se filtró) y genera uno nuevo
+const regenerarMiCodigo = async (req, res) => {
+    try {
+        const id_docente = req.usuario.id_usuario;
+        const codigo = await codigoDocenteService.asignarCodigoNuevo(id_docente);
+        await auditService.registrarAccion(id_docente, 'REGENERAR_CODIGO_DOCENTE', 'El docente regeneró su código de registro para estudiantes');
+        res.status(200).json({ status: 'success', data: { codigo_docente: codigo } });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'No se pudo regenerar tu código de docente.' });
+    }
+};
 
 const crear = async (req, res) => {
     try {
@@ -78,6 +105,59 @@ const verResumenGeneral = async (req, res) => {
     }
 };
 
+// Ejercicios de los cursos del docente (para elegirlos en el informe)
+const listarEjerciciosDocente = async (req, res) => {
+    try {
+        const ejercicios = await informeService.obtenerEjerciciosDocente(req.usuario.id_usuario);
+        res.status(200).json({ status: 'success', data: ejercicios });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'Error al obtener los ejercicios' });
+    }
+};
+
+// Informe PDF de calificaciones por ejercicio o conjunto de ejercicios. Se sirve "inline" para verlo/imprimirlo en el visor del navegador.
+const descargarInformeCalificaciones = async (req, res) => {
+    try {
+        const { id_curso, ejercicios } = req.query;
+        const ids = typeof ejercicios === 'string' ? ejercicios.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const { buffer, nombreArchivo } = await informeService.generarInformePdf({
+            id_docente: req.usuario.id_usuario,
+            nombre_docente: req.usuario.nombre_completo || req.usuario.nombre,
+            id_curso,
+            ids_ejercicios: ids
+        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${nombreArchivo}"`);
+        res.setHeader('Content-Length', buffer.length);
+        res.send(buffer);
+    } catch (error) {
+        const esDeUsuario = error instanceof informeService.ErrorInforme;
+        if (!esDeUsuario) console.error('Error generando el informe PDF:', error);
+        res.status(esDeUsuario ? 400 : 500).json({ status: 'error', message: esDeUsuario ? error.message : 'No se pudo generar el informe.' });
+    }
+};
+
+// Informe PDF individual de un estudiante (evolución del diagnóstico). Opcional: ?ejercicios=1,2 para limitarlo.
+const descargarInformeEstudiante = async (req, res) => {
+    try {
+        const ejercicios = typeof req.query.ejercicios === 'string' ? req.query.ejercicios.split(',').map(s => s.trim()).filter(Boolean) : [];
+        const { buffer, nombreArchivo } = await informeEstudianteService.generarInformeEstudiantePdf({
+            id_docente: req.usuario.id_usuario,
+            nombre_docente: req.usuario.nombre_completo || req.usuario.nombre,
+            id_estudiante: req.params.id,
+            ids_ejercicios: ejercicios
+        });
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="${nombreArchivo}"`);
+        res.setHeader('Content-Length', buffer.length);
+        res.send(buffer);
+    } catch (error) {
+        const esDeUsuario = error instanceof informeService.ErrorInforme;
+        if (!esDeUsuario) console.error('Error generando el informe individual:', error);
+        res.status(esDeUsuario ? 400 : 500).json({ status: 'error', message: esDeUsuario ? error.message : 'No se pudo generar el informe.' });
+    }
+};
+
 const verDetalleEstudiante = async (req, res) => {
     try {
         const { id } = req.params;
@@ -141,9 +221,14 @@ const eliminarCurso = async (req, res) => {
 };
 
 module.exports = {
+    verMiCodigo,
+    regenerarMiCodigo,
     crear,
     asignar,
     listarMisCursos,
+    listarEjerciciosDocente,
+    descargarInformeCalificaciones,
+    descargarInformeEstudiante,
     listarEstudiantes,
     verDashboard,
     verResumenGeneral,

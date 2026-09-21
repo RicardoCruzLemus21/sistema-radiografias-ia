@@ -1,0 +1,297 @@
+<div class="modelo-container">
+
+  <header class="modelo-header">
+    <h1>Ficha del modelo de IA</h1>
+    <p>Una guía visual para entender qué hace la inteligencia artificial de RADIA-OS, qué tan bien lo hace y en qué se equivoca.
+      No necesitas conocer Google Colab ni programación: cada gráfica trae su explicación.</p>
+  </header>
+
+  <div class="modelo-cargando" *ngIf="cargando">
+    <div class="spinner"></div>
+    <p>Calculando estadísticas del modelo...</p>
+  </div>
+  <div class="modelo-error" *ngIf="error">{{ error }}</div>
+
+  <ng-container *ngIf="ficha">
+
+    <div class="modelo-aviso">
+      <strong>Material educativo, no es una herramienta de diagnóstico.</strong>
+      Las etiquetas provienen de informes radiológicos del NIH extraídos con procesamiento automático de texto y tienen su propio margen de error.
+      El mapa de calor (Grad-CAM) indica dónde se apoyó el modelo; no explica un razonamiento clínico.
+    </div>
+
+    <nav class="modelo-nav" aria-label="Secciones">
+      <button type="button" (click)="ir('sec-como')">1. Cómo funciona</button>
+      <button type="button" (click)="ir('sec-numeros')">2. En números</button>
+      <button type="button" (click)="ir('sec-leer')">3. Cómo leer las gráficas</button>
+      <button type="button" (click)="ir('sec-graficas')">4. Gráficas generales</button>
+      <button type="button" (click)="ir('sec-detalle')">5. Cada patología</button>
+      <button type="button" (click)="ir('sec-limites')">6. Límites</button>
+    </nav>
+
+    <!-- 1. CÓMO FUNCIONA -->
+    <section id="sec-como" class="modelo-seccion">
+      <h2><span class="sec-num">1</span> ¿Cómo funciona el modelo?</h2>
+      <div class="pasos">
+        <div class="paso glass-panel">
+          <div class="paso-num">1</div>
+          <h3>Aprendió</h3>
+          <p>Se entrenó en <strong>Google Colab</strong> (un servicio de Google para entrenar modelos de IA) con radiografías de tórax del <strong>NIH</strong>, un banco público de imágenes con diagnósticos hechos por radiólogos.</p>
+        </div>
+        <div class="paso glass-panel">
+          <div class="paso-num">2</div>
+          <h3>Mira</h3>
+          <p>Al recibir una radiografía calcula, para cada una de las <strong>8 categorías</strong>, un porcentaje de probabilidad. Cada porcentaje es independiente: una misma imagen puede tener varias patologías a la vez.</p>
+        </div>
+        <div class="paso glass-panel">
+          <div class="paso-num">3</div>
+          <h3>Decide o se abstiene</h3>
+          <p>Solo opina si la probabilidad supera un <strong>umbral</strong>: una línea mínima de confianza propia de cada patología. Si ninguna la supera, <strong>se abstiene</strong>: prefiere callar antes que arriesgarse.</p>
+        </div>
+        <div class="paso glass-panel">
+          <div class="paso-num">4</div>
+          <h3>Muestra dónde miró</h3>
+          <p>Con <strong>Grad-CAM</strong> pinta en colores cálidos las zonas de la radiografía en las que se apoyó al evaluar una patología.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. EN NÚMEROS -->
+    <section id="sec-numeros" class="modelo-seccion">
+      <h2><span class="sec-num">2</span> El modelo en números</h2>
+      <div class="kpis">
+        <div class="kpi glass-panel"><span class="kpi-valor">{{ ficha.global.imagenes }}</span><span class="kpi-etiqueta">radiografías analizadas (las del banco de la plataforma)</span></div>
+        <div class="kpi glass-panel"><span class="kpi-valor">{{ num(ficha.meta.aucPromedioColab) }}</span><span class="kpi-etiqueta">AUC promedio en Colab (de 1,0). Mide qué tan bien distingue.</span></div>
+        <div class="kpi glass-panel"><span class="kpi-valor">{{ pct(ficha.global.conOpinion / ficha.global.imagenes) }}</span><span class="kpi-etiqueta">de las imágenes en las que se atreve a opinar ({{ ficha.global.conOpinion }})</span></div>
+        <div class="kpi glass-panel"><span class="kpi-valor">{{ pct(ficha.global.correctas / ficha.global.opiniones) }}</span><span class="kpi-etiqueta">de sus opiniones son correctas ({{ ficha.global.correctas }} de {{ ficha.global.opiniones }})</span></div>
+        <div class="kpi glass-panel"><span class="kpi-valor">{{ pct(ficha.global.seAbstiene / ficha.global.imagenes) }}</span><span class="kpi-etiqueta">de las imágenes en las que se abstiene ({{ ficha.global.seAbstiene }})</span></div>
+      </div>
+      <div class="verificacion glass-panel">
+        <strong>Verificación:</strong> se recalcularon las estadísticas con las {{ ficha.global.imagenes }} imágenes que usa la plataforma y coinciden con las de Colab
+        (diferencia máxima en el AUC: {{ num(diferenciaMaximaAuc) }}). Es decir, las imágenes elegidas para la plataforma representan bien al conjunto original.
+      </div>
+    </section>
+
+    <!-- 3. CÓMO LEER -->
+    <section id="sec-leer" class="modelo-seccion">
+      <h2><span class="sec-num">3</span> Cómo leer las gráficas (glosario)</h2>
+      <div class="glosario">
+        <div class="termino glass-panel">
+          <h3>AUC</h3>
+          <p>Una nota entre 0,5 y 1,0. Responde: <em>si le muestro una radiografía con la patología y otra sin ella, ¿cuántas veces asigna más probabilidad a la correcta?</em></p>
+          <p class="escala"><span>0,5 azar</span><span>0,7 aceptable</span><span>0,8 muy buena</span><span>0,9 excelente</span></p>
+        </div>
+        <div class="termino glass-panel">
+          <h3>Umbral</h3>
+          <p>El porcentaje mínimo que debe superar el modelo para atreverse a opinar. Es como la nota mínima para aprobar: por debajo, el modelo prefiere no responder.</p>
+        </div>
+        <div class="termino glass-panel">
+          <h3>Precisión</h3>
+          <p>De las veces que el modelo dice <em>"aquí hay X"</em>, ¿en cuántas tenía razón? Una precisión del 50% significa que acierta una de cada dos opiniones.</p>
+        </div>
+        <div class="termino glass-panel">
+          <h3>Sensibilidad</h3>
+          <p>De todas las radiografías que <strong>sí</strong> tienen X, ¿a cuántas las detecta? Mide cuántos casos reales se le escapan.</p>
+        </div>
+        <div class="termino glass-panel">
+          <h3>Especificidad</h3>
+          <p>De todas las radiografías que <strong>no</strong> tienen X, ¿a cuántas las descarta bien? Mide cuántas falsas alarmas da.</p>
+        </div>
+        <div class="termino glass-panel">
+          <h3>Mejora sobre el azar</h3>
+          <p>Cuántas veces mejor acierta el modelo que alguien que señalara radiografías al azar. Si vale 4, acierta cuatro veces más que adivinando.</p>
+        </div>
+        <div class="termino glass-panel">
+          <h3>Curva ROC</h3>
+          <p>Muestra el equilibrio entre <strong>detectar más casos</strong> (subir) y <strong>dar más falsas alarmas</strong> (ir a la derecha). Cuanto más pegada a la esquina superior izquierda, mejor. La línea punteada diagonal es el azar.</p>
+        </div>
+        <div class="termino glass-panel">
+          <h3>Abstención</h3>
+          <p>Cuando el modelo decide no opinar porque ninguna probabilidad supera su umbral. No es un error: es una decisión de diseño para no dar opiniones poco fiables.</p>
+        </div>
+        <div class="termino glass-panel">
+          <h3>Grad-CAM</h3>
+          <p>El mapa de calor. Las zonas rojas/amarillas son donde más se fijó el modelo. Sirve para ver <em>dónde miró</em>, no para saber si tiene razón.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. GRÁFICAS GENERALES -->
+    <section id="sec-graficas" class="modelo-seccion">
+      <h2><span class="sec-num">4</span> Gráficas generales</h2>
+
+      <article class="grafica glass-panel">
+        <h3>4.1 ¿Qué tan bien distingue cada patología? (AUC)</h3>
+        <p class="como-leer"><strong>Cómo leerla:</strong> cada par de barras es una patología. Cuanto más larga la barra, mejor distingue. Las líneas punteadas marcan los niveles aceptable, muy bueno y excelente. La barra gris es lo que se midió en Colab y la de color lo que se obtiene con las imágenes de la plataforma: si son casi iguales, los resultados son consistentes.</p>
+        <div class="lienzo lienzo-alto"><canvas id="g-auc"></canvas></div>
+        <p class="que-vemos"><strong>Qué vemos:</strong> el modelo distingue mejor {{ nombre(mejorAuc.nombre) }} (AUC {{ num(mejorAuc.aucPlataforma) }}) y peor {{ nombre(peorAuc.nombre) }} (AUC {{ num(peorAuc.aucPlataforma) }}).
+          Las estructuras grandes y bien definidas (el corazón, el líquido en la pleura) son más fáciles que las opacidades difusas.</p>
+      </article>
+
+      <article class="grafica glass-panel">
+        <h3>4.2 Curvas ROC: detección frente a falsas alarmas</h3>
+        <p class="como-leer"><strong>Cómo leerla:</strong> una curva por patología. Si una curva se acerca a la esquina superior izquierda, detecta muchos casos con pocas falsas alarmas. La diagonal punteada es adivinar. Puedes ocultar o mostrar patologías haciendo clic en su nombre en la leyenda.</p>
+        <div class="lienzo lienzo-cuadrado"><canvas id="g-roc"></canvas></div>
+      </article>
+
+      <article class="grafica glass-panel">
+        <h3>4.3 Cuando el modelo opina, ¿acierta más que el azar?</h3>
+        <p class="como-leer"><strong>Cómo leerla:</strong> la barra gris es qué porcentaje de las imágenes tiene realmente esa patología (lo que acertaría alguien que adivinara). La barra de color es la precisión del modelo cuando se atreve a opinar. Que la de color sea más alta demuestra que sabe algo útil.</p>
+        <div class="lienzo"><canvas id="g-precision"></canvas></div>
+        <div class="mejoras">
+          <span *ngFor="let c of clasesQueOpinan" class="chip-mejora"><strong>{{ nombre(c.nombre) }}:</strong> {{ num(c.plataforma.mejoraSobreAzar, 1) }} veces mejor que el azar</span>
+        </div>
+        <p class="que-vemos"><strong>Qué vemos:</strong> en todas las patologías en las que opina supera claramente al azar. Sobre {{ clasesSinOpinion.join(' y ') }} nunca opina, por eso no aparecen aquí.</p>
+      </article>
+
+      <div class="dos-columnas">
+        <article class="grafica glass-panel">
+          <h3>4.4 ¿Cuántas de sus opiniones son correctas?</h3>
+          <p class="como-leer"><strong>Cómo leerla:</strong> cada barra es el total de opiniones que la IA dio sobre esa patología: verde las correctas, rojo las equivocadas.</p>
+          <div class="lienzo"><canvas id="g-opiniones"></canvas></div>
+          <p class="que-vemos"><strong>Qué vemos:</strong> de {{ ficha.global.opiniones }} opiniones, {{ ficha.global.correctas }} son correctas ({{ pct(ficha.global.correctas / ficha.global.opiniones) }}). Por eso se presenta como un compañero de estudio que puede equivocarse, no como un diagnóstico.</p>
+        </article>
+        <article class="grafica glass-panel">
+          <h3>4.5 ¿Cuándo opina y cuándo se abstiene?</h3>
+          <p class="como-leer"><strong>Cómo leerla:</strong> de todas las radiografías, en cuántas la IA se atreve a opinar y en cuántas prefiere callar.</p>
+          <div class="lienzo"><canvas id="g-abstencion"></canvas></div>
+          <p class="que-vemos"><strong>Qué vemos:</strong> se abstiene en casi la mitad de las imágenes. Es intencional: prefiere no opinar antes que dar una opinión poco fiable.</p>
+        </article>
+      </div>
+
+      <article class="grafica glass-panel">
+        <h3>4.6 Lo que dijo la IA frente a lo que realmente era</h3>
+        <p class="como-leer"><strong>Cómo leerla:</strong> cada <strong>fila</strong> es lo que dijo la IA y cada <strong>columna</strong> lo que la radiografía realmente tenía. Los números son cuántas veces ocurrió. Cuanto más intenso el color, mayor parte de esa fila. Las celdas con borde (la diagonal) son los aciertos; el resto son confusiones. La última fila cuenta las veces que se abstuvo.</p>
+        <div class="matriz-wrap">
+          <table class="matriz">
+            <thead>
+              <tr>
+                <th class="esquina">La IA dijo ↓ &nbsp; / &nbsp; Era →</th>
+                <th *ngFor="let col of ficha.global.columnasMatriz">{{ nombre(col) }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let fila of ficha.global.filasMatriz">
+                <th class="fila-titulo">{{ fila === 'Se abstiene' ? 'Se abstiene' : nombre(fila) }}</th>
+                <td *ngFor="let col of ficha.global.columnasMatriz"
+                    [class.acierto]="esAcierto(fila, col)"
+                    [style.background]="'rgba(56, 189, 248,' + (intensidad(fila, col) * 0.85).toFixed(2) + ')'">
+                  {{ celda(fila, col) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="que-vemos"><strong>Qué vemos:</strong> los cruces más frecuentes entre patologías son: {{ resumenConfusiones.cruces }}.
+          Además, la IA opinó una patología sobre radiografías que en realidad eran normales {{ resumenConfusiones.falsasAlarmas }} veces (falsas alarmas). Cuando dice "Normal" y la radiografía sí tenía algo, es una falsa tranquilidad.
+          Recuerda que una radiografía puede tener varias etiquetas reales, así que algunos cruces son casos que tienen ambas patologías.</p>
+      </article>
+
+      <div class="dos-columnas">
+        <article class="grafica glass-panel">
+          <h3>4.7 ¿Sabe señalar dónde está la lesión? (Grad-CAM)</h3>
+          <p class="como-leer"><strong>Cómo leerla:</strong> en las imágenes donde un radiólogo dibujó un recuadro, mide en qué porcentaje el mapa de calor del modelo cae dentro de ese recuadro.</p>
+          <div class="lienzo"><canvas id="g-localizacion"></canvas></div>
+          <p class="que-vemos"><strong>Qué vemos:</strong> localiza muy bien el corazón, pero mucho peor las lesiones pequeñas o difusas (por ejemplo, los nódulos). Por eso el mapa de calor se presenta como una ayuda para conversar, no como una prueba.</p>
+        </article>
+        <article class="grafica glass-panel">
+          <h3>4.8 ¿Cuántas imágenes hay de cada patología?</h3>
+          <p class="como-leer"><strong>Cómo leerla:</strong> número de radiografías de la plataforma con cada etiqueta. Una imagen puede tener varias.</p>
+          <div class="lienzo"><canvas id="g-prevalencia"></canvas></div>
+          <p class="que-vemos"><strong>Qué vemos:</strong> hay muchas más radiografías normales que de cada patología. Las patologías poco frecuentes, como la Neumonía ({{ ficha.clases[4].plataforma.positivos }} imágenes), tienen menos ejemplos con los que medir al modelo, así que sus cifras son menos estables.</p>
+        </article>
+      </div>
+
+      <article class="grafica glass-panel">
+        <h3>4.9 Dos preguntas sencillas: ¿parece normal? ¿hay algún hallazgo?</h3>
+        <p class="como-leer"><strong>Cómo leerla:</strong> además de las 8 categorías, el modelo responde dos preguntas más simples. La barra de color indica cuánto acierta cuando lo afirma; la gris, en qué porcentaje de las imágenes se atreve a afirmarlo.</p>
+        <div class="lienzo"><canvas id="g-triaje"></canvas></div>
+        <p class="que-vemos"><strong>Qué vemos:</strong> cuando afirma que <em>hay algún hallazgo</em>, acierta el {{ pct(ficha.global.triage.hay_hallazgo.precision) }} de las veces. Detectar que "algo no está bien" le resulta más fácil que decir exactamente qué es.</p>
+      </article>
+    </section>
+
+    <!-- 5. DETALLE POR PATOLOGÍA -->
+    <section id="sec-detalle" class="modelo-seccion">
+      <h2><span class="sec-num">5</span> Cada patología en detalle</h2>
+      <p class="intro-detalle">Elige una patología para ver cómo le va al modelo con ella, explicado con sus números reales.</p>
+
+      <div class="chips-clase" role="tablist">
+        <button type="button" *ngFor="let c of ficha.clases" role="tab"
+                [class.activa]="c.nombre === claseSeleccionada"
+                [style.--color-clase]="color(c.nombre)"
+                (click)="seleccionarClase(c.nombre)">
+          <span class="punto" [style.background]="color(c.nombre)"></span>{{ nombre(c.nombre) }}
+        </button>
+      </div>
+
+      <div class="detalle glass-panel" *ngIf="clase">
+        <div class="detalle-cabecera">
+          <h3>{{ nombre(clase.nombre) }}</h3>
+          <span class="etiqueta" [class.etiqueta-ok]="clase.sePuedePronunciar" [class.etiqueta-no]="!clase.sePuedePronunciar">
+            {{ clase.sePuedePronunciar ? 'El modelo puede opinar sobre esta patología' : 'El modelo nunca opina sobre esta patología' }}
+          </span>
+        </div>
+
+        <div class="detalle-kpis">
+          <div><span class="dk-valor">{{ num(clase.aucPlataforma) }}</span><span class="dk-etiqueta">AUC ({{ calificarAuc(clase.aucPlataforma) }})</span></div>
+          <div><span class="dk-valor">{{ pct(clase.plataforma.prevalencia, 1) }}</span><span class="dk-etiqueta">de las imágenes la tienen ({{ clase.plataforma.positivos }})</span></div>
+          <div *ngIf="clase.sePuedePronunciar"><span class="dk-valor">{{ pct(clase.plataforma.precision) }}</span><span class="dk-etiqueta">precisión cuando opina</span></div>
+          <div *ngIf="clase.sePuedePronunciar"><span class="dk-valor">{{ pct(clase.plataforma.sensibilidad) }}</span><span class="dk-etiqueta">de los casos reales detecta</span></div>
+          <div *ngIf="clase.sePuedePronunciar"><span class="dk-valor">{{ pct(clase.plataforma.especificidad) }}</span><span class="dk-etiqueta">de los sanos descarta bien</span></div>
+          <div *ngIf="clase.localizacionGradcam"><span class="dk-valor">{{ pct(clase.localizacionGradcam.acierto) }}</span><span class="dk-etiqueta">localización con mapa de calor</span></div>
+        </div>
+
+        <div class="explicaciones">
+          <div class="explica" *ngFor="let e of explicacion">
+            <h4>{{ e.titulo }}</h4>
+            <p>{{ e.texto }}</p>
+          </div>
+          <blockquote class="nota-clinica" *ngIf="clase.notaClinica">
+            <strong>Nota clínica:</strong> {{ clase.notaClinica }}
+          </blockquote>
+        </div>
+
+        <div class="conf-grid" *ngIf="clase.sePuedePronunciar">
+          <div class="conf conf-ok"><strong>{{ clase.plataforma.tp }}</strong><span>Detectó bien</span><small>Opinó {{ nombre(clase.nombre) }} y sí la tenía</small></div>
+          <div class="conf conf-mal"><strong>{{ clase.plataforma.fp }}</strong><span>Falsa alarma</span><small>Opinó {{ nombre(clase.nombre) }} pero no la tenía</small></div>
+          <div class="conf conf-mal"><strong>{{ clase.plataforma.fn }}</strong><span>Se le escapó</span><small>La tenía y el modelo no opinó</small></div>
+          <div class="conf conf-ok"><strong>{{ clase.plataforma.tn }}</strong><span>Descartó bien</span><small>No la tenía y no opinó</small></div>
+        </div>
+
+        <div class="detalle-graficas">
+          <div class="grafica-mini">
+            <h4>¿Separa las radiografías que la tienen de las que no?</h4>
+            <p class="como-leer">Cada barra agrupa las radiografías según el porcentaje que el modelo dio. Si las barras de color (con la patología) están a la derecha de las grises (sin ella), el modelo las separa bien. Si se montan una sobre otra, se confunde.
+              <ng-container *ngIf="clase.umbral !== null"> La línea naranja es su umbral.</ng-container></p>
+            <div class="lienzo"><canvas id="d-hist"></canvas></div>
+          </div>
+          <div class="grafica-mini">
+            <h4>Curva ROC de esta patología</h4>
+            <p class="como-leer">Cuanto más se aleja la curva de la diagonal (azar) hacia la esquina superior izquierda, mejor. El área bajo la curva es el AUC.</p>
+            <div class="lienzo lienzo-cuadrado"><canvas id="d-roc"></canvas></div>
+          </div>
+          <div class="grafica-mini">
+            <h4>¿Qué tan confiables son sus porcentajes?</h4>
+            <p class="como-leer">Cuando el modelo dice "X%", ¿en qué proporción de esas radiografías realmente estaba la patología? Si los puntos siguen la diagonal, sus porcentajes son fieles. Por debajo, es demasiado optimista; por encima, demasiado modesto.</p>
+            <div class="lienzo lienzo-cuadrado"><canvas id="d-calibracion"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. LÍMITES -->
+    <section id="sec-limites" class="modelo-seccion">
+      <h2><span class="sec-num">6</span> Límites y uso responsable</h2>
+      <ul class="limites glass-panel">
+        <li><strong>No es un diagnóstico.</strong> Es un compañero de estudio que puede equivocarse: cerca de la mitad de sus opiniones no coinciden con la etiqueta real.</li>
+        <li><strong>Las etiquetas también tienen error.</strong> Vienen de informes radiológicos del NIH procesados automáticamente, no de una revisión imagen por imagen.</li>
+        <li><strong>Sobre {{ clasesSinOpinion.join(' y ') }} nunca opina.</strong> Está configurado para abstenerse siempre con ellas (no tiene un umbral de opinión definido), y la plataforma respeta esa decisión.</li>
+        <li><strong>El mapa de calor no es una prueba.</strong> Muestra dónde se apoyó el modelo; solo localiza bien algunas patologías (por ejemplo, el corazón).</li>
+        <li><strong>Los estudiantes no se califican contra la IA.</strong> Su nota se compara siempre con las etiquetas reales del NIH, nunca con la opinión del modelo.</li>
+        <li><strong>Estas cifras se calculan con {{ ficha.global.imagenes }} imágenes</strong> (las del banco de la plataforma) y coinciden con las de Colab; el modelo no se vuelve a entrenar ni se modifica al consultar esta ficha.</li>
+      </ul>
+      <p class="pie-ficha">Versión del modelo: {{ ficha.meta.version }} · datos generados el {{ ficha.meta.generado }} · resolución de análisis {{ ficha.meta.resolucionInferencia[0] }}×{{ ficha.meta.resolucionInferencia[1] }} píxeles</p>
+    </section>
+
+  </ng-container>
+</div>

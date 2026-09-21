@@ -15,7 +15,45 @@ export class AcademicService {
     private authService: AuthService
   ) {}
 
+  // Código único que el docente comparte con sus estudiantes para que se registren solos
+  getMiCodigo(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/mi-codigo`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Invalida el código anterior y genera uno nuevo
+  regenerarMiCodigo(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/mi-codigo/regenerar`, {}, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   // Obtiene los cursos del catedrático
+  // Ejercicios de todos los cursos del docente (para elegirlos en el informe PDF)
+  getEjerciciosDocente(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/ejercicios`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Informe PDF de calificaciones de un curso, por ejercicio o conjunto de ejercicios
+  getInformeCalificaciones(idCurso: number, idsEjercicios: number[]): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/informe-calificaciones`, {
+      headers: this.authService.getAuthHeaders(),
+      params: { id_curso: String(idCurso), ejercicios: idsEjercicios.join(',') },
+      responseType: 'blob'
+    });
+  }
+
+  // Informe PDF individual de un estudiante (evolución de su diagnóstico)
+  getInformeEstudiante(idEstudiante: number | string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/estudiante/${idEstudiante}/informe`, {
+      headers: this.authService.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
+
   getMisCursos(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/mis-cursos`, {
       headers: this.authService.getAuthHeaders()

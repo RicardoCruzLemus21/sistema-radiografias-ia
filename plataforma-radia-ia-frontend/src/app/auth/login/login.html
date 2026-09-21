@@ -1,8 +1,8 @@
 <div class="login-layout">
-  
+
   <!-- Lado Izquierdo: Formulario y Animaciones -->
-  <div class="login-left">
-    
+  <div class="login-left" [class.modo-registro]="modoRegistro">
+
     <!-- Botón de Tema Esquina Superior Izquierda -->
     <div class="theme-toggle-login" (click)="toggleTema()">
       <svg *ngIf="temaActual === 'darkglass'" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -19,7 +19,7 @@
 
     <!-- Tarjeta central del formulario -->
     <div class="glass-panel login-card">
-      
+
       <!-- Encabezado -->
       <div class="logo-container">
         <svg viewBox="0 0 24 24" width="56" height="56" stroke="var(--accent-cyan)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -30,30 +30,34 @@
       </div>
 
       <!-- Formulario de Inicio de Sesión Normal -->
-      <ng-container *ngIf="!requiereCambioClave">
+      <ng-container *ngIf="!requiereCambioClave && !modoRegistro">
+        <div *ngIf="mensajeExito" class="exito-msg">{{ mensajeExito }}</div>
+
         <div class="input-group">
           <label>CORREO ELECTRÓNICO</label>
-          <div class="input-wrapper">
-            <input type="email" [(ngModel)]="correo" (ngModelChange)="limpiarError()" (keyup.enter)="iniciarSesion()" placeholder="ejemplo@example.edu.gt" />
+          <div class="input-wrapper" [class.invalido]="mostrarErrorLogin('correo')">
+            <input type="email" [(ngModel)]="correo" (ngModelChange)="limpiarError()" (blur)="tocar('login_correo')" (keyup.enter)="iniciarSesion()" placeholder="ejemplo@example.edu.gt" maxlength="255" autocomplete="username" [attr.aria-invalid]="mostrarErrorLogin('correo')" />
             <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
           </div>
+          <div class="campo-error" *ngIf="mostrarErrorLogin('correo')">{{ errorLogin('correo') }}</div>
         </div>
 
         <div class="input-group">
           <label>CONTRASEÑA</label>
-          <div class="input-wrapper">
-            <input type="password" [(ngModel)]="contrasena" (ngModelChange)="limpiarError()" (keyup.enter)="iniciarSesion()" placeholder="••••••••" />
+          <div class="input-wrapper" [class.invalido]="mostrarErrorLogin('contrasena')">
+            <input type="password" [(ngModel)]="contrasena" (ngModelChange)="limpiarError()" (blur)="tocar('login_contrasena')" (keyup.enter)="iniciarSesion()" placeholder="••••••••" maxlength="72" autocomplete="current-password" [attr.aria-invalid]="mostrarErrorLogin('contrasena')" />
             <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
             </svg>
           </div>
+          <div class="campo-error" *ngIf="mostrarErrorLogin('contrasena')">{{ errorLogin('contrasena') }}</div>
         </div>
 
-        <!-- Mensaje de Error Dinámico -->
+        <!-- Mensaje de Error Dinámico (respuesta del servidor) -->
         <div *ngIf="errorMensaje" class="error-msg">
           {{ errorMensaje }}
         </div>
@@ -75,6 +79,198 @@
             <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
           </svg>
         </button>
+
+        <p class="alt-action">
+          ¿No tienes cuenta?
+          <a class="link-registro" (click)="abrirRegistro()">Regístrate aquí</a>
+        </p>
+      </ng-container>
+
+      <!-- Formulario de registro de docente nuevo -->
+      <ng-container *ngIf="modoRegistro && !requiereCambioClave">
+        <div class="tabs-rol" role="tablist">
+          <button type="button" role="tab" [class.activo]="rolRegistro === 'docente'" [attr.aria-selected]="rolRegistro === 'docente'" (click)="seleccionarRol('docente')">Soy docente</button>
+          <button type="button" role="tab" [class.activo]="rolRegistro === 'estudiante'" [attr.aria-selected]="rolRegistro === 'estudiante'" (click)="seleccionarRol('estudiante')">Soy estudiante</button>
+        </div>
+
+        <div class="registro-form" *ngIf="rolRegistro === 'docente'">
+          <p class="registro-titulo">Crear cuenta de docente</p>
+
+          <div class="registro-grid">
+
+            <div class="input-group">
+              <label>CARNET</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorReg('carnet')">
+                <input type="text" inputmode="numeric" [value]="registro.carnet" (input)="onCarnetInput($event)" (blur)="tocar('reg_carnet')" placeholder="Ej. 1234-56-7890" maxlength="12" autocomplete="off" [attr.aria-invalid]="mostrarErrorReg('carnet')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorReg('carnet')">{{ errorReg('carnet') }}</div>
+            </div>
+
+            <div class="input-group">
+              <label>NOMBRE COMPLETO</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorReg('nombre')">
+                <input type="text" [(ngModel)]="registro.nombre_completo" (ngModelChange)="limpiarError()" (blur)="tocar('reg_nombre')" placeholder="Ej. Dr. Juan Pérez" maxlength="150" autocomplete="name" [attr.aria-invalid]="mostrarErrorReg('nombre')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorReg('nombre')">{{ errorReg('nombre') }}</div>
+            </div>
+
+            <div class="input-group span-2">
+              <label>CORREO ELECTRÓNICO</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorReg('correo')">
+                <input type="email" [(ngModel)]="registro.correo_electronico" (ngModelChange)="limpiarError()" (blur)="tocar('reg_correo')" placeholder="ejemplo@example.edu.gt" [attr.maxlength]="maxCorreo" autocomplete="email" [attr.aria-invalid]="mostrarErrorReg('correo')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorReg('correo')">{{ errorReg('correo') }}</div>
+            </div>
+
+            <div class="input-group span-2">
+              <label>CURSO A IMPARTIR</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorReg('curso')">
+                <select [(ngModel)]="registro.curso_seleccion" (ngModelChange)="limpiarError()" (blur)="tocar('reg_curso')" [attr.aria-invalid]="mostrarErrorReg('curso')">
+                  <option value="">-- Selecciona un curso --</option>
+                  <option *ngFor="let c of cursosDisponibles" [value]="c">{{ c }}</option>
+                  <option [value]="valorCursoNuevo">+ Crear un curso nuevo...</option>
+                </select>
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorReg('curso')">{{ errorReg('curso') }}</div>
+            </div>
+
+            <div class="input-group span-2" *ngIf="registro.curso_seleccion === valorCursoNuevo">
+              <label>NOMBRE DEL CURSO NUEVO</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorReg('cursoNuevo')">
+                <input type="text" [(ngModel)]="registro.nombre_curso_asignar" (ngModelChange)="limpiarError()" (blur)="tocar('reg_cursoNuevo')" placeholder="Ej. Radiología Intervencionista" maxlength="150" autocomplete="off" [attr.aria-invalid]="mostrarErrorReg('cursoNuevo')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorReg('cursoNuevo')">{{ errorReg('cursoNuevo') }}</div>
+            </div>
+
+            <div class="input-group">
+              <label>CONTRASEÑA</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorReg('contrasena')">
+                <input type="password" [(ngModel)]="registro.contrasena" (ngModelChange)="limpiarError()" (blur)="tocar('reg_contrasena')" placeholder="Mínimo 6 caracteres" [attr.maxlength]="maxContrasena" autocomplete="new-password" [attr.aria-invalid]="mostrarErrorReg('contrasena')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorReg('contrasena')">{{ errorReg('contrasena') }}</div>
+            </div>
+
+            <div class="input-group">
+              <label>CONFIRMAR CONTRASEÑA</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorReg('confirmar')">
+                <input type="password" [(ngModel)]="registro.confirmar" (ngModelChange)="limpiarError()" (blur)="tocar('reg_confirmar')" (keyup.enter)="registrarDocente()" placeholder="Repita la contraseña" [attr.maxlength]="maxContrasena" autocomplete="new-password" [attr.aria-invalid]="mostrarErrorReg('confirmar')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorReg('confirmar')">{{ errorReg('confirmar') }}</div>
+            </div>
+
+          </div>
+
+          <div *ngIf="errorMensaje" class="error-msg">{{ errorMensaje }}</div>
+
+          <button class="btn-primary login-btn" (click)="registrarDocente()" [disabled]="cargando">
+            <span>{{ cargando ? 'CREANDO CUENTA...' : 'CREAR CUENTA' }}</span>
+          </button>
+
+          <p class="alt-action">
+            ¿Ya tienes cuenta?
+            <a class="link-registro" (click)="volverAlLogin()">Inicia sesión</a>
+          </p>
+        </div>
+
+        <!-- Registro de estudiante con el código que le dio su docente -->
+        <div class="registro-form" *ngIf="rolRegistro === 'estudiante'">
+          <p class="registro-titulo">Crear cuenta de estudiante</p>
+
+          <div class="input-group">
+            <label>CÓDIGO DE TU DOCENTE</label>
+            <div class="input-wrapper" [class.invalido]="mostrarErrorEst('codigo')" [class.verificado]="!!docenteVerificado">
+              <input type="text" class="input-codigo" [value]="estudiante.codigo_docente" (input)="onCodigoInput($event)" (blur)="tocar('est_codigo')" placeholder="Ej. K7M2XQ9A" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" [attr.aria-invalid]="mostrarErrorEst('codigo')" />
+              <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+            </div>
+            <div class="campo-error" *ngIf="mostrarErrorEst('codigo')">{{ errorEst('codigo') }}</div>
+            <div class="ayuda-codigo" *ngIf="verificandoCodigo">Verificando código...</div>
+            <div class="docente-ok" *ngIf="docenteVerificado">
+              Docente: <strong>{{ docenteVerificado.nombre_docente }}</strong>
+              <span *ngIf="docenteVerificado.cursos.length === 1"> · {{ docenteVerificado.cursos[0].nombre_curso }}</span>
+              <span *ngIf="docenteVerificado.cursos.length === 0" class="docente-sin-curso"> · todavía no tiene cursos disponibles</span>
+            </div>
+            <div class="ayuda-codigo" *ngIf="!docenteVerificado && !verificandoCodigo && !errorCodigoServidor">Pídele a tu docente su código de 8 caracteres.</div>
+          </div>
+
+          <div class="input-group" *ngIf="docenteVerificado && docenteVerificado.cursos.length > 1">
+            <label>CURSO</label>
+            <div class="input-wrapper" [class.invalido]="mostrarErrorEst('curso')">
+              <select [(ngModel)]="estudiante.id_curso" (ngModelChange)="limpiarError()" (blur)="tocar('est_curso')" [attr.aria-invalid]="mostrarErrorEst('curso')">
+                <option value="">-- Selecciona tu curso --</option>
+                <option *ngFor="let c of docenteVerificado.cursos" [value]="c.id_curso">{{ c.nombre_curso }} ({{ c.semestre }} {{ c.anio }})</option>
+              </select>
+              <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            </div>
+            <div class="campo-error" *ngIf="mostrarErrorEst('curso')">{{ errorEst('curso') }}</div>
+          </div>
+
+          <div class="registro-grid">
+
+            <div class="input-group">
+              <label>CARNET</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorEst('carnet')">
+                <input type="text" inputmode="numeric" [value]="estudiante.carnet" (input)="onCarnetEstudianteInput($event)" (blur)="tocar('est_carnet')" placeholder="Ej. 1234-56-7890" maxlength="12" autocomplete="off" [attr.aria-invalid]="mostrarErrorEst('carnet')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorEst('carnet')">{{ errorEst('carnet') }}</div>
+            </div>
+
+            <div class="input-group">
+              <label>NOMBRE COMPLETO</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorEst('nombre')">
+                <input type="text" [(ngModel)]="estudiante.nombre_completo" (ngModelChange)="limpiarError()" (blur)="tocar('est_nombre')" placeholder="Ej. María López" maxlength="150" autocomplete="name" [attr.aria-invalid]="mostrarErrorEst('nombre')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorEst('nombre')">{{ errorEst('nombre') }}</div>
+            </div>
+
+            <div class="input-group span-2">
+              <label>CORREO ELECTRÓNICO</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorEst('correo')">
+                <input type="email" [(ngModel)]="estudiante.correo_electronico" (ngModelChange)="limpiarError()" (blur)="tocar('est_correo')" placeholder="ejemplo@example.edu.gt" [attr.maxlength]="maxCorreo" autocomplete="email" [attr.aria-invalid]="mostrarErrorEst('correo')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorEst('correo')">{{ errorEst('correo') }}</div>
+            </div>
+
+            <div class="input-group">
+              <label>CONTRASEÑA</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorEst('contrasena')">
+                <input type="password" [(ngModel)]="estudiante.contrasena" (ngModelChange)="limpiarError()" (blur)="tocar('est_contrasena')" placeholder="Mínimo 6 caracteres" [attr.maxlength]="maxContrasena" autocomplete="new-password" [attr.aria-invalid]="mostrarErrorEst('contrasena')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorEst('contrasena')">{{ errorEst('contrasena') }}</div>
+            </div>
+
+            <div class="input-group">
+              <label>CONFIRMAR CONTRASEÑA</label>
+              <div class="input-wrapper" [class.invalido]="mostrarErrorEst('confirmar')">
+                <input type="password" [(ngModel)]="estudiante.confirmar" (ngModelChange)="limpiarError()" (blur)="tocar('est_confirmar')" (keyup.enter)="registrarEstudiante()" placeholder="Repita la contraseña" [attr.maxlength]="maxContrasena" autocomplete="new-password" [attr.aria-invalid]="mostrarErrorEst('confirmar')" />
+                <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+              </div>
+              <div class="campo-error" *ngIf="mostrarErrorEst('confirmar')">{{ errorEst('confirmar') }}</div>
+            </div>
+
+          </div>
+
+          <div *ngIf="errorMensaje" class="error-msg">{{ errorMensaje }}</div>
+
+          <button class="btn-primary login-btn" (click)="registrarEstudiante()" [disabled]="cargando">
+            <span>{{ cargando ? 'CREANDO CUENTA...' : 'CREAR CUENTA' }}</span>
+          </button>
+
+          <p class="alt-action">
+            ¿Ya tienes cuenta?
+            <a class="link-registro" (click)="volverAlLogin()">Inicia sesión</a>
+          </p>
+        </div>
       </ng-container>
 
       <!-- Formulario de Cambio de Contraseña Inicial -->
@@ -86,7 +282,7 @@
         <div class="input-group">
           <label>NUEVA CONTRASEÑA</label>
           <div class="input-wrapper">
-            <input type="password" [(ngModel)]="nuevaContrasena" (ngModelChange)="limpiarError()" (keyup.enter)="cambiarContrasena()" placeholder="Mínimo 6 caracteres" />
+            <input type="password" [(ngModel)]="nuevaContrasena" (ngModelChange)="limpiarError()" (keyup.enter)="cambiarContrasena()" placeholder="Mínimo 6 caracteres" [attr.maxlength]="maxContrasena" autocomplete="new-password" />
             <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
@@ -97,7 +293,7 @@
         <div class="input-group">
           <label>CONFIRMAR CONTRASEÑA</label>
           <div class="input-wrapper">
-            <input type="password" [(ngModel)]="confirmarContrasena" (ngModelChange)="limpiarError()" (keyup.enter)="cambiarContrasena()" placeholder="Repita la nueva contraseña" />
+            <input type="password" [(ngModel)]="confirmarContrasena" (ngModelChange)="limpiarError()" (keyup.enter)="cambiarContrasena()" placeholder="Repita la nueva contraseña" [attr.maxlength]="maxContrasena" autocomplete="new-password" />
             <svg class="input-icon" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>

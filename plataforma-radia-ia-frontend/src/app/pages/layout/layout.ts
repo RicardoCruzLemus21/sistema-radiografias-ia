@@ -1,35 +1,64 @@
-import { Component, OnInit } from '@angular/core';
-import { RouterModule, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { AuthService } from '../../services/auth'; 
-import { ExtraService } from '../../services/extra';
+import { AuthService } from '../../services/auth';
+import { SesionService } from '../../services/sesion.service';
+import { CampanaNotificaciones } from '../../components/campana-notificaciones/campana-notificaciones';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [RouterModule, CommonModule],
+  imports: [RouterModule, CommonModule, CampanaNotificaciones],
   templateUrl: './layout.html',
   styleUrl: './layout.css'
 })
-export class LayoutComponent implements OnInit {
+export class LayoutComponent implements OnInit, OnDestroy {
   nombreUsuarioActual: string = 'Usuario';
   rolUsuarioActual: string = '';
   isAdmin: boolean = false;
   isCatedratico: boolean = false;
   isEstudiante: boolean = false;
-  notificacionesNoLeidas: number = 0;
   temaActual: string = 'darkglass';
   isSidebarCollapsed: boolean = false;
 
+  // Al evaluar una radiografía el panel se comprime solo para dar más espacio a la imagen;
+  // al salir del visor vuelve a como estaba (si el usuario lo había dejado desplegado).
+  private colapsadoAutomaticamente = false;
+  private subRuta?: Subscription;
+
   constructor(
     private authService: AuthService,
-    private extraService: ExtraService,
-    private router: Router
+    private sesionService: SesionService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.cargarDatosUsuario();
     this.cargarTema();
+    this.ajustarPanelSegunRuta(this.router.url);
+    this.subRuta = this.router.events.subscribe(evento => {
+      if (evento instanceof NavigationEnd) {
+        this.ajustarPanelSegunRuta(evento.urlAfterRedirects);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.subRuta?.unsubscribe();
+  }
+
+  private ajustarPanelSegunRuta(url: string): void {
+    const enVisor = url.includes('/visor/');
+    if (enVisor && !this.isSidebarCollapsed) {
+      this.isSidebarCollapsed = true;
+      this.colapsadoAutomaticamente = true;
+    } else if (!enVisor && this.colapsadoAutomaticamente) {
+      this.isSidebarCollapsed = false;
+      this.colapsadoAutomaticamente = false;
+    }
   }
 
   cargarDatosUsuario(): void {
@@ -38,19 +67,6 @@ export class LayoutComponent implements OnInit {
     this.isAdmin = this.authService.isAdmin();
     this.isCatedratico = this.authService.isCatedratico();
     this.isEstudiante = this.authService.isEstudiante();
-
-    if (this.isEstudiante) {
-      // Se suscribe al contador compartido: se actualiza solo cuando se marca una
-      // notificación como leída desde cualquier pantalla, sin recargar la página.
-      this.extraService.noLeidas$.subscribe(count => this.notificacionesNoLeidas = count);
-      this.cargarNotificaciones();
-    }
-  }
-
-  cargarNotificaciones(): void {
-    this.extraService.getNotificaciones().subscribe({
-      error: (err) => console.error("Error al cargar notificaciones globales:", err)
-    });
   }
 
   cargarTema(): void {
@@ -67,10 +83,11 @@ export class LayoutComponent implements OnInit {
 
   toggleSidebar(): void {
     this.isSidebarCollapsed = !this.isSidebarCollapsed;
+    this.colapsadoAutomaticamente = false; // la decisión manual del usuario manda
   }
 
-  cerrarSesion(): void {
-    this.authService.logout(); 
-    this.router.navigate(['/login']); 
+  // Siempre pide confirmación con un modal antes de cerrar la sesión
+  async cerrarSesion(): Promise<void> {
+    await this.sesionService.cerrarSesion();
   }
 }

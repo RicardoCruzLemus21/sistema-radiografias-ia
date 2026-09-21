@@ -64,9 +64,39 @@
     </div>
   </section>
 
+  <!-- Carpetas de ejercicios: cada publicación es un conjunto de casos (Ejercicio 1, 2, ...) -->
+  <section class="ejercicios-seccion" *ngIf="!ejercicioAbierto && carpetas.length > 0">
+    <h2 class="seccion-titulo">Ejercicios publicados</h2>
+    <div class="carpetas-grid">
+      <div class="carpeta-card glass-panel" *ngFor="let f of carpetas" role="button" tabindex="0"
+           (click)="abrirCarpeta(f)" (keydown.enter)="abrirCarpeta(f)">
+        <div class="carpeta-icono">
+          <svg viewBox="0 0 24 24" width="30" height="30" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <div class="carpeta-info">
+          <h3>{{ f.nombre }}</h3>
+          <span class="carpeta-curso">{{ f.nombre_curso }}</span>
+          <span class="carpeta-meta">{{ f.casos.length }} {{ f.casos.length === 1 ? 'caso' : 'casos' }} · {{ f.intentos }} intentos</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Vista interna de un ejercicio -->
+  <section class="carpeta-cabecera glass-panel" *ngIf="ejercicioAbierto">
+    <button class="btn-cancel" (click)="cerrarCarpeta()">&larr; Volver</button>
+    <div class="carpeta-titulo">
+      <h2>{{ ejercicioAbierto.nombre }}</h2>
+      <span class="carpeta-curso">{{ ejercicioAbierto.nombre_curso }} · {{ ejercicioAbierto.casos.length }} casos</span>
+    </div>
+    <button class="btn-peligro" [disabled]="eliminandoEjercicio" (click)="eliminarCarpeta(ejercicioAbierto)">Eliminar ejercicio</button>
+  </section>
+
+  <h2 class="seccion-titulo" *ngIf="!ejercicioAbierto && carpetas.length > 0 && casosSueltos.length > 0">Casos individuales</h2>
+
   <!-- Grid de Casos Clínicos para Docente (SIN BOTÓN DE EVALUAR) -->
   <section class="cases-grid">
-    <div class="case-card glass-panel" *ngFor="let caso of casosFiltrados">
+    <div class="case-card glass-panel" *ngFor="let caso of casosVisibles">
       
       <div class="case-card-img-wrapper" (click)="abrirDetalleCaso(caso)">
         <img [src]="getImagenUrl(caso.ruta_imagen)" alt="Radiografía del caso" class="case-img">
@@ -116,140 +146,171 @@
     </div>
   </section>
 
-  <!-- MODAL: BANCO DE CASOS NIH (PANTALLA COMPLETA) -->
+  <!-- MODAL: ASIGNAR CASOS DEL BANCO NIH (un solo flujo: configurar -> componer -> revisar -> publicar) -->
   <div class="modal-backdrop banco-modal-backdrop" *ngIf="bancoModalAbierto" (click)="cerrarBancoCasos()">
     <div class="modal-card modal-full glass-panel" (click)="$event.stopPropagation()">
-      
-      <!-- ENCABEZADO Y FILTROS -->
+
       <div class="modal-header banco-header">
         <div class="modal-title-box">
           <div class="modal-icon-badge">
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="var(--accent-cyan)" stroke-width="2" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
           </div>
           <div>
-            <h3>Banco de Casos NIH</h3>
-            <p class="text-muted">Explora y selecciona casos reales para tu evaluación</p>
+            <h3>Asignar casos a un curso</h3>
+            <p class="text-muted">Elige qué quieres evaluar, revisa los casos y publica el ejercicio.</p>
           </div>
         </div>
-        
-        <div class="banco-filters">
-          <div class="filter-group">
-            <label>Patología Principal:</label>
-            <select [(ngModel)]="filtroBancoPatologia" (change)="cambiarFiltroBanco()" class="glass-input">
-              <option *ngFor="let pat of patologias" [value]="pat.nombre">{{ pat.nombre }}</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Dificultad:</label>
-            <select [(ngModel)]="filtroBancoDificultad" (change)="cambiarFiltroBanco()" class="glass-input">
-              <option value="Basico">Básico</option>
-              <option value="Intermedio">Intermedio</option>
-              <option value="Avanzado">Avanzado</option>
-            </select>
-          </div>
-          <button class="btn-close" (click)="cerrarBancoCasos()">&times;</button>
-        </div>
+        <button class="btn-close" (click)="cerrarBancoCasos()" aria-label="Cerrar">&times;</button>
       </div>
 
-      <!-- COMPOSICIÓN AUTOMÁTICA: prellena el carrito con una mezcla diana + normales + distractores.
-           El docente puede seguir agregando/quitando casos a mano en la grilla de abajo. -->
-      <div class="banco-composicion glass-panel" style="margin: 15px 20px; padding: 15px 20px; border-radius: 10px;">
-        <h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--accent-cyan);">Composición Automática del Ejercicio</h4>
+      <div class="ej-cuerpo">
 
-        <div class="form-group" style="position: relative;">
-          <label style="font-size: 12px;">Patologías objetivo:</label>
-          <button type="button" class="glass-input" style="width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" (click)="mostrarDropdownPatologias = !mostrarDropdownPatologias">
-            <span>{{ textoPatologiasObjetivo() }}</span>
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <!-- PASO 1: CONFIGURAR -->
+        <section class="ej-config glass-panel">
+          <h4 class="ej-titulo"><span class="ej-paso">1</span> Configura el ejercicio</h4>
+
+          <div class="ej-grid">
+            <div class="ej-campo">
+              <label for="ej-curso">Curso destino</label>
+              <select id="ej-curso" class="glass-input" [ngModel]="cursoSeleccionado" (ngModelChange)="cursoSeleccionado = $event; alCambiarCurso()">
+                <option *ngFor="let c of misCursos" [ngValue]="c.id_curso">{{ c.nombre_curso }}</option>
+              </select>
+            </div>
+
+            <div class="ej-campo">
+              <label for="ej-nivel">Dificultad máxima</label>
+              <select id="ej-nivel" class="glass-input" [ngModel]="criteriosComposicion.nivel_dificultad" (ngModelChange)="criteriosComposicion.nivel_dificultad = $event; alCambiarNivel()">
+                <option *ngFor="let n of NIVELES" [value]="n.valor">{{ n.texto }}</option>
+              </select>
+            </div>
+
+            <div class="ej-campo">
+              <label for="ej-total">N.º de casos</label>
+              <input id="ej-total" type="number" class="glass-input" [(ngModel)]="criteriosComposicion.total_casos" min="1" [max]="MAX_CASOS">
+            </div>
+          </div>
+
+          <!-- Patologías a evaluar (selección múltiple) -->
+          <div class="ej-campo pat-select">
+            <label>Patologías a evaluar</label>
+            <button type="button" class="glass-input pat-trigger" (click)="mostrarDropdownPatologias = !mostrarDropdownPatologias" [attr.aria-expanded]="mostrarDropdownPatologias">
+              <span class="pat-chips">
+                <span *ngIf="patologiasSeleccionadas.length === 0" class="pat-placeholder">Selecciona una o más patologías...</span>
+                <span class="pat-chip" *ngFor="let n of patologiasSeleccionadas" [class.vacia]="disponibilidad[n] === 0">
+                  {{ n }}
+                  <span class="pat-chip-x" role="button" tabindex="0" [attr.aria-label]="'Quitar ' + n" (click)="quitarPatologia(n); $event.stopPropagation()" (keydown.enter)="quitarPatologia(n); $event.stopPropagation()">&times;</span>
+                </span>
+              </span>
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+
+            <div class="pat-panel glass-panel" *ngIf="mostrarDropdownPatologias">
+              <div class="pat-acciones">
+                <button type="button" class="link-btn" (click)="seleccionarTodasLasPatologias()">Seleccionar todas</button>
+                <button type="button" class="link-btn" (click)="limpiarPatologias()">Limpiar</button>
+              </div>
+              <label class="pat-item" *ngFor="let pat of patologiasObjetivo" [class.sin-casos]="disponibilidad[pat.nombre] === 0">
+                <input type="checkbox" [(ngModel)]="pat.seleccionada" [disabled]="disponibilidad[pat.nombre] === 0 && !pat.seleccionada">
+                <span class="pat-nombre">{{ pat.nombre }}</span>
+                <span class="pat-conteo">{{ cargandoDisponibilidad ? '...' : textoDisponibilidad(pat.nombre) }}</span>
+              </label>
+              <button type="button" class="btn-primary pat-listo" (click)="mostrarDropdownPatologias = false">Listo</button>
+            </div>
+          </div>
+
+          <div class="ej-aviso" *ngIf="patologiasSinCasos.length > 0" role="status">
+            <strong>Sin casos hasta este nivel:</strong> {{ patologiasSinCasos.join(', ') }}.
+            <span *ngIf="sinCasosObjetivo">Sube la dificultad máxima o elige otras patologías.</span>
+            <span *ngIf="!sinCasosObjetivo">Se ignorarán al componer.</span>
+          </div>
+
+          <!-- Opciones avanzadas: el % de normales trae un valor razonable por defecto -->
+          <button type="button" class="link-btn ej-avanzado-toggle" (click)="mostrarAvanzadas = !mostrarAvanzadas" [attr.aria-expanded]="mostrarAvanzadas">
+            Opciones avanzadas
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" [class.girado]="mostrarAvanzadas"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </button>
+          <div class="ej-avanzadas" *ngIf="mostrarAvanzadas">
+            <div class="ej-campo">
+              <label for="ej-normales">% de casos normales</label>
+              <input id="ej-normales" type="number" class="glass-input" [(ngModel)]="criteriosComposicion.porcentaje_normales" min="0" max="100">
+              <small class="ej-ayuda">Los normales evitan que el estudiante asuma que siempre hay un hallazgo.</small>
+            </div>
+          </div>
 
-          <div *ngIf="mostrarDropdownPatologias" class="glass-panel" style="position: absolute; top: 100%; left: 0; right: 0; z-index: 20; margin-top: 4px; padding: 10px; border-radius: 8px; max-height: 220px; overflow-y: auto;">
-            <label class="checkbox-container" *ngFor="let pat of patologiasObjetivo" style="font-size: 13px; display: flex; align-items: center; gap: 8px; padding: 6px 4px;">
-              <input type="checkbox" [(ngModel)]="pat.seleccionada">
-              <span class="checkmark"></span>
-              {{ pat.nombre }}
-            </label>
-            <button type="button" class="btn-primary" style="width: 100%; margin-top: 8px; padding: 6px;" (click)="mostrarDropdownPatologias = false">Listo</button>
-          </div>
-        </div>
-
-        <div class="form-grid-3" style="display: flex; gap: 15px; margin-top: 12px; flex-wrap: wrap;">
-          <div class="form-group" style="flex: 1; min-width: 140px;">
-            <label style="font-size: 12px;">Nivel máximo</label>
-            <select [(ngModel)]="criteriosComposicion.nivel_dificultad" class="glass-input">
-              <option value="Básico">Básico</option>
-              <option value="Intermedio">Básico + Intermedio</option>
-              <option value="Avanzado">Todos los niveles</option>
-            </select>
-          </div>
-          <div class="form-group" style="flex: 1; min-width: 120px;">
-            <label style="font-size: 12px;">N.º de casos</label>
-            <input type="number" [(ngModel)]="criteriosComposicion.total_casos" min="1" max="50" class="glass-input">
-          </div>
-          <div class="form-group" style="flex: 1; min-width: 120px;">
-            <label style="font-size: 12px;">% Normales</label>
-            <input type="number" [(ngModel)]="criteriosComposicion.porcentaje_normales" min="0" max="100" class="glass-input">
-          </div>
-          <div class="form-group" style="display: flex; align-items: flex-end;">
-            <button class="btn-primary" [disabled]="componiendoEjercicio" (click)="componerAutomaticamente()">
-              {{ componiendoEjercicio ? 'Componiendo...' : 'Componer Automáticamente' }}
+          <div class="ej-accion">
+            <p class="ej-resumen-previo">
+              Se armarán <strong>{{ previsualizacion.objetivo + previsualizacion.normales + previsualizacion.distractores }}</strong> casos:
+              <span class="tipo-badge tipo-diana">{{ previsualizacion.objetivo }} objetivo</span>
+              <span class="tipo-badge tipo-normal">{{ previsualizacion.normales }} normales</span>
+              <span class="tipo-badge tipo-distractor" title="Casos con patologías que suelen confundirse con las elegidas">{{ previsualizacion.distractores }} distractores</span>
+            </p>
+            <button class="btn-primary" [disabled]="!puedeComponer" (click)="componerEjercicio()">
+              {{ componiendoEjercicio ? 'Componiendo...' : (ejercicio.length > 0 ? 'Volver a componer' : 'Componer ejercicio') }}
             </button>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <!-- CUADRÍCULA DE IMÁGENES -->
-      <div class="modal-body banco-body">
-        
-        <div class="banco-loading" *ngIf="cargandoBanco">
-          <div class="spinner"></div>
-          <p>Cargando casos desde el servidor...</p>
-        </div>
-        
-        <div class="banco-empty" *ngIf="!cargandoBanco && bancoCasos.length === 0">
-          <p>No se encontraron casos del NIH para estos filtros.</p>
-        </div>
-
-        <div class="banco-grid" *ngIf="!cargandoBanco && bancoCasos.length > 0">
-          <div class="banco-card" 
-               *ngFor="let caso of bancoCasos; trackBy: trackByCaso" 
-               [class.selected]="esCasoSeleccionado(caso.id_caso)"
-               (click)="toggleSeleccionCaso(caso)">
-               
-            <div class="banco-img-wrapper">
-              <!-- Skeleton que se muestra mientras la imagen carga -->
-              <div class="img-skeleton" [class.hidden]="caso._imgLoaded"></div>
-              
-              <img 
-                [src]="getImagenUrl(caso.ruta_imagen)" 
-                alt="Radiografía"
-                loading="lazy"
-                [class.img-visible]="caso._imgLoaded"
-                (load)="caso._imgLoaded = true"
-                (error)="onImageError($event, caso)">
-              
-              <div class="banco-overlay">
-                <svg *ngIf="esCasoSeleccionado(caso.id_caso)" viewBox="0 0 24 24" width="40" height="40" stroke="#00ff88" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                <span *ngIf="!esCasoSeleccionado(caso.id_caso)">Haz clic para seleccionar</span>
-              </div>
-            </div>
-            
-            <div class="banco-info">
-              <h4>{{ caso.titulo_caso }}</h4>
-              <p class="banco-meta"><strong>Paciente:</strong> {{ caso.edad }} años, {{ caso.genero }}</p>
-              
-              <!-- Mostrar hallazgos de forma limpia -->
-              <div class="banco-hallazgos">
-                <span class="hallazgo-badge" *ngFor="let h of caso.hallazgos_docente">{{ h }}</span>
-              </div>
-            </div>
-            
+        <!-- PASO 2: REVISAR -->
+        <section class="ej-resultado">
+          <div class="ej-resultado-cabecera">
+            <h4 class="ej-titulo"><span class="ej-paso">2</span> Revisa los casos</h4>
+            <p class="ej-ayuda" *ngIf="ejercicio.length > 0">Haz clic en un caso para quitarlo del ejercicio o volver a incluirlo.</p>
           </div>
-        </div>
-        
+
+          <div class="banco-empty" *ngIf="componiendoEjercicio">
+            <div class="spinner"></div>
+            <p>Buscando casos en el banco...</p>
+          </div>
+
+          <div class="banco-empty" *ngIf="!componiendoEjercicio && ejercicio.length === 0">
+            <svg viewBox="0 0 24 24" width="44" height="44" stroke="currentColor" stroke-width="1.5" fill="none" style="opacity: 0.5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+            <p>Todavía no hay casos. Elige las patologías que quieres evaluar y pulsa <strong>Componer ejercicio</strong>.</p>
+          </div>
+
+          <div class="banco-grid" *ngIf="!componiendoEjercicio && ejercicio.length > 0">
+            <div class="banco-card"
+                 *ngFor="let caso of ejercicio; trackBy: trackByCaso"
+                 [class.selected]="esCasoSeleccionado(caso.id_caso)"
+                 [class.excluido]="!esCasoSeleccionado(caso.id_caso)"
+                 role="button" tabindex="0"
+                 [attr.aria-pressed]="esCasoSeleccionado(caso.id_caso)"
+                 (click)="toggleSeleccionCaso(caso)"
+                 (keydown.enter)="toggleSeleccionCaso(caso)">
+
+              <div class="banco-img-wrapper">
+                <!-- Skeleton que se muestra mientras la imagen carga -->
+                <div class="img-skeleton" [class.hidden]="caso._imgLoaded"></div>
+
+                <img
+                  [src]="getImagenUrl(caso.ruta_imagen)"
+                  alt="Radiografía"
+                  loading="lazy"
+                  [class.img-visible]="caso._imgLoaded"
+                  (load)="caso._imgLoaded = true"
+                  (error)="onImageError($event, caso)">
+
+                <span class="tipo-badge tipo-flotante" [ngClass]="'tipo-' + caso.tipo_composicion">{{ etiquetaTipo(caso.tipo_composicion) }}</span>
+
+                <div class="banco-overlay">
+                  <svg *ngIf="esCasoSeleccionado(caso.id_caso)" viewBox="0 0 24 24" width="40" height="40" stroke="#00ff88" stroke-width="2" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  <span *ngIf="!esCasoSeleccionado(caso.id_caso)">Quitado del ejercicio<br>Clic para incluir</span>
+                </div>
+              </div>
+
+              <div class="banco-info">
+                <h4>{{ caso.titulo_caso }}</h4>
+                <p class="banco-meta"><strong>Paciente:</strong> {{ caso.edad }} años, {{ caso.genero }}</p>
+                <div class="banco-hallazgos">
+                  <span class="hallazgo-badge" *ngFor="let h of caso.hallazgos_docente">{{ h }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
 
-      <!-- PANEL INFERIOR: CARRITO DE SELECCIÓN -->
+      <!-- PASO 3: PUBLICAR -->
       <div class="modal-footer banco-carrito-panel">
         <div class="carrito-status">
           <div class="carrito-icon">
@@ -257,29 +318,23 @@
             <span class="badge" *ngIf="casosSeleccionados.length > 0">{{ casosSeleccionados.length }}</span>
           </div>
           <div class="carrito-text">
-            <span *ngIf="casosSeleccionados.length === 0">Ningún caso seleccionado</span>
-            <span *ngIf="casosSeleccionados.length > 0"><strong>{{ casosSeleccionados.length }} casos</strong> en tu bandeja de asignación</span>
+            <span *ngIf="ejercicio.length === 0">Aún no has compuesto el ejercicio</span>
+            <span *ngIf="ejercicio.length > 0 && casosSeleccionados.length === 0">Quitaste todos los casos: incluye al menos uno</span>
+            <span *ngIf="casosSeleccionados.length > 0"><strong>{{ casosSeleccionados.length }} de {{ ejercicio.length }} casos</strong> se publicarán en {{ nombreCursoSeleccionado }}</span>
           </div>
         </div>
-        
+
         <div class="carrito-actions">
-          <div class="curso-selector" *ngIf="casosSeleccionados.length > 0">
-            <label>Asignar al curso:</label>
-            <select [(ngModel)]="cursoSeleccionado" class="glass-input">
-              <option *ngFor="let c of misCursos" [value]="c.id_curso">{{ c.nombre }}</option>
-            </select>
-          </div>
-          
           <button class="btn-cancel" (click)="cerrarBancoCasos()">Cancelar</button>
-          <button class="btn-primary" 
-                  [disabled]="casosSeleccionados.length === 0 || guardandoEjercicio" 
+          <button class="btn-primary"
+                  [disabled]="casosSeleccionados.length === 0 || guardandoEjercicio"
                   (click)="publicarEjercicio()">
-            <span *ngIf="!guardandoEjercicio">Publicar Ejercicio</span>
+            <span *ngIf="!guardandoEjercicio">Publicar ejercicio</span>
             <span *ngIf="guardandoEjercicio">Asignando...</span>
           </button>
         </div>
       </div>
-      
+
     </div>
   </div>
 
@@ -306,6 +361,10 @@
           <div class="rx-viewer-box">
             <img [src]="getImagenUrl(casoSeleccionado?.ruta_imagen)" alt="Radiografía del caso" class="rx-full-img">
             <span class="proyeccion-tag">{{ casoSeleccionado?.proyeccion }}</span>
+            <button type="button" class="rx-ampliar-btn" (click)="abrirRadiografiaAmpliada()" title="Ver la radiografía en grande" aria-label="Ampliar radiografía">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
+              Ampliar
+            </button>
           </div>
         </div>
 
@@ -424,3 +483,20 @@
        en vez de un modal HTML propio, para que todo el flujo use un único tipo de ventana. -->
 
 </div>
+
+  <!-- VISOR AMPLIADO DE LA RADIOGRAFÍA -->
+  <div class="rx-lightbox" *ngIf="radiografiaAmpliada" (click)="cerrarRadiografiaAmpliada()">
+    <div class="rx-lightbox-barra" (click)="$event.stopPropagation()">
+      <span class="rx-lightbox-titulo">{{ casoSeleccionado?.titulo }}</span>
+      <div class="rx-lightbox-controles">
+        <button type="button" (click)="cambiarZoom(-0.5)" [disabled]="zoomRx <= 1" aria-label="Alejar">&minus;</button>
+        <span class="rx-zoom-valor">{{ (zoomRx * 100) | number:'1.0-0' }}%</span>
+        <button type="button" (click)="cambiarZoom(0.5)" [disabled]="zoomRx >= 4" aria-label="Acercar">+</button>
+        <button type="button" (click)="zoomRx = 1" [disabled]="zoomRx === 1">Restablecer</button>
+        <button type="button" class="rx-cerrar" (click)="cerrarRadiografiaAmpliada()" aria-label="Cerrar">&times;</button>
+      </div>
+    </div>
+    <div class="rx-lightbox-lienzo" (click)="$event.stopPropagation()" (wheel)="zoomConRueda($event)">
+      <img [src]="getImagenUrl(casoSeleccionado?.ruta_imagen)" alt="Radiografía ampliada" [style.height.%]="zoomRx * 100" draggable="false">
+    </div>
+  </div>

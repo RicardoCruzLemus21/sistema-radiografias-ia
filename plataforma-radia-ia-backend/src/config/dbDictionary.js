@@ -46,6 +46,7 @@ module.exports = {
     COLUMNAS: {
         // Módulo 1
         DEBE_CAMBIAR_CONTRASENA: 'debe_cambiar_contrasena',
+        CODIGO_DOCENTE: 'codigo_docente', // Usuarios: código único que el docente comparte para que sus estudiantes se registren
 
         // Módulo 2
         ID_CURSO: 'id_curso',

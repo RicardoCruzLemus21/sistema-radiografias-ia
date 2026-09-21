@@ -32,6 +32,7 @@ const asignarEstudiante = async (datosAsignacion) => {
         }
 
         const [resultado] = await pool.query('CALL sp_asignar_estudiante_curso(?, ?)', [id_curso, id_estudiante]);
+        require('./notificationService').notificarMatricula(id_estudiante, id_curso);
 
         // === NOTIFICACIÓN POR CORREO DINÁMICO ===
         try {
@@ -73,7 +74,7 @@ const obtenerCursosCatedratico = async (id_catedratico) => {
 
 // 3.5 Obtener catálogo maestro de cursos disponibles
 const obtenerCatalogoCursos = async () => {
-    const [catalogo] = await pool.query('CALL sp_obtener_catalogo_cursos()');
+    const [catalogo] = await pool.query('CALL sp_obtener_nombres_cursos_disponibles()');
     return catalogo[0];
 };
 
@@ -102,9 +103,10 @@ const obtenerResumenGeneral = async (id_catedratico) => {
         // Formatear estudiantes con estado y datos limpios
         const alumnosFormateados = estudiantesRows[0].map(est => {
             const prec = parseFloat(est.precision_promedio) || 0;
+            const casosResueltos = Number(est.casosResueltos) || 0;
             
             let estado = 'Sin Evaluar';
-            if (est.casosResueltos > 0) {
+            if (casosResueltos > 0) {
                 if (prec >= 80) estado = 'Sobresaliente';
                 else if (prec >= 50) estado = 'Promedio';
                 else estado = 'En Riesgo';
@@ -115,9 +117,9 @@ const obtenerResumenGeneral = async (id_catedratico) => {
                 id_usuario: est.id,
                 nombre: est.nombre,
                 correo: est.correo,
-                casosResueltos: est.casosResueltos || 0,
+                casosResueltos,
                 casosAsignados: totalCasosGlobal,
-                precision: Math.round(prec),
+                precision: Math.round(prec * 10) / 10, // promedio de los ejercicios, con un decimal (p. ej. 44.5)
                 estado: estado
             };
         });
@@ -125,7 +127,7 @@ const obtenerResumenGeneral = async (id_catedratico) => {
         // Calcular estadísticas globales
         const totalAlumnos = alumnosFormateados.length;
         const totalPrecisionSum = alumnosFormateados.reduce((acc, curr) => acc + curr.precision, 0);
-        const precisionGrupal = totalAlumnos > 0 ? Math.round(totalPrecisionSum / totalAlumnos) : 0;
+        const precisionGrupal = totalAlumnos > 0 ? Math.round((totalPrecisionSum / totalAlumnos) * 10) / 10 : 0;
         const casosCompletadosTotales = alumnosFormateados.reduce((acc, curr) => acc + curr.casosResueltos, 0);
 
         return {
@@ -206,8 +208,8 @@ const obtenerMiRendimiento = async (id_estudiante) => {
         return {
             estudiante: usuario[0][0],
             estadisticas: {
-                total_casos: estadisticas[0][0].total_casos || 0,
-                precision_promedio: estadisticas[0][0].precision_promedio || 0
+                total_casos: Number(estadisticas[0][0].total_casos) || 0,
+                precision_promedio: Number(estadisticas[0][0].precision_promedio) || 0
             },
             historial: evaluaciones[0]
         };

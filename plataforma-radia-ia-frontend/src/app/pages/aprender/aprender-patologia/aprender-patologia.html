@@ -1,0 +1,165 @@
+<div class="aprender-pagina" [style.--color-clase]="colorClase(clase)">
+
+  <header class="patologia-cabecera">
+    <button type="button" class="btn-link" (click)="volverALaRuta()">&larr; Ruta de aprendizaje</button>
+    <h1><span class="clase-punto" [style.background]="colorClase(clase)"></span>{{ nombreClase(clase) }}</h1>
+  </header>
+
+  <nav class="pestanas" role="tablist">
+    <button type="button" role="tab" [class.activa]="pestana === 'leccion'" (click)="irAPestana('leccion')"><span class="num">1</span> Lección</button>
+    <button type="button" role="tab" [class.activa]="pestana === 'comparador'" (click)="irAPestana('comparador')"><span class="num">2</span> Comparador</button>
+    <button type="button" role="tab" [class.activa]="pestana === 'practica'" (click)="irAPestana('practica')"><span class="num">3</span> Casos guiados</button>
+  </nav>
+
+  <div class="cargando-caja" *ngIf="cargandoLeccion">Cargando lección...</div>
+  <div class="vacio-caja error-texto" *ngIf="errorLeccion">{{ errorLeccion }}</div>
+
+  <ng-container *ngIf="leccion">
+
+    <!-- ===== 1. LECCIÓN ===== -->
+    <section *ngIf="pestana === 'leccion'" class="bloque">
+      <p class="resumen-leccion">{{ leccion.resumen }}</p>
+
+      <div class="dos-col">
+        <div class="tarjeta glass-panel">
+          <h2>Qué buscar</h2>
+          <ol class="lista-claves">
+            <li *ngFor="let q of leccion.que_buscar">{{ q }}</li>
+          </ol>
+        </div>
+        <div class="tarjeta glass-panel">
+          <h2>Errores típicos</h2>
+          <ul class="lista-errores">
+            <li *ngFor="let e of leccion.errores_tipicos">{{ e }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="dato-clave">
+        <strong>Dato clave:</strong> {{ leccion.dato_clave }}
+      </div>
+
+      <div class="tarjeta glass-panel" *ngIf="leccion.se_confunde_con?.length">
+        <h2>Se confunde con</h2>
+        <div class="confusiones">
+          <div class="confusion" *ngFor="let c of leccion.se_confunde_con">
+            <span class="chip-clase" [style.--color-clase]="colorClase(c.clase)">{{ nombreClase(c.clase) }}</span>
+            <p>{{ c.clave }}</p>
+            <button type="button" class="btn-mini" (click)="irAPestana('comparador', c.clase)">Comparar con {{ nombreClase(c.clase) }}</button>
+          </div>
+        </div>
+      </div>
+
+      <details class="tarjeta glass-panel ficha" *ngIf="leccion.ficha">
+        <summary>Ficha ampliada</summary>
+        <div class="ficha-cuerpo">
+          <h3 *ngIf="leccion.ficha.definicion">Definición</h3><p *ngIf="leccion.ficha.definicion">{{ leccion.ficha.definicion }}</p>
+          <h3 *ngIf="leccion.ficha.fisiopatologia">Cómo ocurre</h3><p *ngIf="leccion.ficha.fisiopatologia">{{ leccion.ficha.fisiopatologia }}</p>
+          <h3 *ngIf="leccion.ficha.presentacion_clinica">Presentación clínica</h3><p *ngIf="leccion.ficha.presentacion_clinica">{{ leccion.ficha.presentacion_clinica }}</p>
+          <h3 *ngIf="leccion.ficha.epidemiologia">A quién afecta</h3><p *ngIf="leccion.ficha.epidemiologia">{{ leccion.ficha.epidemiologia }}</p>
+          <small>Material educativo de apoyo generado con IA (Biblioteca Clínica); no es una herramienta de diagnóstico.</small>
+        </div>
+      </details>
+
+      <button type="button" class="btn-primario" (click)="irAPestana('comparador')">Siguiente: comparar &rarr;</button>
+    </section>
+
+    <!-- ===== 2. COMPARADOR ===== -->
+    <section *ngIf="pestana === 'comparador'" class="bloque">
+      <div class="selector-contra">
+        <span class="etiqueta-fija">Comparar {{ nombreClase(clase) }} con:</span>
+        <button type="button" class="chip-boton" *ngFor="let c of opcionesContra" [class.activa]="c === contra"
+                [style.--color-clase]="colorClase(c)" (click)="elegirContra(c)">{{ nombreClase(c) }}</button>
+      </div>
+
+      <div class="cargando-caja" *ngIf="cargandoComparador && !comparacion">Buscando ejemplos...</div>
+      <div class="vacio-caja error-texto" *ngIf="errorComparador">{{ errorComparador }}</div>
+
+      <ng-container *ngIf="comparacion">
+        <div class="comparacion" [class.cargando-suave]="cargandoComparador">
+          <figure class="panel-imagen">
+            <div class="rx-caja" (click)="ampliada = url(comparacion.a.imagen)">
+              <img [src]="url(comparacion.a.imagen)" alt="Ejemplo de {{ comparacion.a.nombre }}" draggable="false">
+              <img *ngIf="mapaA && comparacion.a.gradcam" class="rx-capa" [src]="url(comparacion.a.gradcam)" alt="Mapa de calor" draggable="false">
+              <div class="rx-bbox" *ngFor="let b of comparacion.a.bbox" [style.left.%]="b.x * 100" [style.top.%]="b.y * 100" [style.width.%]="b.ancho * 100" [style.height.%]="b.alto * 100"></div>
+            </div>
+            <figcaption>
+              <span class="chip-clase" [style.--color-clase]="colorClase(comparacion.a.clase)">{{ comparacion.a.nombre }}</span>
+              <button type="button" class="btn-mini" *ngIf="comparacion.a.gradcam" (click)="mapaA = !mapaA">{{ mapaA ? 'Ocultar mapa de calor' : 'Mapa de calor' }}</button>
+            </figcaption>
+          </figure>
+
+          <figure class="panel-imagen">
+            <div class="rx-caja" (click)="ampliada = url(comparacion.b.imagen)">
+              <img [src]="url(comparacion.b.imagen)" alt="Ejemplo de {{ comparacion.b.nombre }}" draggable="false">
+              <img *ngIf="mapaB && comparacion.b.gradcam" class="rx-capa" [src]="url(comparacion.b.gradcam)" alt="Mapa de calor" draggable="false">
+              <div class="rx-bbox" *ngFor="let b of comparacion.b.bbox" [style.left.%]="b.x * 100" [style.top.%]="b.y * 100" [style.width.%]="b.ancho * 100" [style.height.%]="b.alto * 100"></div>
+            </div>
+            <figcaption>
+              <span class="chip-clase" [style.--color-clase]="colorClase(comparacion.b.clase)">{{ comparacion.b.nombre }}</span>
+              <button type="button" class="btn-mini" *ngIf="comparacion.b.gradcam" (click)="mapaB = !mapaB">{{ mapaB ? 'Ocultar mapa de calor' : 'Mapa de calor' }}</button>
+            </figcaption>
+          </figure>
+        </div>
+
+        <div class="acciones-fila">
+          <button type="button" class="btn-secundario" (click)="cargarComparacion()" [disabled]="cargandoComparador">Otro ejemplo</button>
+          <span class="nota-pequena">Clic en una imagen para ampliarla. El mapa de calor muestra dónde se fijó el modelo; no es una prueba.</span>
+        </div>
+
+        <div class="tarjeta glass-panel">
+          <h2>Cómo distinguirlas</h2>
+          <p class="resumen-par">{{ comparacion.explicacion.resumen }}</p>
+          <div class="dos-col">
+            <div>
+              <h3 class="sub"><span class="chip-clase" [style.--color-clase]="colorClase(clase)">{{ nombreClase(clase) }}</span></h3>
+              <ul class="lista-errores"><li *ngFor="let k of comparacion.claves[clase]">{{ k }}</li></ul>
+            </div>
+            <div>
+              <h3 class="sub"><span class="chip-clase" [style.--color-clase]="colorClase(contra)">{{ nombreClase(contra) }}</span></h3>
+              <ul class="lista-errores"><li *ngFor="let k of comparacion.claves[contra]">{{ k }}</li></ul>
+            </div>
+          </div>
+          <p class="pista-clave" *ngIf="comparacion.explicacion.pista"><strong>Clave:</strong> {{ comparacion.explicacion.pista }}</p>
+          <small class="origen" *ngIf="comparacion.explicacion.origen === 'ia'">Explicación generada con IA y revisada por tu docente.</small>
+        </div>
+      </ng-container>
+
+      <button type="button" class="btn-primario" (click)="irAPestana('practica')">Siguiente: practicar &rarr;</button>
+    </section>
+
+    <!-- ===== 3. CASOS GUIADOS ===== -->
+    <section *ngIf="pestana === 'practica'" class="bloque">
+
+      <div class="tarjeta glass-panel inicio-sesion" *ngIf="fase === 'inicio'">
+        <h2>Practica con casos reales</h2>
+        <p>Vas a ver hasta 6 radiografías del banco. Algunas son de {{ nombreClase(clase) }}, otras normales y otras de patologías que se le parecen: así aprendes a distinguirlas, no solo a reconocerla.</p>
+        <p>Después de cada respuesta recibes una explicación al instante. Lo que falles volverá en tu repaso.</p>
+        <p class="error-texto" *ngIf="errorSesion">{{ errorSesion }}</p>
+        <button type="button" class="btn-primario" [disabled]="cargandoSesion" (click)="empezarSesion()">{{ cargandoSesion ? 'Preparando casos...' : 'Empezar sesión' }}</button>
+      </div>
+
+      <app-practica-caso *ngIf="fase === 'practicando' && sesion"
+                         [caso]="sesion.casos[indice]" origen="guiado" [claseObjetivo]="clase"
+                         [pistas]="sesion.pistas" [indice]="indice + 1" [total]="sesion.casos.length"
+                         (terminado)="alTerminarCaso($event)"></app-practica-caso>
+
+      <div class="tarjeta glass-panel fin-sesion" *ngIf="fase === 'fin'">
+        <h2>Sesión terminada</h2>
+        <p class="marcador"><strong>{{ aciertos }}</strong> de {{ resultados.length }} correctos</p>
+        <div class="barra"><span [style.width.%]="resultados.length ? (aciertos / resultados.length) * 100 : 0"></span></div>
+        <p>{{ aciertos === resultados.length ? '¡Sesión perfecta!' : 'Los casos que fallaste volverán en tu repaso para que se te fijen.' }}</p>
+        <div class="acciones-fila">
+          <button type="button" class="btn-primario" (click)="fase = 'inicio'">Otra sesión</button>
+          <button type="button" class="btn-secundario" (click)="irAPestana('leccion')">Repasar la lección</button>
+          <button type="button" class="btn-secundario" (click)="volverALaRuta()">Volver a la ruta</button>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>
+
+<div class="visor-ampliado" *ngIf="ampliada" (click)="ampliada = null" role="dialog" aria-label="Radiografía ampliada">
+  <button type="button" class="visor-cerrar" (click)="ampliada = null" aria-label="Cerrar">&times;</button>
+  <img [src]="ampliada" alt="Radiografía ampliada" (click)="$event.stopPropagation()" draggable="false">
+</div>

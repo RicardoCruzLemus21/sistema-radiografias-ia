@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const clinicalController = require('../controllers/clinicalController');
-const { verificarToken } = require('../middlewares/authMiddleware');
+const { verificarToken, verificarRol } = require('../middlewares/authMiddleware');
 const upload = require('../middlewares/uploadMiddleware'); // Importamos Multer
 
 // Aseguramos todo el módulo temporalmente deshabilitado para pruebas
@@ -13,14 +13,17 @@ router.get('/casos-admin', clinicalController.listarCasosCatedratico);
 router.get('/caso/:id', clinicalController.obtenerCasoPorId);
 router.get('/next-paciente', clinicalController.obtenerSiguienteCodigoPaciente);
 router.get('/library/:patologia', clinicalController.obtenerInfoPatologiaIA);
-router.get('/banco-casos-ia', clinicalController.obtenerBancoCasosIA);
-router.post('/banco-casos-ia/componer', clinicalController.componerEjercicio);
+// Flujo de asignación del banco: solo catedráticos (y solo sobre sus propios cursos, ver el controlador)
+router.get('/banco-casos-ia/disponibilidad', verificarRol(['catedratico']), clinicalController.obtenerDisponibilidadBanco);
+router.post('/banco-casos-ia/componer', verificarRol(['catedratico']), clinicalController.componerEjercicio);
 router.get('/metricas-modelo', clinicalController.obtenerMetricasModelo);
 router.get('/estadisticas-estudiante', clinicalController.obtenerEstadisticasEstudiante);
 
 // Endpoints de Estudiante (Flujo Educativo Fase 1)
 router.get('/caso/:id/estudiante', clinicalController.obtenerCasoEstudiante);
-router.post('/respuestas', clinicalController.registrarRespuesta);
+router.get('/caso/:id/retroalimentacion', verificarRol(['estudiante']), clinicalController.obtenerRetroalimentacion);
+// Solo estudiantes responden casos, y siempre a su propio nombre (el id sale del token)
+router.post('/respuestas', verificarRol(['estudiante']), clinicalController.registrarRespuesta);
 // =========================================================
 
 // Endpoints POST individuales
@@ -32,10 +35,11 @@ router.post('/radiografia', upload.single('imagen'), clinicalController.subirIma
 router.post('/crear-completo', upload.single('imagen_rx'), clinicalController.crearCasoCompleto);
 
 // Endpoint POST: Asignar casos del Banco NIH a un curso
-router.post('/evaluaciones', clinicalController.asignarCasosBanco);
+router.post('/evaluaciones', verificarRol(['catedratico']), clinicalController.asignarCasosBanco);
 
 // Endpoints CRUD adicionales (Editar y Eliminar)
 router.put('/caso/:id', clinicalController.editarCaso);
+router.delete('/ejercicio/:id', verificarRol(['catedratico']), clinicalController.eliminarEjercicio);
 router.delete('/caso/:id', clinicalController.eliminarCaso);
 
 module.exports = router;

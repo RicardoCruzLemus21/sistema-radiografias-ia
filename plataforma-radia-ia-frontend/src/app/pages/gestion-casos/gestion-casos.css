@@ -595,33 +595,8 @@
   padding: 16px 24px;
 }
 
-.banco-filters {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-.filter-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.filter-group label {
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.banco-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 24px;
-  background: var(--bg-dark-base); /* Fondo más oscuro para contrastar las rx */
-}
-
 /* Estado de Carga */
-.banco-loading, .banco-empty {
+.banco-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -792,17 +767,6 @@
   gap: 15px;
 }
 
-.curso-selector {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.curso-selector label {
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
 /* ==========================================
    SKELETON / LAZY LOADING DE IMÁGENES
    ========================================== */
@@ -853,3 +817,142 @@
   100% { background-position: -200% 0; }
 }
 
+/* ========================================================
+   ASIGNAR CASOS: FLUJO ÚNICO (configurar -> componer -> revisar -> publicar)
+   ======================================================== */
+.ej-cuerpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  background: var(--bg-dark-base);
+}
+
+.ej-config { padding: 20px 24px; border-radius: 12px; display: flex; flex-direction: column; gap: 16px; }
+.ej-titulo { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--text-main); }
+.ej-paso {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(0, 229, 255, 0.15); border: 1px solid rgba(0, 229, 255, 0.4);
+  color: var(--accent-cyan); font-size: 12px; font-weight: 700;
+}
+
+.ej-grid { display: grid; grid-template-columns: 2fr 1.4fr 1fr; gap: 16px; }
+.ej-campo { display: flex; flex-direction: column; gap: 6px; position: relative; }
+.ej-campo label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.ej-ayuda { font-size: 12px; color: var(--text-muted); margin: 0; }
+
+.link-btn { background: none; border: none; padding: 2px 4px; color: var(--accent-cyan); font-size: 12px; font-weight: 600; cursor: pointer; }
+.link-btn:hover { text-decoration: underline; }
+
+/* Selector de patologías (selección múltiple con chips) */
+.pat-trigger { display: flex; justify-content: space-between; align-items: center; gap: 8px; width: 100%; min-height: 44px; text-align: left; cursor: pointer; }
+.pat-chips { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; min-width: 0; }
+.pat-placeholder { color: var(--text-muted); font-size: 14px; }
+.pat-chip {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 6px 3px 10px; border-radius: 999px;
+  background: rgba(0, 229, 255, 0.12); border: 1px solid rgba(0, 229, 255, 0.35);
+  font-size: 12px; color: var(--text-main);
+}
+.pat-chip.vacia { background: rgba(245, 158, 11, 0.14); border-color: #f59e0b; }
+.pat-chip-x { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; cursor: pointer; line-height: 1; }
+.pat-chip-x:hover { background: rgba(255, 255, 255, 0.2); }
+
+.pat-panel {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30;
+  padding: 10px; border-radius: 10px; max-height: 340px; overflow-y: auto;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+.pat-acciones { display: flex; justify-content: space-between; padding: 0 4px 8px; }
+.pat-item { display: flex; align-items: center; gap: 10px; padding: 8px 6px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--text-main); }
+.pat-item:hover { background: var(--table-row-hover); }
+.pat-item input { width: 16px; height: 16px; accent-color: var(--accent-cyan); }
+.pat-nombre { flex: 1; }
+.pat-conteo { font-size: 11px; color: var(--text-muted); }
+.pat-item.sin-casos { opacity: 0.55; cursor: not-allowed; }
+.pat-listo { width: 100%; margin-top: 8px; padding: 6px; }
+
+.ej-aviso { padding: 10px 12px; border-left: 3px solid #f59e0b; background: rgba(245, 158, 11, 0.1); border-radius: 4px; font-size: 13px; color: var(--text-main); }
+
+.ej-avanzado-toggle { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; }
+.ej-avanzado-toggle svg { transition: transform 0.2s ease; }
+.ej-avanzado-toggle svg.girado { transform: rotate(180deg); }
+.ej-avanzadas { max-width: 280px; }
+
+.ej-accion { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; padding-top: 14px; border-top: 1px solid var(--border-color); }
+.ej-resumen-previo { margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 13px; color: var(--text-muted); }
+.ej-resumen-previo strong { color: var(--text-main); }
+
+/* Etiquetas del tipo de caso: objetivo / normal / distractor */
+.tipo-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+.tipo-badge.tipo-diana { background: rgba(14, 165, 233, 0.16); color: #38bdf8; }
+.tipo-badge.tipo-normal { background: rgba(16, 185, 129, 0.16); color: #34d399; }
+.tipo-badge.tipo-distractor { background: rgba(245, 158, 11, 0.16); color: #fbbf24; }
+[data-theme="light"] .tipo-badge.tipo-diana { color: #0369a1; }
+[data-theme="light"] .tipo-badge.tipo-normal { color: #047857; }
+[data-theme="light"] .tipo-badge.tipo-distractor { color: #b45309; }
+/* Sobre la radiografía: fondo sólido con texto blanco para que se lea en cualquier imagen */
+.tipo-flotante { position: absolute; top: 10px; left: 10px; z-index: 2; color: #fff !important; }
+.tipo-flotante.tipo-diana { background: #0284c7; }
+.tipo-flotante.tipo-normal { background: #059669; }
+.tipo-flotante.tipo-distractor { background: #d97706; }
+
+.ej-resultado { display: flex; flex-direction: column; gap: 14px; }
+.ej-resultado-cabecera { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.ej-resultado .banco-empty { min-height: 220px; text-align: center; padding: 24px; }
+
+.banco-card:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.banco-card.excluido { opacity: 0.55; filter: grayscale(0.6); }
+.banco-card.excluido .banco-overlay { opacity: 1; background: rgba(0, 0, 0, 0.55); text-align: center; line-height: 1.5; }
+
+.banco-carrito-panel { flex-wrap: wrap; gap: 12px; }
+
+@media (max-width: 900px) {
+  .ej-grid { grid-template-columns: 1fr; }
+  .ej-cuerpo { padding: 16px; }
+}
+
+/* ========================================================
+   CARPETAS DE EJERCICIOS
+   ======================================================== */
+.seccion-titulo { margin: 8px 0 12px; font-size: 16px; color: var(--text-main); }
+.carpetas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.carpeta-card { display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 14px; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease; }
+.carpeta-card:hover { transform: translateY(-2px); border-color: var(--accent-cyan); }
+.carpeta-card:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
+.carpeta-icono { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 12px; background: rgba(0, 229, 255, 0.12); color: var(--accent-cyan); flex-shrink: 0; }
+.carpeta-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.carpeta-info h3 { margin: 0; font-size: 17px; color: var(--text-main); }
+.carpeta-curso { font-size: 13px; color: var(--text-muted); }
+.carpeta-meta { font-size: 12px; color: var(--text-muted); }
+
+.carpeta-cabecera { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding: 16px 20px; border-radius: 12px; margin-bottom: 20px; }
+.carpeta-titulo { flex: 1; min-width: 160px; display: flex; flex-direction: column; }
+.carpeta-titulo h2 { margin: 0; font-size: 20px; color: var(--text-main); }
+.btn-peligro { padding: 10px 16px; border-radius: 8px; border: 1px solid #ef4444; background: transparent; color: #ef4444; font-weight: 600; cursor: pointer; }
+.btn-peligro:hover:not(:disabled) { background: #ef4444; color: #fff; }
+.btn-peligro:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ========================================================
+   VISOR AMPLIADO DE RADIOGRAFÍA
+   ======================================================== */
+.rx-ampliar-btn {
+  position: absolute; bottom: 12px; right: 12px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px;
+  background: rgba(0, 0, 0, 0.7); color: #fff; border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.rx-ampliar-btn:hover { background: var(--accent-cyan); color: #000; }
+
+.rx-lightbox { position: fixed; inset: 0; z-index: 3000; background: rgba(0, 0, 0, 0.95); display: flex; flex-direction: column; }
+.rx-lightbox-barra { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 12px 20px; color: #fff; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+.rx-lightbox-titulo { font-weight: 600; }
+.rx-lightbox-controles { display: flex; align-items: center; gap: 8px; }
+.rx-lightbox-controles button { min-width: 36px; height: 36px; padding: 0 12px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 16px; cursor: pointer; }
+.rx-lightbox-controles button:hover:not(:disabled) { background: rgba(255, 255, 255, 0.2); }
+.rx-lightbox-controles button:disabled { opacity: 0.4; cursor: not-allowed; }
+.rx-zoom-valor { min-width: 52px; text-align: center; font-size: 13px; }
+.rx-lightbox-lienzo { flex: 1; min-height: 0; overflow: auto; display: flex; padding: 16px; }
+.rx-lightbox-lienzo img { max-width: none; width: auto; flex-shrink: 0; margin: auto; user-select: none; }

@@ -1,0 +1,124 @@
+<div class="aprender-pagina">
+
+  <header class="aprender-cabecera">
+    <h1>Contenido de aprendizaje</h1>
+    <p>Revisa lo que ven los estudiantes en su ruta de aprendizaje. Las lecciones y las explicaciones de cada error se pueden editar; las generadas con IA
+      <strong>no se muestran a los estudiantes hasta que las apruebes</strong>.</p>
+  </header>
+
+  <nav class="pestanas" role="tablist">
+    <button type="button" role="tab" [class.activa]="pestana === 'explicaciones'" (click)="pestana = 'explicaciones'">Explicaciones de errores <span class="contador" *ngIf="pendientesIa > 0">{{ pendientesIa }} por revisar</span></button>
+    <button type="button" role="tab" [class.activa]="pestana === 'lecciones'" (click)="pestana = 'lecciones'">Lecciones</button>
+  </nav>
+
+  <div class="cargando-caja" *ngIf="cargando">Cargando...</div>
+  <div class="vacio-caja error-texto" *ngIf="error">{{ error }}</div>
+
+  <!-- ===== EXPLICACIONES ===== -->
+  <section *ngIf="!cargando && !error && pestana === 'explicaciones'" class="bloque">
+
+    <div class="tarjeta glass-panel generar-caja">
+      <div>
+        <h2>Explicaciones generadas con IA</h2>
+        <p *ngIf="paresSinIa > 0">Faltan <strong>{{ paresSinIa }}</strong> de 56 combinaciones "era X y marcaste Y". La IA solo redacta a partir de las lecciones; tú decides qué se publica.</p>
+        <p *ngIf="paresSinIa === 0">Ya se generó una explicación para las 56 combinaciones.</p>
+        <p class="nota-pequena" *ngIf="paresSinIa > 0">Con el plan gratuito de Gemini se generan unas 4 por minuto y hasta ~20 al día; si se agota, continúa al día siguiente.</p>
+        <p class="aviso" *ngIf="avisoGeneracion">{{ avisoGeneracion }}</p>
+        <p class="progreso" *ngIf="generando || progreso.generadas > 0">Generadas en esta sesión: <strong>{{ progreso.generadas }}</strong><span *ngIf="progreso.errores > 0"> · con error: {{ progreso.errores }}</span></p>
+      </div>
+      <div class="generar-botones">
+        <button type="button" class="btn-primario" *ngIf="!generando" [disabled]="paresSinIa === 0" (click)="generarFaltantes()">Generar las que faltan</button>
+        <button type="button" class="btn-secundario" *ngIf="generando" (click)="detenerGeneracion()">Detener</button>
+        <span class="nota-pequena" *ngIf="generando">Generando... puede tardar unos minutos. No cierres esta pantalla.</span>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <button type="button" class="chip-boton" [class.activa]="filtro === 'pendiente'" (click)="filtro = 'pendiente'">Pendientes ({{ contar('pendiente') }})</button>
+      <button type="button" class="chip-boton" [class.activa]="filtro === 'aprobada'" (click)="filtro = 'aprobada'">Aprobadas ({{ contar('aprobada') }})</button>
+      <button type="button" class="chip-boton" [class.activa]="filtro === 'rechazada'" (click)="filtro = 'rechazada'">Rechazadas ({{ contar('rechazada') }})</button>
+      <button type="button" class="chip-boton" [class.activa]="filtro === 'todas'" (click)="filtro = 'todas'">Todas ({{ contar('todas') }})</button>
+      <select class="filtro-origen" [(ngModel)]="filtroOrigen" aria-label="Origen del texto">
+        <option value="todos">Todos los orígenes</option>
+        <option value="ia">Generadas con IA</option>
+        <option value="plantilla">Texto base</option>
+      </select>
+    </div>
+
+    <div class="vacio-caja" *ngIf="visibles.length === 0">No hay explicaciones con este filtro.</div>
+
+    <article class="expl tarjeta glass-panel" *ngFor="let e of visibles" [class.editando]="editandoId === e.id_explicacion">
+      <header class="expl-cabecera">
+        <h3>
+          <span class="chip-clase" [style.--color-clase]="colorClase(e.clase_real)">{{ e.nombre_real }}</span>
+          <span class="flecha">marcada como</span>
+          <span class="chip-clase" [style.--color-clase]="colorClase(e.clase_marcada)">{{ e.nombre_marcada }}</span>
+        </h3>
+        <span class="insignia" [class.ia]="e.origen === 'ia'">{{ e.origen === 'ia' ? 'IA' : 'Texto base' }}</span>
+        <span class="insignia estado" [ngClass]="e.estado">{{ e.estado === 'aprobada' ? 'Aprobada' : e.estado === 'rechazada' ? 'Rechazada' : 'Pendiente' }}</span>
+      </header>
+
+      <ng-container *ngIf="editandoId !== e.id_explicacion">
+        <p class="expl-resumen">{{ e.contenido.resumen }}</p>
+        <ol class="expl-pasos"><li *ngFor="let p of e.contenido.como_distinguir">{{ p }}</li></ol>
+        <p class="expl-linea"><strong>Pista:</strong> {{ e.contenido.pista }}</p>
+        <p class="expl-linea"><strong>Próxima vez:</strong> {{ e.contenido.proxima_vez }}</p>
+
+        <div class="acciones-fila">
+          <button type="button" class="btn-mini" (click)="iniciarEdicion(e)">Editar</button>
+          <button type="button" class="btn-aprobar" *ngIf="e.estado !== 'aprobada'" [disabled]="procesandoId === e.id_explicacion" (click)="cambiarEstado(e, 'aprobada')">Aprobar</button>
+          <button type="button" class="btn-mini" *ngIf="e.estado !== 'rechazada' && e.origen === 'ia'" [disabled]="procesandoId === e.id_explicacion" (click)="cambiarEstado(e, 'rechazada')">Rechazar</button>
+          <button type="button" class="btn-mini" *ngIf="e.origen === 'ia'" [disabled]="procesandoId === e.id_explicacion" (click)="regenerar(e)">{{ procesandoId === e.id_explicacion ? 'Trabajando...' : 'Regenerar con IA' }}</button>
+        </div>
+      </ng-container>
+
+      <form *ngIf="editandoId === e.id_explicacion" class="formulario" (ngSubmit)="guardarEdicion(e)">
+        <label>Resumen<textarea name="resumen" rows="3" [(ngModel)]="formulario.resumen"></textarea></label>
+        <label>Cómo distinguirlas (un paso por línea)<textarea name="pasos" rows="4" [(ngModel)]="formulario.pasos"></textarea></label>
+        <label>Pista<input name="pista" type="text" [(ngModel)]="formulario.pista"></label>
+        <label>Próxima vez<input name="proxima" type="text" [(ngModel)]="formulario.proxima_vez"></label>
+        <div class="acciones-fila">
+          <button type="submit" class="btn-primario" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar y aprobar' }}</button>
+          <button type="button" class="btn-secundario" (click)="cancelarEdicion()">Cancelar</button>
+        </div>
+      </form>
+    </article>
+  </section>
+
+  <!-- ===== LECCIONES ===== -->
+  <section *ngIf="!cargando && !error && pestana === 'lecciones'" class="bloque">
+    <p class="nota-pequena">El contenido base de las lecciones se redactó como material de apoyo. Revísalo y ajústalo a tu criterio: lo que edites se conserva. Una lección en borrador no se muestra a los estudiantes.</p>
+
+    <article class="expl tarjeta glass-panel" *ngFor="let l of lecciones" [class.editando]="leccionEditando === l.clase">
+      <header class="expl-cabecera">
+        <h3><span class="chip-clase" [style.--color-clase]="colorClase(l.clase)">{{ l.nombre }}</span></h3>
+        <span class="insignia estado" [ngClass]="l.estado === 'aprobado' ? 'aprobada' : 'pendiente'">{{ l.estado === 'aprobado' ? 'Publicada' : 'Borrador' }}</span>
+        <span class="insignia" *ngIf="l.revisado_por">Editada por un docente</span>
+      </header>
+
+      <ng-container *ngIf="leccionEditando !== l.clase">
+        <p class="expl-resumen">{{ l.contenido.resumen }}</p>
+        <p class="expl-linea"><strong>Dato clave:</strong> {{ l.contenido.dato_clave }}</p>
+        <div class="acciones-fila"><button type="button" class="btn-mini" (click)="iniciarEdicionLeccion(l)">Editar lección</button></div>
+      </ng-container>
+
+      <form *ngIf="leccionEditando === l.clase && formLeccion" class="formulario" (ngSubmit)="guardarLeccion(l, 'aprobado')">
+        <label>Resumen<textarea name="lresumen" rows="3" [(ngModel)]="formLeccion.resumen"></textarea></label>
+        <label>Qué buscar (uno por línea)<textarea name="lbuscar" rows="6" [(ngModel)]="formLeccion.que_buscar"></textarea></label>
+        <label>Errores típicos (uno por línea)<textarea name="lerrores" rows="4" [(ngModel)]="formLeccion.errores_tipicos"></textarea></label>
+        <label>Dato clave<input name="ldato" type="text" [(ngModel)]="formLeccion.dato_clave"></label>
+        <div class="confusiones-edicion" *ngIf="formLeccion.confusiones.length">
+          <span class="etiqueta-fija">Se confunde con</span>
+          <label *ngFor="let c of formLeccion.confusiones; let i = index">{{ nombreClase(c.clase) }}
+            <textarea [name]="'lconf' + i" rows="2" [(ngModel)]="c.clave"></textarea>
+          </label>
+        </div>
+        <div class="acciones-fila">
+          <button type="submit" class="btn-primario" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar y publicar' }}</button>
+          <button type="button" class="btn-secundario" [disabled]="guardando" (click)="guardarLeccion(l, 'borrador')">Guardar como borrador</button>
+          <button type="button" class="btn-secundario" (click)="cancelarEdicionLeccion()">Cancelar</button>
+        </div>
+      </form>
+    </article>
+  </section>
+</div>

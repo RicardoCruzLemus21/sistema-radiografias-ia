@@ -13,11 +13,11 @@
     <div class="stepper-indicator">
       <div class="step" [class.active]="faseActual >= 1">1. Lectura a Ciegas</div>
       <div class="step-divider"></div>
-      <div class="step" [class.active]="faseActual >= 2">2. Verdad (NIH)</div>
+      <div class="step" [class.active]="faseActual >= 2" [class.clickable]="modoRevision" (click)="irAFase(2)">2. Verdad (NIH)</div>
       <div class="step-divider"></div>
-      <div class="step" [class.active]="faseActual >= 3">3. Opinión IA</div>
+      <div class="step" [class.active]="faseActual >= 3" [class.clickable]="modoRevision" (click)="irAFase(3)">3. Opinión IA</div>
       <div class="step-divider"></div>
-      <div class="step" [class.active]="faseActual >= 4">4. Discusión</div>
+      <div class="step" [class.active]="faseActual >= 4" [class.clickable]="modoRevision" (click)="irAFase(4)">4. Discusión</div>
     </div>
     <div class="header-right" *ngIf="faseActual === 1">
       <span class="timer">{{ tiempoDisplay }}</span>
@@ -43,14 +43,13 @@
            (mousemove)="onImageMouseMove($event)" 
            (mouseup)="onImageMouseUp($event)">
            
-        <!-- Grad-CAM IA (Fase 3 y 4): mapa de calor de la opinión con mayor probabilidad -->
-        <div class="heatmap-overlay" *ngIf="faseActual >= 3 && resultadoFase3?.opiniones?.[0]?.gradcamUrl"
-             [ngStyle]="{'background-image': 'url(' + resultadoFase3.opiniones[0].gradcamUrl + ')'}"></div>
-
-        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image"
-             [class.heatmap-effect]="faseActual >= 3 && resultadoFase3?.opiniones?.[0]?.gradcamUrl"
+        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image" (load)="alCargarImagen()"
              [ngStyle]="{'transform': 'scale(' + zoomLevel + ')', 'filter': (isInverted ? 'invert(1) ' : 'grayscale(100%) ') + 'brightness(' + brightness + ') contrast(' + contrast + ')'}" 
              style="transition: transform 0.3s ease, filter 0.3s ease; user-select: none;" draggable="false">
+
+        <!-- Grad-CAM (Fase 3 y 4): capa de calor con transparencia, alineada exactamente sobre la radiografía -->
+        <img *ngIf="faseActual >= 3 && mostrarGradcam && gradcamActual" [src]="gradcamActual.url" alt="Mapa de calor Grad-CAM" class="gradcam-overlay"
+             [ngStyle]="estiloCapaSobreImagen()" draggable="false">
 
         <!-- Marca del Estudiante -->
         <div *ngIf="marcadorEstudiante" class="user-marker"
@@ -60,11 +59,13 @@
         </div>
 
         <!-- Marca de Verdad de Referencia (NIH) (Fase 2, 3, 4) -->
-        <div *ngIf="faseActual >= 2 && resultadoFase2?.bbox" class="nih-marker"
-             [ngStyle]="{'left.px': resultadoFase2.bbox.x, 'top.px': resultadoFase2.bbox.y, 'width.px': resultadoFase2.bbox.width, 'height.px': resultadoFase2.bbox.height}"
-             style="position: absolute; border: 2px solid #ff4757; background: rgba(255, 71, 87, 0.1); pointer-events: none; z-index: 9;">
-             <span style="position: absolute; top: -20px; left: 0; background: #ff4757; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px;">Radiólogo (NIH)</span>
-        </div>
+        <ng-container *ngIf="faseActual >= 2 && resultadoFase2?.bbox">
+          <div *ngFor="let caja of resultadoFase2.bbox" class="nih-marker"
+               [ngStyle]="estiloCajaReal(caja)"
+               style="position: absolute; border: 2px solid #ff4757; background: rgba(255, 71, 87, 0.1); pointer-events: none; z-index: 9;">
+               <span style="position: absolute; top: -20px; left: 0; background: #ff4757; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px; white-space: nowrap;">Radiólogo (NIH)</span>
+          </div>
+        </ng-container>
 
       </div>
     </section>
@@ -73,7 +74,11 @@
     <aside class="diagnostic-panel glass-panel">
       
       <!-- ================= FASE 1: LECTURA A CIEGAS ================= -->
-      <div *ngIf="faseActual === 1" class="fase-container">
+      <div *ngIf="comprobandoRevision" class="fase-container">
+        <p class="helper-text">Cargando tu caso...</p>
+      </div>
+
+      <div *ngIf="faseActual === 1 && !comprobandoRevision" class="fase-container">
         <div class="panel-section">
           <h3>1. SELECCIÓN DE HALLAZGOS PATOLÓGICOS</h3>
           <p class="helper-text">Selecciona las anomalías que observas. Haz clic en la radiografía para marcar la zona exacta (arrastra para dibujar un rectángulo).</p>
@@ -119,8 +124,11 @@
             <strong>Diagnóstico Real:</strong> {{ resultadoFase2?.etiquetas_nih?.join(', ') || 'Sin hallazgos' }}
           </div>
           
-          <p class="helper-text highlight-box" style="margin-top: 15px;">
-            Observa el recuadro rojo en la imagen. Ese es el Bounding Box (BBox) trazado por el radiólogo profesional. ¿Coincide con tu marca verde?
+          <p class="helper-text highlight-box" style="margin-top: 15px;" *ngIf="resultadoFase2?.bbox">
+            Observa el recuadro rojo en la imagen. Ese es el Bounding Box (BBox) trazado por el radiólogo profesional. <ng-container *ngIf="marcadorEstudiante">¿Coincide con tu marca verde?</ng-container>
+          </p>
+          <p class="helper-text highlight-box" style="margin-top: 15px;" *ngIf="!resultadoFase2?.bbox">
+            Este caso no tiene un recuadro trazado por el radiólogo: el informe original solo indica los diagnósticos, sin localizar la lesión en la imagen.
           </p>
         </div>
 
@@ -160,13 +168,38 @@
               </p>
             </div>
 
-            <p class="helper-text highlight-box" style="margin-top: 15px;" *ngIf="resultadoFase3?.opiniones?.[0]?.gradcamUrl">
-              Las zonas iluminadas en colores cálidos sobre la radiografía indican qué píxeles utilizó la red neuronal para tomar su decisión.
-            </p>
-            <div class="alert-box" style="background: rgba(255,255,255,0.05); padding: 10px; color: #888; margin-top: 15px;" *ngIf="!resultadoFase3?.opiniones?.[0]?.gradcamUrl">
-              El modelo no generó un mapa de calor (Grad-CAM) para esta predicción.
-            </div>
           </div>
+        </div>
+
+        <!-- Grad-CAM: se muestra siempre (también cuando el modelo se abstiene) -->
+        <div class="panel-section">
+          <h3>MAPA DE CALOR (GRAD-CAM)</h3>
+
+          <ng-container *ngIf="gradcams.length > 0; else sinGradcam">
+            <p class="helper-text">
+              Las zonas en colores cálidos son donde se fijó el modelo al evaluar
+              <strong>{{ gradcamActual?.patologia }}</strong>, la patología real de este caso.
+              No es la explicación de su opinión: muestra dónde busca esa patología.
+            </p>
+
+            <div class="gradcam-selector" *ngIf="gradcams.length > 1" role="group" aria-label="Patología del mapa de calor">
+              <button type="button" *ngFor="let g of gradcams; let i = index" [class.activo]="i === gradcamIndice" (click)="gradcamIndice = i">{{ g.patologia }}</button>
+            </div>
+
+            <button type="button" class="btn-secundario-visor" (click)="mostrarGradcam = !mostrarGradcam">
+              {{ mostrarGradcam ? 'Ocultar mapa de calor' : 'Mostrar mapa de calor' }}
+            </button>
+
+            <p class="helper-text" style="margin-top: 12px;" *ngIf="resultadoFase2?.bbox">
+              Compáralo con el recuadro rojo del radiólogo: si ambos coinciden, el modelo miró donde está la lesión.
+            </p>
+          </ng-container>
+
+          <ng-template #sinGradcam>
+            <div class="alert-box" style="background: rgba(255,255,255,0.05); padding: 10px; color: #888;">
+              No hay mapa de calor para este caso: en radiografías normales no hay una lesión que resaltar.
+            </div>
+          </ng-template>
         </div>
 
         <div class="panel-actions" style="margin-top: auto;">
@@ -180,6 +213,18 @@
       <div *ngIf="faseActual === 4" class="fase-container fade-in">
         <div class="panel-section">
           <h3>EVALUACIÓN EN TRES EJES</h3>
+
+          <div class="resultado-caso" *ngIf="puntajesEstudiante">
+            <span class="resultado-caso-valor" [ngClass]="claseResultado(puntajesEstudiante.diagnostico)">{{ puntajesEstudiante.diagnostico | number:'1.0-0' }}%</span>
+            <span class="resultado-caso-texto">Resultado de este caso<br><small>{{ modoRevision ? 'Ya respondiste este caso: aquí está tu retroalimentación.' : 'Nota de diagnóstico' }}</small></span>
+          </div>
+
+          <div class="score-card">
+            <h4>Lo que respondiste</h4>
+            <p class="helper-text">Patologías marcadas: <strong>{{ resumenMarcadas.length ? resumenMarcadas.join(', ') : 'ninguna' }}</strong></p>
+            <p class="helper-text" *ngIf="resultadoFase2?.etiquetas_nih">Diagnóstico real: <strong>{{ resultadoFase2.etiquetas_nih.join(', ') || 'Sin hallazgos' }}</strong></p>
+            <p class="helper-text">Tu nivel de confianza: <strong>{{ nivelConfianza }}%</strong></p>
+          </div>
 
           <div class="score-card" *ngIf="justificacionClinica">
             <h4>Tu justificación clínica</h4>
@@ -228,7 +273,7 @@
 
         <div class="panel-actions" style="margin-top: auto;">
           <button class="btn-primary" (click)="volverAlDashboard()" style="width: 100%;">
-            FINALIZAR CASO
+            {{ modoRevision ? 'VOLVER A LA WORKLIST' : 'FINALIZAR CASO' }}
           </button>
         </div>
       </div>

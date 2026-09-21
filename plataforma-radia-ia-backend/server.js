@@ -24,6 +24,8 @@ const metricsRoutes = require('./src/routes/metricsRoutes');
 const extraRoutes = require('./src/routes/extraRoutes');
 const auditRoutes = require('./src/routes/auditRoutes');
 const userRoutes = require('./src/routes/userRoutes');
+const modeloRoutes = require('./src/routes/modeloRoutes');
+const aprendizajeRoutes = require('./src/routes/aprendizajeRoutes');
 
 // ==========================================
 // REGISTRO DE ENDPOINTS REST
@@ -38,6 +40,8 @@ app.use('/api/ia', iaRoutes);               // MÓDULO 5: Inferencia IA y Concor
 app.use('/api/metricas', metricsRoutes);     // MÓDULO 6 & 7: Rúbricas y Medición Científica (Likert)
 app.use('/api/extra', extraRoutes);         // MÓDULO EXTRA: Auditoría, Notificaciones, Comentarios
 app.use('/api/audit', auditRoutes);         // Visor de Auditoría (Timeline)
+app.use('/api/modelo', modeloRoutes);       // Ficha del modelo de IA (estadísticas)
+app.use('/api/aprendizaje', aprendizajeRoutes); // Módulo de aprendizaje: ruta por patología, repaso y errores
 app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)
 
 const iaService = require('./src/services/iaService');

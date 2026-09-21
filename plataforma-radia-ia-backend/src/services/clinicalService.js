@@ -2,6 +2,29 @@ const pool = require('../config/database');
 const dict = require('../config/dbDictionary');
 const { DISTRACTORES, ORDEN_NIVELES } = require('../config/distractoresConfig');
 
+const MAX_CASOS_EJERCICIO = 50;
+
+// Error causado por datos del usuario (no por un fallo del servidor): el controlador responde 400
+class ErrorNegocio extends Error {}
+
+const nivelesHasta = (nivel) => {
+    const indice = ORDEN_NIVELES.indexOf(nivel);
+    return indice >= 0 ? ORDEN_NIVELES.slice(0, indice + 1) : ORDEN_NIVELES;
+};
+
+const normalizarIdCurso = (id) => {
+    const n = Number(id);
+    return Number.isInteger(n) && n > 0 ? n : null;
+};
+
+// Un docente solo puede componer/asignar ejercicios en sus propios cursos
+const verificarCursoDelDocente = async (id_docente, id_curso) => {
+    const idCurso = normalizarIdCurso(id_curso);
+    if (!idCurso) return false;
+    const [res] = await pool.query('CALL sp_obtener_cursos_catedratico(?)', [id_docente]);
+    return res[0].some(c => c.id_curso === idCurso);
+};
+
 // 1. Crear el paciente simulado
 const crearPaciente = async (datosPaciente) => {
     const { codigo_paciente, edad, genero, antecedentes_medicos } = datosPaciente;
@@ -174,64 +197,60 @@ const generarInfoPatologia = async (patologia) => {
     return variantes[indiceAleatorio];
 };
 
-// NUEVA FUNCION: Obtener casos del banco NIH (con paginación aleatoria rápida)
-const obtenerBancoCasosIA = async (filtros) => {
-    const { patologia, dificultad, limit } = filtros || {};
-    const parsedLimit = limit ? parseInt(limit) : 20; // Reducimos a 20 para carga más rápida
-    const patologiaParam = patologia || null;
-    const dificultadParam = dificultad || null;
-
-    // PASO 1: Contar filas que coinciden (rápido con índice)
-    const [countResult] = await pool.query('CALL sp_contar_banco_casos_ia(?, ?)', [patologiaParam, dificultadParam]);
-    const total = countResult[0][0]?.total || 0;
-
-    if (total === 0) return [];
-
-    // PASO 2: Calcular offset aleatorio y traer los registros con LIMIT + OFFSET (sin ORDER BY RAND)
-    const maxOffset = Math.max(0, total - parsedLimit);
-    const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
-
-    const [dataResult] = await pool.query(
-        'CALL sp_listar_banco_casos_ia(?, ?, ?, ?)',
-        [patologiaParam, dificultadParam, parsedLimit, randomOffset]
-    );
-    const rows = dataResult[0];
-    // Función para generar edad aleatoria basada en un id (seed)
-    const seededRandomAge = (id) => Math.floor(Math.abs(Math.sin(id) * 60)) + 20; // 20 a 80
-    const seededRandomGender = (id) => (id % 2 === 0) ? 'M' : 'F';
-
-    // Parse JSON y generar fallback para paciente
-    return rows.map(r => {
-        const docInfo = typeof r.hallazgos_docente === 'string' ? JSON.parse(r.hallazgos_docente) : r.hallazgos_docente;
-        return {
-            ...r,
-            edad: r.edad || seededRandomAge(r.id_caso),
-            genero: r.genero || seededRandomGender(r.id_caso),
-            titulo_caso: r.titulo_caso !== 'Caso NIH: Normal' ? r.titulo_caso : `Caso NIH: ${docInfo?.etiquetas_reales?.[0] || 'Normal'}`,
-            hallazgos_docente: docInfo?.etiquetas_reales || []
-        };
-    });
+// Elimina un ejercicio completo con sus casos (solo si es de un curso del docente)
+const eliminarEjercicio = async (id_ejercicio, id_docente) => {
+    const id = normalizarIdCurso(id_ejercicio);
+    if (!id) throw new ErrorNegocio('Ejercicio no válido.');
+    const conn = await pool.getConnection();
+    try {
+        await conn.beginTransaction();
+        const [res] = await conn.query('CALL sp_eliminar_ejercicio(?, ?)', [id, id_docente]);
+        await conn.commit();
+        const eliminados = res[0][0].casos_eliminados;
+        if (!eliminados) throw new ErrorNegocio('Ese ejercicio no existe o no te pertenece.');
+        return eliminados;
+    } catch (error) {
+        await conn.rollback();
+        throw error;
+    } finally {
+        conn.release();
+    }
 };
 
 const asignarCasosBanco = async (id_curso, ids_casos) => {
-    // Para cada ID, clonamos el caso del banco a un nuevo caso asignado al curso
-    // (sp_clonar_caso_a_curso hace SELECT original + INSERT caso + INSERT radiografía).
-    // Transacción: si falla a mitad del lote, no queremos casos huérfanos sin radiografía.
+    // Cada id debe ser un caso del banco global con imagen, y su radiografía no debe estar ya en el curso.
+    // Si alguno no cumple se cancela TODO el lote (transacción): no queremos ejercicios a medias.
+    if (!Array.isArray(ids_casos) || ids_casos.length === 0 || ids_casos.length > MAX_CASOS_EJERCICIO) {
+        throw new ErrorNegocio(`Debes elegir entre 1 y ${MAX_CASOS_EJERCICIO} casos para publicar.`);
+    }
+    const ids = ids_casos.map(Number);
+    if (ids.some(id => !Number.isInteger(id) || id <= 0) || new Set(ids).size !== ids.length) {
+        throw new ErrorNegocio('La lista de casos no es válida (ids repetidos o incorrectos).');
+    }
+
     const conn = await pool.getConnection();
     const idsInsertados = [];
     try {
         await conn.beginTransaction();
 
-        for (const id of ids_casos) {
-            const [result] = await conn.query('CALL sp_clonar_caso_a_curso(?, ?)', [id_curso, id]);
+        // Cada publicación es un ejercicio nuevo del curso (Ejercicio 1, 2, ...)
+        const [ejercicio] = await conn.query('CALL sp_crear_ejercicio(?)', [id_curso]);
+        const { id_ejercicio, nombre } = ejercicio[0][0];
+
+        for (const id of ids) {
+            const [result] = await conn.query('CALL sp_clonar_caso_a_curso(?, ?, ?)', [id_curso, id, id_ejercicio]);
             const nuevoIdCaso = result[0][0]?.nuevo_id_caso;
-            if (nuevoIdCaso) idsInsertados.push(nuevoIdCaso);
+            if (!nuevoIdCaso) {
+                throw new ErrorNegocio(`El caso ${id} ya no está disponible en el banco o el curso ya tiene esa radiografía. Vuelve a componer el ejercicio.`);
+            }
+            idsInsertados.push(nuevoIdCaso);
         }
 
         await conn.commit();
-        return idsInsertados;
+        return { id_ejercicio, nombre, ids_casos: idsInsertados };
     } catch (error) {
         await conn.rollback();
+        if (error instanceof ErrorNegocio) throw error;
         throw new Error(`Error al asignar casos del banco: ${error.message}`);
     } finally {
         conn.release();
@@ -246,15 +265,18 @@ const componerEjercicio = async (criterios) => {
         patologias_objetivo = [],
         nivel_dificultad = 'Avanzado',
         total_casos = 10,
-        porcentaje_normales = 0.3
+        porcentaje_normales = 0.3,
+        id_curso = null
     } = criterios;
 
-    if (!Array.isArray(patologias_objetivo) || patologias_objetivo.length === 0) {
-        throw new Error('Debes seleccionar al menos una patología objetivo.');
+    if (!Array.isArray(patologias_objetivo) || patologias_objetivo.length === 0 || patologias_objetivo.some(p => typeof p !== 'string')) {
+        throw new ErrorNegocio('Debes seleccionar al menos una patología objetivo.');
     }
 
-    const total = parseInt(total_casos, 10) || 10;
-    const propNormales = Math.min(Math.max(parseFloat(porcentaje_normales) || 0.3, 0), 1);
+    const idCurso = normalizarIdCurso(id_curso); // con curso, se excluyen las radiografías que ya tiene
+    const total = Math.min(Math.max(parseInt(total_casos, 10) || 10, 1), MAX_CASOS_EJERCICIO);
+    const pn = parseFloat(porcentaje_normales); // ojo: 0 % es válido, no debe caer al valor por defecto
+    const propNormales = Math.min(Math.max(Number.isFinite(pn) ? pn : 0.3, 0), 1);
 
     // Fórmula de mezcla (ver documento de diseño): diana + normales + el resto como distractores
     const casosNormales = Math.round(total * propNormales);
@@ -265,8 +287,7 @@ const componerEjercicio = async (criterios) => {
         patologias_objetivo.flatMap(p => DISTRACTORES[p] || [])
     )].filter(p => !patologias_objetivo.includes(p) && p !== 'Normal');
 
-    const nivelIndex = ORDEN_NIVELES.indexOf(nivel_dificultad);
-    const nivelesIncluidos = nivelIndex >= 0 ? ORDEN_NIVELES.slice(0, nivelIndex + 1) : ORDEN_NIVELES;
+    const nivelesIncluidos = nivelesHasta(nivel_dificultad);
 
     // El universo de patologías es una constante fija de producto (8, ver Catalogo_Patologias),
     // así que en vez de armar SQL dinámico dentro del SP, se pasan hasta 8 slots nullable.
@@ -283,8 +304,8 @@ const componerEjercicio = async (criterios) => {
         const excluirCsv = excluirIds.join(',');
 
         const [countResult] = await pool.query(
-            'CALL sp_contar_casos_banco_nih(?,?,?,?,?,?,?,?,?,?)',
-            [...patSlots(patologiasSet), nivelesCsv, excluirCsv]
+            'CALL sp_contar_casos_banco_nih(?,?,?,?,?,?,?,?,?,?,?)',
+            [...patSlots(patologiasSet), nivelesCsv, excluirCsv, idCurso]
         );
         const totalDisponibles = countResult[0][0]?.total || 0;
         if (totalDisponibles === 0) return [];
@@ -294,8 +315,8 @@ const componerEjercicio = async (criterios) => {
         const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
 
         const [dataResult] = await pool.query(
-            'CALL sp_listar_casos_banco_nih(?,?,?,?,?,?,?,?,?,?,?,?)',
-            [...patSlots(patologiasSet), nivelesCsv, excluirCsv, tomar, randomOffset]
+            'CALL sp_listar_casos_banco_nih(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+            [...patSlots(patologiasSet), nivelesCsv, excluirCsv, idCurso, tomar, randomOffset]
         );
         return dataResult[0];
     };
@@ -351,6 +372,23 @@ const componerEjercicio = async (criterios) => {
     };
 };
 
+// Cuántos casos utilizables tiene el banco por patología para un nivel máximo (y, si se indica el
+// curso, sin contar las radiografías que ese curso ya tiene). Permite avisar en el modal antes de
+// componer: p. ej. en "Básico" solo existen casos normales, y Atelectasia solo tiene casos avanzados.
+const obtenerDisponibilidadBanco = async ({ nivel_dificultad = 'Avanzado', id_curso = null } = {}) => {
+    const niveles = nivelesHasta(nivel_dificultad).join(',');
+    const idCurso = normalizarIdCurso(id_curso);
+    const disponibilidad = [];
+    for (const patologia of Object.keys(DISTRACTORES)) {
+        const [res] = await pool.query(
+            'CALL sp_contar_casos_banco_nih(?,?,?,?,?,?,?,?,?,?,?)',
+            [patologia, null, null, null, null, null, null, null, niveles, '', idCurso]
+        );
+        disponibilidad.push({ patologia, total: res[0][0]?.total || 0 });
+    }
+    return disponibilidad;
+};
+
 // NUEVA FUNCIÓN: Métricas reales del modelo por patología (Metricas_Modelo_Patologia).
 // Alimenta la Fase 3 del visor del estudiante para dar contexto real a la opinión
 // del modelo ("acierta ~X% de las veces que señala esto") en vez de un texto fijo.
@@ -366,8 +404,8 @@ const obtenerEstadisticasEstudiante = async (id_estudiante) => {
     const [resumen, porDificultad] = resultado; // el SP devuelve 2 result sets
 
     return {
-        casos_resueltos: resumen[0]?.casos_resueltos || 0,
-        precision_promedio: resumen[0]?.precision_promedio || 0,
+        casos_resueltos: Number(resumen[0]?.casos_resueltos) || 0,
+        precision_promedio: Number(resumen[0]?.precision_promedio) || 0,
         desglose_por_dificultad: porDificultad
     };
 };
@@ -394,7 +432,7 @@ const obtenerCasoEstudianteSeguro = async (id_caso) => {
 
     return {
         id_caso: caso.id_caso,
-        titulo_caso: caso.titulo_caso,
+        titulo_caso: `Caso #${caso.id_caso}`, // el título real puede revelar el diagnóstico
         motivo_consulta: caso.motivo_consulta,
         nivel_dificultad: caso.nivel_dificultad,
         ruta_imagen: caso.ruta_imagen,
@@ -405,6 +443,13 @@ const obtenerCasoEstudianteSeguro = async (id_caso) => {
 // NUEVA FUNCIÓN: Guardar Respuesta Estudiante y Retornar Verdad
 const guardarRespuestaEstudiante = async (payload) => {
     const { id_estudiante, id_caso, tiempo_analisis_segundos, justificacion_clinica, nivel_confianza, marcador_estudiante, patologias } = payload;
+
+    // Un caso se responde una sola vez: repetirlo duplicaría el resultado y alteraría el promedio del estudiante
+    const [existe] = await pool.query('CALL sp_existe_evaluacion_estudiante(?, ?)', [id_estudiante, id_caso]);
+    if (existe[0][0].total > 0) {
+        throw new ErrorNegocio('Ya respondiste este caso. Puedes ver tu retroalimentación desde la worklist.');
+    }
+
     const conn = await pool.getConnection();
 
     try {
@@ -457,26 +502,22 @@ const guardarRespuestaEstudiante = async (payload) => {
 
         // Eje 2: Localización (IoU Bounding Box)
         let eje2 = null;
-        if (docInfo.tiene_bbox && docInfo.bbox && docInfo.bbox[0] && marcador_estudiante) {
-            const r = docInfo.bbox[0]; // Real: [x, y, w, h] relativas
-            const e = marcador_estudiante; // Estudiante: {x, y, w, h} relativas
-            if (Array.isArray(r) && r.length === 4) {
-                const rx = r[0], ry = r[1], rw = r[2], rh = r[3];
-                const ix = Math.max(rx, e.x);
-                const iy = Math.max(ry, e.y);
-                const iw = Math.min(rx + rw, e.x + e.w) - ix;
-                const ih = Math.min(ry + rh, e.y + e.h) - iy;
-                
+        // bbox real: lista de {patologia, x, y, ancho, alto} en proporciones (0-1) de la imagen.
+        // Estudiante: {x, y, w, h} también en proporciones. Se toma el mejor solapamiento con cualquiera de los recuadros.
+        const cajasReales = Array.isArray(docInfo.bbox) ? docInfo.bbox.filter(b => b && Number.isFinite(b.x) && Number.isFinite(b.ancho)) : [];
+        if (docInfo.tiene_bbox && cajasReales.length > 0 && marcador_estudiante) {
+            const e = marcador_estudiante;
+            let mejorIou = 0;
+            for (const r of cajasReales) {
+                const iw = Math.min(r.x + r.ancho, e.x + e.w) - Math.max(r.x, e.x);
+                const ih = Math.min(r.y + r.alto, e.y + e.h) - Math.max(r.y, e.y);
                 if (iw > 0 && ih > 0) {
                     const interArea = iw * ih;
-                    const rArea = rw * rh;
-                    const eArea = e.w * e.h;
-                    const iou = interArea / (rArea + eArea - interArea);
-                    eje2 = Math.round(iou * 100);
-                } else {
-                    eje2 = 0;
+                    const iou = interArea / (r.ancho * r.alto + e.w * e.h - interArea);
+                    if (iou > mejorIou) mejorIou = iou;
                 }
             }
+            eje2 = Math.round(mejorIou * 100);
         }
 
         // Eje 3: Calibración
@@ -489,7 +530,7 @@ const guardarRespuestaEstudiante = async (payload) => {
         return {
             id_evaluacion: idEvaluacion,
             etiquetas_nih: docInfo.etiquetas_reales || [],
-            bbox: docInfo.tiene_bbox ? (docInfo.bbox[0] || null) : null,
+            bbox: docInfo.tiene_bbox && Array.isArray(docInfo.bbox) && docInfo.bbox.length > 0 ? docInfo.bbox : null,
             opinion_modelo: docInfo.opinion_modelo || [],
             modelo_se_abstiene: docInfo.modelo_se_abstiene || false,
             gradcam: docInfo.gradcam || {},
@@ -508,7 +549,46 @@ const guardarRespuestaEstudiante = async (payload) => {
     }
 };
 
+// Retroalimentación completa de un caso YA respondido por el estudiante (su respuesta + la verdad + IA + Grad-CAM).
+// Devuelve null si todavía no lo respondió: así no se puede consultar la verdad de un caso pendiente.
+const obtenerRetroalimentacionEstudiante = async (id_estudiante, id_caso) => {
+    const [res] = await pool.query('CALL sp_obtener_retroalimentacion_estudiante(?, ?)', [id_estudiante, id_caso]);
+    const ev = res[0][0];
+    if (!ev) return null;
+
+    const docInfo = typeof ev.hallazgos_docente === 'string' ? JSON.parse(ev.hallazgos_docente) : (ev.hallazgos_docente || {});
+    let marcador = ev.marcador_estudiante;
+    if (typeof marcador === 'string') { try { marcador = JSON.parse(marcador); } catch (e) { marcador = null; } }
+    const num = (v) => (v === null || v === undefined ? null : Number(v));
+
+    return {
+        id_evaluacion: ev.id_evaluacion,
+        id_caso: Number(id_caso),
+        ruta_imagen: ev.ruta_imagen,
+        fecha_evaluacion: ev.fecha_evaluacion,
+        // Lo que respondió el estudiante
+        patologias_marcadas: res[1].map(p => ({ id: p.id_patologia, nombre: p.nombre_patologia })),
+        marcador_estudiante: marcador || null,
+        justificacion_clinica: ev.justificacion_clinica || '',
+        nivel_confianza: num(ev.nivel_confianza),
+        tiempo_analisis_segundos: num(ev.tiempo_analisis_segundos),
+        // La verdad y la opinión del modelo (mismo formato que al terminar la fase 1)
+        etiquetas_nih: docInfo.etiquetas_reales || [],
+        bbox: docInfo.tiene_bbox && Array.isArray(docInfo.bbox) && docInfo.bbox.length > 0 ? docInfo.bbox : null,
+        opinion_modelo: docInfo.opinion_modelo || [],
+        modelo_se_abstiene: docInfo.modelo_se_abstiene || false,
+        gradcam: docInfo.gradcam || {},
+        puntajes: {
+            diagnostico: num(ev.eje1_diagnostico),
+            localizacion: num(ev.eje2_localizacion),
+            calibracion: num(ev.eje3_calibracion)
+        }
+    };
+};
+
 module.exports = {
+    obtenerRetroalimentacionEstudiante,
+    ErrorNegocio,
     crearPaciente,
     crearCaso,
     guardarRadiografia,
@@ -519,8 +599,10 @@ module.exports = {
     editarCaso,
     eliminarCaso,
     generarInfoPatologia,
-    obtenerBancoCasosIA,
     asignarCasosBanco,
+    eliminarEjercicio,
+    obtenerDisponibilidadBanco,
+    verificarCursoDelDocente,
     componerEjercicio,
     obtenerMetricasModelo,
     obtenerEstadisticasEstudiante,
