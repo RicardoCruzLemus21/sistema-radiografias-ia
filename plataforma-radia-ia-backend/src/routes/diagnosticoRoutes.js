@@ -9,7 +9,7 @@ const { verificarToken, verificarRol } = require('../middlewares/authMiddleware'
 // =========================================================
 
 // Endpoint: POST /api/diagnostico/evaluar
-router.post('/evaluar', /* verificarToken, */ diagnosticoController.registrarEvaluacion);
+router.post('/evaluar', verificarToken, verificarRol(['estudiante']), diagnosticoController.registrarEvaluacion);
 
 // Endpoints CRUD para Patologías (Catálogo)
 // Módulo de Catálogos

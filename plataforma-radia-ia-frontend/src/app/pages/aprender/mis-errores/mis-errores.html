@@ -1,0 +1,132 @@
+<div class="aprender-pagina">
+
+  <header class="aprender-cabecera">
+    <button type="button" class="btn-link" (click)="volver()">&larr; Ruta de aprendizaje</button>
+    <h1>Mis errores frecuentes</h1>
+    <p>Se calculan con lo que ya respondiste: tus ejercicios del curso y tu práctica. Sirven para saber qué reforzar primero, no para calificarte.</p>
+  </header>
+
+  <div class="cargando-caja" *ngIf="cargando">Analizando tus respuestas...</div>
+  <div class="vacio-caja error-texto" *ngIf="error">{{ error }}</div>
+
+  <ng-container *ngIf="datos">
+
+    <div class="tarjeta glass-panel" *ngIf="datos.total_eventos === 0">
+      <h2>Todavía no hay datos</h2>
+      <p>Cuando respondas casos en tus ejercicios o en la práctica guiada, aquí aparecerán tus errores más frecuentes.</p>
+    </div>
+
+    <ng-container *ngIf="datos.total_eventos > 0">
+
+      <p class="base-datos">Basado en <strong>{{ datos.total_eventos }}</strong> respuestas:
+        {{ datos.por_fuente.ejercicio }} de ejercicios, {{ datos.por_fuente.guiado }} de práctica guiada y {{ datos.por_fuente.repaso }} de repaso.</p>
+
+      <!-- Qué reforzar primero -->
+      <section *ngIf="datos.reforzar.length > 0">
+        <h2 class="seccion">Qué reforzar primero</h2>
+        <div class="reforzar">
+          <article class="tarjeta glass-panel reforzar-item" *ngFor="let c of datos.reforzar" [style.--color-clase]="colorClase(c.clase)">
+            <h3><span class="punto" [style.background]="colorClase(c.clase)"></span>{{ c.nombre }}</h3>
+            <p class="grande">{{ c.sensibilidad }}%</p>
+            <p class="detalle">Detectaste {{ c.detectadas }} de {{ c.apariciones }} veces que apareció.</p>
+            <div class="acciones-fila">
+              <button type="button" class="btn-mini" (click)="irALeccion(c.clase)">Ver lección</button>
+              <button type="button" class="btn-mini" (click)="practicar(c.clase)">Practicar</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Confusiones -->
+      <section *ngIf="datos.confusiones.length > 0">
+        <h2 class="seccion">Lo que más confundes</h2>
+        <div class="tarjeta glass-panel">
+          <ul class="lista-confusiones">
+            <li *ngFor="let c of datos.confusiones">
+              <span class="texto-conf">
+                <span class="chip-clase" [style.--color-clase]="colorClase(c.real)">{{ c.nombre_real }}</span>
+                <span class="flecha">marcada como</span>
+                <span class="chip-clase" [style.--color-clase]="colorClase(c.marcada)">{{ c.nombre_marcada }}</span>
+              </span>
+              <span class="veces">{{ c.veces }} {{ c.veces === 1 ? 'vez' : 'veces' }}</span>
+              <button type="button" class="btn-mini" (click)="comparar(c.real, c.marcada)">Comparar</button>
+            </li>
+          </ul>
+          <p class="nota-pequena">"Normal" aparece aquí cuando se te escapó un hallazgo (lo marcaste como normal) o cuando viste una patología en una radiografía normal.</p>
+        </div>
+      </section>
+
+      <!-- Por categoría -->
+      <section>
+        <h2 class="seccion">Cómo te va con cada patología</h2>
+        <div class="tarjeta glass-panel tabla-caja">
+          <table class="tabla">
+            <thead>
+              <tr><th>Patología</th><th>Veces que apareció</th><th>La detectaste</th><th>Falsas alarmas</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of datos.clases">
+                <td><span class="chip-clase" [style.--color-clase]="colorClase(c.clase)">{{ c.nombre }}</span></td>
+                <td>{{ c.apariciones }}</td>
+                <td>
+                  <ng-container *ngIf="c.sensibilidad !== null; else sinDato">
+                    <div class="celda-barra"><div class="barra"><span [style.width.%]="c.sensibilidad" [style.background]="colorClase(c.clase)"></span></div><strong>{{ c.sensibilidad }}%</strong></div>
+                  </ng-container>
+                  <ng-template #sinDato><span class="sin-dato">sin datos</span></ng-template>
+                </td>
+                <td>{{ c.falsas_alarmas }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="nota-pequena">"Falsa alarma": veces que marcaste esa patología y no estaba.</p>
+        </div>
+      </section>
+
+      <!-- Matriz -->
+      <section>
+        <h2 class="seccion">Qué era y qué marcaste</h2>
+        <div class="tarjeta glass-panel matriz-caja">
+          <p class="nota-pequena">Cada fila es lo que <strong>era</strong> la radiografía y cada columna lo que <strong>marcaste</strong>. Los números son cuántas veces. La diagonal (con borde) son tus aciertos; fuera de ella están las confusiones.</p>
+          <div class="matriz-scroll">
+            <table class="matriz">
+              <thead>
+                <tr>
+                  <th class="esquina">Era ↓ / Marcaste →</th>
+                  <th *ngFor="let m of clases">{{ nombreClase(m) }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of clases">
+                  <th class="fila-titulo">{{ nombreClase(r) }}</th>
+                  <td *ngFor="let m of clases" [class.diagonal]="r === m"
+                      [style.background]="'rgba(56, 189, 248,' + (intensidad(r, m) * 0.85).toFixed(2) + ')'">
+                    {{ datos.matriz[r][m] || '' }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Confianza -->
+      <section>
+        <h2 class="seccion">Tu confianza frente a tus aciertos</h2>
+        <div class="tarjeta glass-panel">
+          <p class="mensaje-confianza">{{ mensajeConfianza }}</p>
+          <table class="tabla" *ngIf="datos.calibracion.casos > 0">
+            <thead><tr><th>Cuando estabas…</th><th>Casos</th><th>Confianza media</th><th>Acierto medio</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let t of datos.calibracion.tramos">
+                <td>{{ t.tramo }}</td>
+                <td>{{ t.casos }}</td>
+                <td>{{ t.confianza_media !== null ? t.confianza_media + '%' : '—' }}</td>
+                <td>{{ t.acierto_medio !== null ? t.acierto_medio + '%' : '—' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

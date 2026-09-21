@@ -594,4 +594,44 @@
 .btn-cancel-comment:hover {
   color: var(--text-main);
   background: var(--table-row-hover);
-}
+}
+
+/* Historial del alumno agrupado por ejercicio */
+.eval-carpeta { margin-bottom: 14px; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; }
+.eval-carpeta-cabecera {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+  background: transparent; border: none; cursor: pointer; text-align: left; color: var(--text-main); font: inherit;
+}
+.eval-carpeta-cabecera:hover { background: var(--table-row-hover); }
+.eval-carpeta-cabecera:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: -2px; }
+.eval-carpeta-icono { color: var(--accent-cyan); flex-shrink: 0; }
+.eval-carpeta-nombre { flex: 1; font-size: 15px; font-weight: 700; }
+.eval-carpeta-casos { font-size: 12px; color: var(--text-muted); }
+.eval-carpeta-resultado { padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.eval-carpeta-resultado.res-alto { background: rgba(16, 185, 129, 0.16); color: #34d399; }
+.eval-carpeta-resultado.res-medio { background: rgba(245, 158, 11, 0.16); color: #fbbf24; }
+.eval-carpeta-resultado.res-bajo { background: rgba(239, 68, 68, 0.16); color: #f87171; }
+[data-theme="light"] .eval-carpeta-resultado.res-alto { color: #047857; }
+[data-theme="light"] .eval-carpeta-resultado.res-medio { color: #b45309; }
+[data-theme="light"] .eval-carpeta-resultado.res-bajo { color: #b91c1c; }
+.eval-carpeta-flecha { color: var(--text-muted); transition: transform 0.2s ease; }
+.eval-carpeta.abierta .eval-carpeta-flecha { transform: rotate(180deg); }
+.eval-carpeta-cuerpo { padding: 4px 14px 14px; border-top: 1px solid var(--border-color); }
+
+/* Modal del informe PDF */
+.informe-modal { max-width: 520px; width: 100%; }
+.informe-cuerpo { padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+.informe-campo { display: flex; flex-direction: column; gap: 8px; }
+.informe-campo > label, .informe-lista-cab > label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.informe-lista-cab { display: flex; justify-content: space-between; align-items: center; }
+.link-btn-informe { background: none; border: none; padding: 2px 4px; color: var(--accent-cyan); font-size: 12px; font-weight: 600; cursor: pointer; }
+.link-btn-informe:hover { text-decoration: underline; }
+.informe-ejercicio {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px;
+  border: 1px solid var(--border-color); cursor: pointer; color: var(--text-main); font-size: 14px;
+}
+.informe-ejercicio:hover { border-color: var(--accent-cyan); }
+.informe-ejercicio.marcado { border-color: var(--accent-cyan); background: rgba(0, 229, 255, 0.06); }
+.informe-ejercicio input { width: 16px; height: 16px; accent-color: var(--accent-cyan); }
+.informe-ejercicio-nombre { flex: 1; font-weight: 600; }
+.informe-ejercicio-casos { font-size: 12px; color: var(--text-muted); }

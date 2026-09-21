@@ -8,10 +8,10 @@ const notificationService = require('../services/notificationService');
 const registrarEvaluacion = async (req, res) => {
     try {
         // req.body ya vendrá parseado como JSON gracias a Express
-        const resultado = await diagnosticoService.guardarEvaluacionEstudiante(req.body);
+        const resultado = await diagnosticoService.guardarEvaluacionEstudiante({ ...req.body, id_estudiante: req.usuario.id_usuario });
         
         // EXTRA: Auditoría y Notificaciones
-        const id_estudiante = req.body.id_estudiante || 2;
+        const id_estudiante = req.usuario.id_usuario;
         await auditService.registrarAccion(id_estudiante, 'EVALUACION_COMPLETADA', `El estudiante completó la evaluación del caso ${req.body.id_caso}`);
         
         // Notificar a los catedráticos

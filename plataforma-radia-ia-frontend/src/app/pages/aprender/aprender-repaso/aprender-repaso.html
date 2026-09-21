@@ -1,0 +1,44 @@
+<div class="aprender-pagina">
+
+  <header class="aprender-cabecera">
+    <button type="button" class="btn-link" (click)="volver()">&larr; Ruta de aprendizaje</button>
+    <h1>Repaso de hoy</h1>
+    <p>Estos casos vuelven justo cuando estás por olvidarlos. Cuanto mejor los respondas, más tardan en regresar.</p>
+  </header>
+
+  <div class="cargando-caja" *ngIf="cargando && !datos">Cargando tu repaso...</div>
+  <div class="vacio-caja error-texto" *ngIf="error">{{ error }}</div>
+
+  <ng-container *ngIf="datos">
+
+    <div class="tarjeta glass-panel" *ngIf="fase === 'inicio' && datos.casos.length > 0">
+      <h2>{{ datos.vencidas }} {{ datos.vencidas === 1 ? 'caso' : 'casos' }} por repasar</h2>
+      <p>En esta sesión verás {{ datos.casos.length }}. Responde como en la práctica: marca lo que ves y comprueba.</p>
+      <button type="button" class="btn-primario" (click)="empezar()">Empezar repaso</button>
+    </div>
+
+    <div class="tarjeta glass-panel" *ngIf="fase === 'inicio' && datos.casos.length === 0">
+      <h2>Estás al día</h2>
+      <p *ngIf="datos.total > 0">No tienes casos por repasar ahora. Tu próximo repaso es el <strong>{{ datos.proxima | date:'d MMM y' }}</strong>.</p>
+      <p *ngIf="datos.total === 0">Todavía no tienes casos para repasar. Se agregan cuando fallas uno en un ejercicio o en la práctica guiada.</p>
+      <button type="button" class="btn-secundario" (click)="volver()">Volver a la ruta</button>
+    </div>
+
+    <app-practica-caso *ngIf="fase === 'practicando'"
+                       [caso]="datos.casos[indice]" origen="repaso"
+                       [indice]="indice + 1" [total]="datos.casos.length"
+                       (terminado)="alTerminarCaso($event)"></app-practica-caso>
+
+    <div class="tarjeta glass-panel" *ngIf="fase === 'fin'">
+      <h2>Repaso terminado</h2>
+      <p class="marcador"><strong>{{ aciertos }}</strong> de {{ resultados.length }} correctos</p>
+      <div class="barra"><span [style.width.%]="resultados.length ? (aciertos / resultados.length) * 100 : 0"></span></div>
+      <p *ngIf="datos.vencidas > 0">Aún quedan <strong>{{ datos.vencidas }}</strong> por repasar.</p>
+      <p *ngIf="datos.vencidas === 0 && datos.total > 0">Ya estás al día. Tu próximo repaso es el <strong>{{ datos.proxima | date:'d MMM y' }}</strong>.</p>
+      <div class="acciones-fila">
+        <button type="button" class="btn-primario" *ngIf="datos.vencidas > 0" (click)="empezar()">Seguir repasando</button>
+        <button type="button" class="btn-secundario" (click)="volver()">Volver a la ruta</button>
+      </div>
+    </div>
+  </ng-container>
+</div>

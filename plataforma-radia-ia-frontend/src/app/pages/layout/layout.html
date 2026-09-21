@@ -51,6 +51,14 @@
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M2 12h4l2-9 5 18 3-9h6"></path></svg>
           <span class="nav-label">Seguridad y Logs</span>
         </a>
+        <a routerLink="/sistema/modelo" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Ficha del Modelo' : null">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span class="nav-label">Ficha del Modelo</span>
+        </a>
+        <a routerLink="/sistema/contenido-aprendizaje" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Contenido de Aprendizaje' : null">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14l2 2 4-4"></path></svg>
+          <span class="nav-label">Contenido de Aprendizaje</span>
+        </a>
       </ng-container>
 
       <!-- MENÚ PARA DOCENTES -->
@@ -59,13 +67,25 @@
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 20V10"></path><path d="M12 20V4"></path><path d="M6 20v-6"></path></svg>
           <span class="nav-label">Rendimiento Alumnos</span>
         </a>
+        <a routerLink="/sistema/gestion-casos" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Banco de Casos / Rx' : null">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+          <span class="nav-label">Banco de Casos / Rx</span>
+        </a>
         <a routerLink="/sistema/gestion-estudiantes" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Estudiantes Inscritos' : null">
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
           <span class="nav-label">Estudiantes Inscritos</span>
         </a>
-        <a routerLink="/sistema/gestion-casos" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Banco de Casos / Rx' : null">
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
-          <span class="nav-label">Banco de Casos / Rx</span>
+        <a routerLink="/sistema/codigo-docente" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Código de Registro' : null">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+          <span class="nav-label">Código de Registro</span>
+        </a>
+        <a routerLink="/sistema/modelo" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Ficha del Modelo' : null">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+          <span class="nav-label">Ficha del Modelo</span>
+        </a>
+        <a routerLink="/sistema/contenido-aprendizaje" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Contenido de Aprendizaje' : null">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 14l2 2 4-4"></path></svg>
+          <span class="nav-label">Contenido de Aprendizaje</span>
         </a>
       </ng-container>
 
@@ -83,12 +103,13 @@
           <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
           <span class="nav-label">Biblioteca Clínica</span>
         </a>
-        <a routerLink="/sistema/notificaciones" routerLinkActive="active" class="nav-item" style="position: relative;" [attr.data-tooltip]="isSidebarCollapsed ? 'Notificaciones' : null">
-          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"></path></svg>
-          <span class="nav-label">Notificaciones</span>
-          <span *ngIf="notificacionesNoLeidas > 0" [style.display]="isSidebarCollapsed ? 'none' : 'inline-block'" style="position: absolute; right: 15px; background: red; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; font-weight: bold;">
-            {{ notificacionesNoLeidas }}
-          </span>
+        <a routerLink="/sistema/aprender" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Ruta de Aprendizaje' : null">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg>
+          <span class="nav-label">Ruta de Aprendizaje</span>
+        </a>
+        <a routerLink="/sistema/mis-errores" routerLinkActive="active" class="nav-item" [attr.data-tooltip]="isSidebarCollapsed ? 'Mis Errores' : null">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          <span class="nav-label">Mis Errores</span>
         </a>
       </ng-container>
 
@@ -107,6 +128,8 @@
     <!-- Barra superior global: aloja el botón de tema en el extremo derecho sin solapar nada -->
     <div class="main-topbar">
       <div class="main-topbar-actions">
+        <!-- El docente no tiene un panel con campana propia: se muestra en la barra superior de todas sus pantallas -->
+        <app-campana-notificaciones *ngIf="isCatedratico"></app-campana-notificaciones>
         <button
           class="btn-theme-toggle"
           (click)="cambiarTema(temaActual === 'darkglass' ? 'light' : 'darkglass')"

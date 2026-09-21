@@ -1,0 +1,53 @@
+.pestanas { display: flex; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border-color); }
+.pestanas button { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; cursor: pointer; background: transparent; border: none; border-bottom: 3px solid transparent; color: var(--text-muted); font-size: 15px; font-weight: 700; }
+.pestanas button:hover { color: var(--text-main); }
+.pestanas button.activa { color: var(--text-main); border-bottom-color: var(--accent-cyan); }
+.contador { padding: 2px 8px; border-radius: 999px; background: rgba(245, 158, 11, 0.2); color: #fbbf24; font-size: 11px; font-weight: 800; }
+
+.bloque { display: flex; flex-direction: column; gap: 16px; }
+.tarjeta { padding: 20px 22px; border-radius: 14px; }
+.tarjeta h2 { margin: 0 0 8px; font-size: 18px; color: var(--text-main); }
+.tarjeta p { margin: 0 0 8px; font-size: 14px; line-height: 1.55; color: var(--text-muted); }
+.nota-pequena { font-size: 12px !important; color: var(--text-muted); }
+.aviso { padding: 10px 14px; border-radius: 8px; background: rgba(245, 158, 11, 0.12); border-left: 4px solid #f59e0b; color: var(--text-main) !important; }
+.progreso { color: var(--text-main) !important; }
+
+.generar-caja { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.generar-botones { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+
+.filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.chip-boton { padding: 7px 14px; border-radius: 999px; cursor: pointer; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 13px; font-weight: 700; }
+.chip-boton:hover { color: var(--text-main); border-color: var(--accent-cyan); }
+.chip-boton.activa { color: var(--text-main); border-color: var(--accent-cyan); background: rgba(0, 229, 255, 0.08); }
+.filtro-origen { margin-left: auto; width: auto; min-width: 200px; flex: 0 0 auto; padding: 7px 12px; border-radius: 8px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; }
+
+.expl.editando { border: 1px solid var(--accent-cyan); }
+.expl-cabecera { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.expl-cabecera h3 { margin: 0; flex: 1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 15px; }
+.flecha { font-size: 12px; color: var(--text-muted); }
+.insignia { padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; background: rgba(148, 163, 184, 0.16); color: var(--text-muted); }
+.insignia.ia { background: rgba(167, 139, 250, 0.2); color: #c4b5fd; }
+.insignia.estado.aprobada { background: rgba(16, 185, 129, 0.16); color: #34d399; }
+.insignia.estado.pendiente { background: rgba(245, 158, 11, 0.16); color: #fbbf24; }
+.insignia.estado.rechazada { background: rgba(239, 68, 68, 0.16); color: #f87171; }
+[data-theme="light"] .insignia.ia { color: #6d28d9; }
+[data-theme="light"] .insignia.estado.aprobada { color: #047857; }
+[data-theme="light"] .insignia.estado.pendiente { color: #b45309; }
+[data-theme="light"] .insignia.estado.rechazada { color: #b91c1c; }
+
+.expl-resumen { color: var(--text-main) !important; font-size: 15px !important; }
+.expl-pasos { margin: 0 0 8px; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.5; color: var(--text-muted); }
+.expl-linea { margin: 0 0 6px !important; }
+.expl-linea strong { color: var(--text-main); }
+
+.acciones-fila { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.btn-aprobar { padding: 6px 14px; border-radius: 8px; cursor: pointer; background: #10b981; border: 1px solid #10b981; color: #062e21; font-size: 12px; font-weight: 800; }
+.btn-aprobar:hover:not(:disabled) { filter: brightness(1.1); }
+.btn-aprobar:disabled, .btn-mini:disabled { opacity: 0.5; cursor: wait; }
+
+.formulario { display: flex; flex-direction: column; gap: 12px; }
+.formulario label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 700; color: var(--text-muted); }
+.formulario textarea, .formulario input { width: 100%; padding: 10px 12px; border-radius: 8px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); font: inherit; font-size: 14px; resize: vertical; }
+.formulario textarea:focus, .formulario input:focus { outline: none; border-color: var(--accent-cyan); }
+.confusiones-edicion { display: flex; flex-direction: column; gap: 10px; }
+.etiqueta-fija { font-size: 13px; font-weight: 700; color: var(--text-muted); }

@@ -49,27 +49,9 @@ const obtenerWorklist = async (req, res) => {
     try {
         const id_estudiante = req.usuario.id_usuario;
         
-        // Hacemos un JOIN dinámico utilizando estrictamente el Diccionario de Datos.
-        // El estado se calcula comprobando si ya existe una evaluación de este estudiante
-        // para el caso (antes estaba fijo en 'Pendiente' y nunca cambiaba).
-        const query = `
-            SELECT
-                c.${COLUMNAS.ID_CASO} AS id,
-                p.${COLUMNAS.CODIGO_PACIENTE} AS paciente,
-                p.${COLUMNAS.EDAD},
-                c.${COLUMNAS.TITULO_CASO} AS estudio,
-                DATE_FORMAT(CURRENT_DATE, '%Y-%m-%d') AS fecha,
-                CASE WHEN EXISTS (
-                    SELECT 1 FROM ${TABLAS.EVALUACIONES_ESTUDIANTES} ee
-                    WHERE ee.${COLUMNAS.ID_CASO} = c.${COLUMNAS.ID_CASO} AND ee.${COLUMNAS.ID_ESTUDIANTE} = ?
-                ) THEN 'Completado' ELSE 'Pendiente' END AS estado
-            FROM ${TABLAS.CASOS} c
-            JOIN ${TABLAS.PACIENTES} p ON c.${COLUMNAS.ID_PACIENTE} = p.${COLUMNAS.ID_PACIENTE}
-            INNER JOIN ${TABLAS.ASIGNACIONES} ae ON c.${COLUMNAS.ID_CURSO} = ae.${COLUMNAS.ID_CURSO}
-            WHERE ae.${COLUMNAS.ID_ESTUDIANTE} = ?
-        `;
-
-        const [rows] = await db.query(query, [id_estudiante, id_estudiante]);
+        // El estado (Pendiente/Completado) y el ejercicio se resuelven en el SP
+        const [resultado] = await db.query('CALL sp_obtener_worklist_estudiante(?)', [id_estudiante]);
+        const rows = resultado[0];
         res.json(rows);
     } catch (error) {
         console.error('Error obteniendo la Worklist:', error);
@@ -156,13 +138,29 @@ const obtenerCasoEstudiante = async (req, res) => {
     }
 };
 
+// Retroalimentación de un caso que el estudiante ya respondió (404 si todavía no)
+const obtenerRetroalimentacion = async (req, res) => {
+    try {
+        const idCaso = Number(req.params.id);
+        if (!Number.isInteger(idCaso) || idCaso <= 0) return res.status(400).json({ status: 'error', message: 'Caso no válido.' });
+        const datos = await clinicalService.obtenerRetroalimentacionEstudiante(req.usuario.id_usuario, idCaso);
+        if (!datos) return res.status(404).json({ status: 'error', message: 'Todavía no has respondido este caso.' });
+        res.status(200).json({ status: 'success', data: datos });
+    } catch (error) {
+        console.error('Error obteniendo la retroalimentación:', error);
+        res.status(500).json({ status: 'error', message: 'No se pudo cargar la retroalimentación.' });
+    }
+};
+
 const registrarRespuesta = async (req, res) => {
     try {
-        const resultadoFase2y3 = await clinicalService.guardarRespuestaEstudiante(req.body);
+        // El estudiante se toma del token: un id enviado en el cuerpo se ignora (evita guardar respuestas a nombre de otro usuario)
+        const resultadoFase2y3 = await clinicalService.guardarRespuestaEstudiante({ ...req.body, id_estudiante: req.usuario.id_usuario });
+        notificationService.notificarProgresoDelEstudiante(req.usuario.id_usuario, req.body.id_caso);
         res.status(200).json({ status: 'success', data: resultadoFase2y3 });
     } catch (error) {
-        console.error('Error registrando respuesta:', error);
-        res.status(500).json({ status: 'error', message: error.message });
+        if (!(error instanceof clinicalService.ErrorNegocio)) console.error('Error registrando respuesta:', error);
+        res.status(estadoError(error)).json({ status: 'error', message: error.message });
     }
 };
 
@@ -208,34 +206,58 @@ const obtenerInfoPatologiaIA = async (req, res) => {
     }
 };
 
-const obtenerBancoCasosIA = async (req, res) => {
-    try {
-        const casos = await clinicalService.obtenerBancoCasosIA(req.query);
-        res.status(200).json({ status: 'success', data: casos });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
-    }
-};
+const estadoError = (error) => (error instanceof clinicalService.ErrorNegocio ? 400 : 500);
 
 const asignarCasosBanco = async (req, res) => {
     try {
         const { id_curso, ids_casos } = req.body;
-        if (!id_curso || !ids_casos || !Array.isArray(ids_casos)) {
+        if (!id_curso || !Array.isArray(ids_casos)) {
             return res.status(400).json({ status: 'error', message: 'Datos incompletos' });
         }
-        const resultado = await clinicalService.asignarCasosBanco(id_curso, ids_casos);
+        if (!(await clinicalService.verificarCursoDelDocente(req.usuario.id_usuario, id_curso))) {
+            return res.status(403).json({ status: 'error', message: 'Ese curso no te pertenece.' });
+        }
+        const resultado = await clinicalService.asignarCasosBanco(Number(id_curso), ids_casos);
+        // Avisa a los estudiantes del curso (sin esperar: si algo falla al notificar, el ejercicio ya quedó publicado)
+        notificationService.notificarEjercicioPublicado(Number(id_curso), resultado.nombre, resultado.ids_casos.length);
         res.status(200).json({ status: 'success', data: resultado });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
+        res.status(estadoError(error)).json({ status: 'error', message: error.message });
+    }
+};
+
+const eliminarEjercicio = async (req, res) => {
+    try {
+        const eliminados = await clinicalService.eliminarEjercicio(req.params.id, req.usuario.id_usuario);
+        res.status(200).json({ status: 'success', data: { casos_eliminados: eliminados } });
+    } catch (error) {
+        res.status(estadoError(error)).json({ status: 'error', message: error.message });
     }
 };
 
 const componerEjercicio = async (req, res) => {
     try {
-        const resultado = await clinicalService.componerEjercicio(req.body);
+        const { id_curso } = req.body || {};
+        if (id_curso && !(await clinicalService.verificarCursoDelDocente(req.usuario.id_usuario, id_curso))) {
+            return res.status(403).json({ status: 'error', message: 'Ese curso no te pertenece.' });
+        }
+        const resultado = await clinicalService.componerEjercicio(req.body || {});
         res.status(200).json({ status: 'success', data: resultado });
     } catch (error) {
-        res.status(400).json({ status: 'error', message: error.message });
+        res.status(error instanceof clinicalService.ErrorNegocio ? 400 : 500).json({ status: 'error', message: error.message });
+    }
+};
+
+const obtenerDisponibilidadBanco = async (req, res) => {
+    try {
+        const { nivel_dificultad, id_curso } = req.query;
+        if (id_curso && !(await clinicalService.verificarCursoDelDocente(req.usuario.id_usuario, id_curso))) {
+            return res.status(403).json({ status: 'error', message: 'Ese curso no te pertenece.' });
+        }
+        const disponibilidad = await clinicalService.obtenerDisponibilidadBanco({ nivel_dificultad, id_curso });
+        res.status(200).json({ status: 'success', data: disponibilidad });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
     }
 };
 
@@ -268,13 +290,15 @@ module.exports = {
     obtenerCasoPorId,
     obtenerCasoEstudiante,
     registrarRespuesta,
+    obtenerRetroalimentacion,
     obtenerSiguienteCodigoPaciente,
     editarCaso,
     eliminarCaso,
     obtenerInfoPatologiaIA,
-    obtenerBancoCasosIA,
     asignarCasosBanco,
+    eliminarEjercicio,
     componerEjercicio,
+    obtenerDisponibilidadBanco,
     obtenerMetricasModelo,
     obtenerEstadisticasEstudiante
 };

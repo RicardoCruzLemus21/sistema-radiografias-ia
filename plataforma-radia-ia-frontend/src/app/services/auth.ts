@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { tap } from 'rxjs/operators';
+import { leerExpiracionMs } from './jwt.util';
 
 @Injectable({
   providedIn: 'root'
@@ -9,19 +10,24 @@ import { tap } from 'rxjs/operators';
 export class AuthService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  // La sesión se guarda en sessionStorage: es propia de cada pestaña. Con localStorage (compartido) iniciar sesión
+  // con otro usuario en una pestaña cambiaba la identidad de todas las demás (mezclaba roles y datos).
+  constructor(private http: HttpClient) {
+    // Restos de la versión anterior, que guardaba la sesión en un almacenamiento compartido
+    for (const clave of ['token', 'usuario', 'token_temporal', 'usuario_temporal']) localStorage.removeItem(clave);
+  }
 
   login(correo_electronico: string, contrasena: string) {
     return this.http.post<any>(`${this.apiUrl}/api/auth/login`, { correo_electronico, contrasena })
       .pipe(
         tap(respuesta => {
           if (respuesta.data && respuesta.data.token && !respuesta.data.requiere_cambio_clave) {
-            localStorage.setItem('token', respuesta.data.token);
-            localStorage.setItem('usuario', JSON.stringify(respuesta.data.usuario));
+            sessionStorage.setItem('token', respuesta.data.token);
+            sessionStorage.setItem('usuario', JSON.stringify(respuesta.data.usuario));
           } else if (respuesta.data && respuesta.data.token && respuesta.data.requiere_cambio_clave) {
             // Guardamos temporalmente el token para poder hacer la peticion de cambio
-            localStorage.setItem('token_temporal', respuesta.data.token);
-            localStorage.setItem('usuario_temporal', JSON.stringify(respuesta.data.usuario));
+            sessionStorage.setItem('token_temporal', respuesta.data.token);
+            sessionStorage.setItem('usuario_temporal', JSON.stringify(respuesta.data.usuario));
           }
         })
       );
@@ -29,16 +35,16 @@ export class AuthService {
 
   cambiarClaveInicial(nueva_contrasena: string) {
     // Usamos el token temporal para autorizar el cambio
-    const token = localStorage.getItem('token_temporal');
+    const token = sessionStorage.getItem('token_temporal');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
     return this.http.post<any>(`${this.apiUrl}/api/auth/cambiar-clave-inicial`, { nueva_contrasena }, { headers })
       .pipe(
         tap(() => {
           // Si es exitoso, promovemos el token temporal a definitivo
-          localStorage.setItem('token', token!);
-          localStorage.setItem('usuario', localStorage.getItem('usuario_temporal')!);
-          localStorage.removeItem('token_temporal');
-          localStorage.removeItem('usuario_temporal');
+          sessionStorage.setItem('token', token!);
+          sessionStorage.setItem('usuario', sessionStorage.getItem('usuario_temporal')!);
+          sessionStorage.removeItem('token_temporal');
+          sessionStorage.removeItem('usuario_temporal');
         })
       );
   }
@@ -49,12 +55,30 @@ export class AuthService {
     });
   }
 
+  registrarDocente(datos: any) {
+    return this.http.post<any>(`${this.apiUrl}/api/auth/registrar-docente`, datos);
+  }
+
+  // Auto-registro público del estudiante con el código de su docente
+  registrarEstudiantePorCodigo(datos: any) {
+    return this.http.post<any>(`${this.apiUrl}/api/auth/registrar-estudiante`, datos);
+  }
+
+  // Devuelve el nombre del docente y sus cursos para confirmar que el código es el correcto
+  getDocentePorCodigo(codigo: string) {
+    return this.http.get<any>(`${this.apiUrl}/api/auth/docente-por-codigo/${encodeURIComponent(codigo)}`);
+  }
+
+  getCursosDisponibles() {
+    return this.http.get<any>(`${this.apiUrl}/api/auth/cursos-disponibles`);
+  }
+
   getRoles() {
     return this.http.get<any>(`${this.apiUrl}/api/auth/roles`);
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return sessionStorage.getItem('token');
   }
 
   getAuthHeaders(): HttpHeaders {
@@ -65,7 +89,7 @@ export class AuthService {
   }
 
   getRolUsuario(): string {
-    const usuarioStr = localStorage.getItem('usuario');
+    const usuarioStr = sessionStorage.getItem('usuario');
     if (usuarioStr) {
       try {
         const u = JSON.parse(usuarioStr);
@@ -88,7 +112,7 @@ export class AuthService {
   }
 
   getNombreUsuario(): string {
-    const usuarioStr = localStorage.getItem('usuario');
+    const usuarioStr = sessionStorage.getItem('usuario');
     if (usuarioStr) {
       try {
         const u = JSON.parse(usuarioStr);
@@ -99,7 +123,7 @@ export class AuthService {
   }
 
   getIdUsuario(): number {
-    const usuarioStr = localStorage.getItem('usuario');
+    const usuarioStr = sessionStorage.getItem('usuario');
     if (usuarioStr) {
       try {
         const u = JSON.parse(usuarioStr);
@@ -135,8 +159,16 @@ export class AuthService {
       .replace(/Ã/g, 'Á');
   }
 
+  // true si hay un token guardado y su hora de expiración ya pasó
+  tokenExpirado(): boolean {
+    const expiracion = leerExpiracionMs(this.getToken());
+    return expiracion !== null && Date.now() >= expiracion;
+  }
+
   logout(): void {
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('usuario');
+    sessionStorage.removeItem('token_temporal');
+    sessionStorage.removeItem('usuario_temporal');
   }
 }

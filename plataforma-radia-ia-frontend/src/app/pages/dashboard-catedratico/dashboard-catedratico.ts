@@ -1,9 +1,11 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Observable } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { AcademicService } from '../../services/academic';
 import { AuthService } from '../../services/auth';
 import { ExtraService } from '../../services/extra';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-dashboard-catedratico',
@@ -58,11 +60,123 @@ export class DashboardCatedratico implements OnInit {
     private academicService: AcademicService,
     private authService: AuthService,
     private extraService: ExtraService,
+    private alertService: AlertService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.cargarDatosReales();
+  }
+
+  // === INFORME PDF DE CALIFICACIONES (por ejercicio o conjunto de ejercicios) ===
+  modalInformeAbierto: boolean = false;
+  cargandoEjerciciosInforme: boolean = false;
+  generandoInforme: boolean = false;
+  cursosInforme: { id_curso: number; nombre_curso: string }[] = [];
+  private ejerciciosTodos: any[] = [];
+  ejerciciosCurso: any[] = [];              // ejercicios del curso elegido (se recalcula al cambiar de curso)
+  cursoInforme: number | null = null;
+  ejerciciosInforme = new Set<number>();    // ids marcados
+
+  abrirModalInforme(): void {
+    this.modalInformeAbierto = true;
+    this.cargandoEjerciciosInforme = true;
+    this.academicService.getEjerciciosDocente().subscribe({
+      next: (resp: any) => {
+        this.ejerciciosTodos = (resp.data || resp || []) as any[];
+        const vistos = new Map<number, string>();
+        for (const e of this.ejerciciosTodos) if (!vistos.has(e.id_curso)) vistos.set(e.id_curso, e.nombre_curso);
+        this.cursosInforme = [...vistos.entries()].map(([id_curso, nombre_curso]) => ({ id_curso, nombre_curso }));
+        this.cursoInforme = this.cursosInforme[0]?.id_curso ?? null;
+        this.alCambiarCursoInforme();
+        this.cargandoEjerciciosInforme = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoEjerciciosInforme = false;
+        this.alertService.error('No se pudieron cargar los ejercicios', 'Intenta de nuevo en unos segundos.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cerrarModalInforme(): void {
+    this.modalInformeAbierto = false;
+  }
+
+  alCambiarCursoInforme(): void {
+    this.ejerciciosCurso = this.ejerciciosTodos.filter(e => e.id_curso === this.cursoInforme);
+    this.ejerciciosInforme = new Set(this.ejerciciosCurso.map(e => e.id_ejercicio)); // por defecto, todos
+  }
+
+  alternarEjercicioInforme(id: number): void {
+    if (this.ejerciciosInforme.has(id)) this.ejerciciosInforme.delete(id);
+    else this.ejerciciosInforme.add(id);
+  }
+
+  get todosEjerciciosMarcados(): boolean {
+    return this.ejerciciosCurso.length > 0 && this.ejerciciosInforme.size === this.ejerciciosCurso.length;
+  }
+
+  alternarTodosEjerciciosInforme(): void {
+    this.ejerciciosInforme = this.todosEjerciciosMarcados ? new Set() : new Set(this.ejerciciosCurso.map(e => e.id_ejercicio));
+  }
+
+  // "ver": abre el PDF en una pestaña nueva (desde el visor del navegador se imprime o se guarda).
+  // "descargar": lo guarda directamente.
+  generarInforme(modo: 'ver' | 'descargar'): void {
+    if (!this.cursoInforme || this.ejerciciosInforme.size === 0) {
+      this.alertService.warning('Elige ejercicios', 'Marca al menos un ejercicio para generar el informe.');
+      return;
+    }
+    this.generandoInforme = true;
+    this.entregarPdf(
+      this.academicService.getInformeCalificaciones(this.cursoInforme, [...this.ejerciciosInforme]),
+      modo, 'informe-calificaciones.pdf', () => { this.generandoInforme = false; }
+    );
+  }
+
+  // Informe individual del alumno abierto en el expediente (con gráficas de evolución)
+  generandoInformeAlumno: boolean = false;
+
+  generarInformeAlumno(modo: 'ver' | 'descargar'): void {
+    const id = this.estudianteSeleccionado?.id_usuario;
+    if (!id) return;
+    this.generandoInformeAlumno = true;
+    this.entregarPdf(
+      this.academicService.getInformeEstudiante(id),
+      modo, 'informe-individual.pdf', () => { this.generandoInformeAlumno = false; }
+    );
+  }
+
+  // Abre el PDF en una pestaña nueva ("ver") o lo descarga. La pestaña se abre ya, dentro del clic,
+  // para que el navegador no la bloquee como ventana emergente.
+  private entregarPdf(fuente: Observable<Blob>, modo: 'ver' | 'descargar', nombreArchivo: string, alTerminar: () => void): void {
+    const pestana = modo === 'ver' ? window.open('', '_blank') : null;
+    fuente.subscribe({
+      next: (pdf: Blob) => {
+        alTerminar();
+        const url = URL.createObjectURL(pdf);
+        if (pestana) {
+          pestana.location.href = url;
+        } else {
+          const enlace = document.createElement('a');
+          enlace.href = url;
+          enlace.download = nombreArchivo;
+          enlace.click();
+        }
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+        this.cdr.detectChanges();
+      },
+      error: async (err: any) => {
+        pestana?.close();
+        alTerminar();
+        let mensaje = 'No se pudo generar el informe.';
+        try { mensaje = JSON.parse(await (err.error as Blob).text()).message || mensaje; } catch { /* respuesta sin JSON */ }
+        this.alertService.error('Error al generar el informe', mensaje);
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   cargarDatosReales(): void {
@@ -126,7 +240,32 @@ export class DashboardCatedratico implements OnInit {
     this.aplicarFiltros();
   }
 
+  // Historial del alumno agrupado por ejercicio (carpetas desplegables con el promedio de cada uno).
+  // Se arma una sola vez al cargar: si fuera un getter, ngFor recrearía las tarjetas en cada ciclo y
+  // se perdería lo que el docente esté escribiendo en un comentario.
+  carpetasEvaluaciones: { clave: number; nombre: string; evaluaciones: any[]; promedio: number }[] = [];
+  carpetasAbiertas = new Set<number>();
+
+  private armarCarpetas(evaluaciones: any[]): void {
+    const mapa = new Map<number, any>();
+    for (const ev of evaluaciones) {
+      if (!mapa.has(ev.id_ejercicio)) mapa.set(ev.id_ejercicio, { clave: ev.id_ejercicio, nombre: ev.ejercicio, evaluaciones: [], promedio: 0 });
+      mapa.get(ev.id_ejercicio).evaluaciones.push(ev);
+    }
+    this.carpetasEvaluaciones = [...mapa.values()].map(c => ({
+      ...c,
+      promedio: Math.round(c.evaluaciones.reduce((s: number, e: any) => s + e.precision_ia, 0) / c.evaluaciones.length)
+    }));
+  }
+
+  alternarCarpeta(clave: number): void {
+    if (this.carpetasAbiertas.has(clave)) this.carpetasAbiertas.delete(clave);
+    else this.carpetasAbiertas.add(clave);
+  }
+
   abrirDetalleEstudiante(alumno: any): void {
+    this.carpetasEvaluaciones = [];
+    this.carpetasAbiertas.clear();
     this.estudianteSeleccionado = alumno;
     this.modalAbierto = true;
     this.cargandoDetalle = true;
@@ -140,7 +279,9 @@ export class DashboardCatedratico implements OnInit {
               id_evaluacion: e.id_evaluacion,
               caso: e.titulo_caso,
               dificultad: e.nivel_dificultad,
-              precision_ia: e.concordancia_ia || alumno.precision,
+              id_ejercicio: e.id_ejercicio || 0,
+              ejercicio: e.ejercicio || 'Casos individuales',
+              precision_ia: Number(e.concordancia_ia) || 0, // 0 % es un resultado válido, no debe caer al promedio del alumno
               tiempo: `${e.tiempo_analisis_segundos || 45}s`,
               justificacion: e.justificacion_clinica || 'Sin justificación registrada',
               fecha: e.fecha_evaluacion ? e.fecha_evaluacion.split('T')[0] : '2026-08-15',
@@ -148,6 +289,8 @@ export class DashboardCatedratico implements OnInit {
               comentarios: []
             }));
             
+            this.armarCarpetas(this.estudianteSeleccionado.evaluaciones);
+
             // Cargar comentarios para cada evaluación
             this.estudianteSeleccionado.evaluaciones.forEach((ev: any) => {
                if(ev.id_evaluacion) {

@@ -1,14 +1,14 @@
 import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { AuthService } from '../services/auth';
 import { AlertService } from '../services/alert.service';
+import { SesionService } from '../services/sesion.service';
 import { catchError, throwError } from 'rxjs';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const alertService = inject(AlertService);
-  const router = inject(Router);
+  const sesionService = inject(SesionService);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
@@ -17,11 +17,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => error);
       }
 
-      if (error.status === 401 || error.status === 403) {
-        // Sesión expirada o no autorizada
-        authService.logout();
-        alertService.warning('Sesión expirada', 'Tu sesión ha expirado o no tienes permisos para acceder a esta ruta.');
-        router.navigate(['/login']);
+      if (error.status === 401) {
+        // El servidor rechazó el token (vencido o inválido). Sin token guardado no había sesión que cerrar.
+        if (authService.getToken()) sesionService.expirarSesion();
+      } else if (error.status === 403) {
+        // 403 = la sesión es válida pero el rol no tiene permiso: no se cierra la sesión.
+        if (authService.getToken()) alertService.warning('Sin permisos', 'No tienes permisos para realizar esta acción.');
       } else if (error.status === 500) {
         // Error del servidor
         alertService.error('Error de Servidor', 'Ha ocurrido un error en el servidor. Por favor, intenta de nuevo más tarde.');

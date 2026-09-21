@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth';
 
@@ -10,12 +9,6 @@ import { AuthService } from './auth';
 })
 export class ExtraService {
   private apiUrl = environment.apiUrl + '/api/extra';
-
-  // Contador compartido de notificaciones no leídas: cualquier componente que llame a
-  // getNotificaciones() o marcarNotificacionLeida() lo mantiene sincronizado automáticamente,
-  // así el badge del sidebar (layout) y la pantalla de Notificaciones nunca quedan desfasados.
-  private noLeidasSubject = new BehaviorSubject<number>(0);
-  noLeidas$ = this.noLeidasSubject.asObservable();
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -31,22 +24,12 @@ export class ExtraService {
 
   // --- Notificaciones ---
   getNotificaciones(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/notificaciones`, { headers: this.getHeaders() }).pipe(
-      tap((res: any) => {
-        const data = res?.data || [];
-        const noLeidas = Array.isArray(data) ? data.filter((n: any) => !n.leida).length : 0;
-        this.noLeidasSubject.next(noLeidas);
-      })
-    );
+    return this.http.get(`${this.apiUrl}/notificaciones`, { headers: this.getHeaders() });
   }
 
-  marcarNotificacionLeida(id_notificacion: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/notificaciones/${id_notificacion}/leida`, {}, { headers: this.getHeaders() }).pipe(
-      tap(() => {
-        const actual = this.noLeidasSubject.value;
-        if (actual > 0) this.noLeidasSubject.next(actual - 1);
-      })
-    );
+  // El check de una notificación: la marca como leída y la elimina
+  eliminarNotificacion(id_notificacion: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/notificaciones/${id_notificacion}`, { headers: this.getHeaders() });
   }
 
   // --- Comentarios ---

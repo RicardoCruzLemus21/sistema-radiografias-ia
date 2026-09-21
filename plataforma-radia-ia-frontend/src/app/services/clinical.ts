@@ -36,6 +36,13 @@ export class ClinicalService {
     });
   }
 
+  // Retroalimentación de un caso que el estudiante ya respondió (404 si todavía no lo ha respondido)
+  getRetroalimentacionCaso(id: string | number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/caso/${id}/retroalimentacion`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   // Obtiene el caso clínico sin las etiquetas de respuesta ni el mapa gradcam (Fase 1 Estudiante)
   getCasoSeguroEstudiante(id: string | number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/caso/${id}/estudiante`, {
@@ -82,16 +89,9 @@ export class ClinicalService {
     });
   }
 
-  // Obtener casos del banco NIH
-  getBancoCasosIA(patologia: string, dificultad: string, limit: number = 50): Observable<any> {
-    const params: any = {};
-    if (patologia && patologia !== 'TODOS') params.patologia = patologia;
-    if (dificultad) params.dificultad = dificultad;
-    params.limit = limit;
-
-    return this.http.get<any>(`${this.apiUrl}/banco-casos-ia`, {
-      headers: this.authService.getAuthHeaders(),
-      params
+  eliminarEjercicio(id_ejercicio: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/ejercicio/${id_ejercicio}`, {
+      headers: this.authService.getAuthHeaders()
     });
   }
 
@@ -108,9 +108,20 @@ export class ClinicalService {
     nivel_dificultad: string;
     total_casos: number;
     porcentaje_normales: number;
+    id_curso?: number;
   }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/banco-casos-ia/componer`, criterios, {
       headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Cuántos casos utilizables hay por patología para un nivel máximo (y, con curso, sin contar lo ya asignado)
+  getDisponibilidadBanco(nivel_dificultad: string, id_curso?: number | null): Observable<any> {
+    const params: any = { nivel_dificultad };
+    if (id_curso) params.id_curso = id_curso;
+    return this.http.get<any>(`${this.apiUrl}/banco-casos-ia/disponibilidad`, {
+      headers: this.authService.getAuthHeaders(),
+      params
     });
   }
 

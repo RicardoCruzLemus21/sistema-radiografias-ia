@@ -1,5 +1,6 @@
 const authService = require('../services/authService');
 const auditService = require('../services/auditService');
+const academicService = require('../services/academicService');
 const jwt = require('jsonwebtoken');
 
 const registrar = async (req, res) => {
@@ -87,8 +88,51 @@ const cambiarClaveInicial = async (req, res) => {
     }
 };
 
+const registrarDocente = async (req, res) => {
+    try {
+        const nuevo = await authService.registrarDocente(req.body);
+        await auditService.registrarAccion(nuevo.id_usuario, 'REGISTRO_DOCENTE', `Un docente se registró por sí mismo (usuario ID: ${nuevo.id_usuario})`);
+        res.status(201).json({ status: 'success', message: 'Cuenta de docente creada correctamente', data: nuevo });
+    } catch (error) {
+        res.status(400).json({ status: 'error', message: error.message });
+    }
+};
+
+const consultarDocentePorCodigo = async (req, res) => {
+    try {
+        const docente = await authService.consultarDocentePorCodigo(req.params.codigo);
+        res.status(200).json({ status: 'success', data: docente });
+    } catch (error) {
+        const noExiste = error.message.startsWith('No existe');
+        res.status(noExiste ? 404 : 400).json({ status: 'error', message: error.message });
+    }
+};
+
+const registrarEstudiante = async (req, res) => {
+    try {
+        const nuevo = await authService.registrarEstudiante(req.body);
+        await auditService.registrarAccion(nuevo.id_usuario, 'REGISTRO_ESTUDIANTE_POR_CODIGO', `Un estudiante se registró con el código de ${nuevo.nombre_docente} (usuario ID: ${nuevo.id_usuario})`);
+        res.status(201).json({ status: 'success', message: 'Cuenta de estudiante creada correctamente', data: nuevo });
+    } catch (error) {
+        res.status(400).json({ status: 'error', message: error.message });
+    }
+};
+
+const listarCursosDisponibles = async (req, res) => {
+    try {
+        const cursos = await academicService.obtenerCatalogoCursos();
+        res.status(200).json({ status: 'success', data: cursos });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'Error al obtener los cursos' });
+    }
+};
+
 module.exports = {
     registrar,
+    registrarDocente,
+    registrarEstudiante,
+    consultarDocentePorCodigo,
+    listarCursosDisponibles,
     login,
     listarRoles,
     listarUsuarios,

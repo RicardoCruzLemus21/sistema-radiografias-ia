@@ -1,0 +1,22 @@
+.accesos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.acceso { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 20px 22px; border-radius: 14px; }
+.acceso-texto h2 { margin: 0 0 4px; font-size: 18px; color: var(--text-main); }
+.acceso-texto p { margin: 0; font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+.acceso .btn-primario, .acceso .btn-secundario { align-self: center; }
+
+.avance-general { margin: 0; font-size: 14px; color: var(--text-main); }
+.avance-general .regla { display: block; margin-top: 4px; font-size: 12px; color: var(--text-muted); }
+
+.cuadricula { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.clase-tarjeta { display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: 14px; border-top: 3px solid var(--color-clase); }
+.clase-cabecera { display: flex; align-items: center; gap: 10px; }
+.clase-cabecera h3 { margin: 0; flex: 1; font-size: 18px; color: var(--text-main); }
+.clase-punto { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+.pasos-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.pasos-lista li { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-muted); }
+.pasos-lista li.hecho { color: var(--text-main); }
+.pasos-lista small { color: var(--text-muted); }
+.marca { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border-color); font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.pasos-lista li.hecho .marca { background: #34d399; border-color: #34d399; color: #062e21; }
+.clase-tarjeta .btn-secundario { margin-top: auto; }

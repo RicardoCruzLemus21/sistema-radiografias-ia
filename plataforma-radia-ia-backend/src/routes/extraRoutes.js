@@ -8,7 +8,7 @@ router.get('/auditoria/logs', verificarToken, verificarRol(['Admin']), extraCont
 
 // Rutas de Notificaciones (Para todos los usuarios)
 router.get('/notificaciones', verificarToken, extraController.obtenerNotificaciones);
-router.put('/notificaciones/:id_notificacion/leida', verificarToken, extraController.marcarNotificacionLeida);
+router.delete('/notificaciones/:id_notificacion', verificarToken, extraController.eliminarNotificacion);
 
 // Rutas de Comentarios
 router.post('/comentarios', verificarToken, extraController.agregarComentario);

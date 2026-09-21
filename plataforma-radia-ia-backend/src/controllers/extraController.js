@@ -25,14 +25,20 @@ const obtenerNotificaciones = async (req, res) => {
     }
 };
 
-const marcarNotificacionLeida = async (req, res) => {
+const eliminarNotificacion = async (req, res) => {
     try {
-        const { id_notificacion } = req.params;
-        await notificationService.marcarComoLeida(id_notificacion);
-        res.status(200).json({ status: 'success', message: "Notificación marcada como leída." });
+        const id_notificacion = Number(req.params.id_notificacion);
+        if (!Number.isInteger(id_notificacion) || id_notificacion <= 0) {
+            return res.status(400).json({ status: 'error', message: 'Identificador de notificación inválido.' });
+        }
+        const eliminada = await notificationService.eliminarNotificacion(id_notificacion, req.usuario.id_usuario);
+        if (!eliminada) {
+            return res.status(404).json({ status: 'error', message: 'La notificación no existe.' });
+        }
+        res.status(200).json({ status: 'success', message: 'Notificación eliminada.' });
     } catch (error) {
-        console.error("Error al actualizar notificación:", error);
-        res.status(500).json({ status: 'error', message: "Error al actualizar notificación." });
+        console.error('Error al eliminar notificación:', error);
+        res.status(500).json({ status: 'error', message: 'Error al eliminar la notificación.' });
     }
 };
 
@@ -42,6 +48,7 @@ const agregarComentario = async (req, res) => {
         const { id_evaluacion, comentario } = req.body;
         const id_catedratico = req.usuario.id_usuario;
         const resultado = await commentService.agregarComentario(id_evaluacion, id_catedratico, comentario);
+        notificationService.notificarComentarioDelDocente(id_evaluacion);
         res.status(201).json({ status: 'success', data: resultado, message: "Comentario registrado." });
     } catch (error) {
         console.error("Error al agregar comentario:", error);
@@ -63,7 +70,7 @@ const obtenerComentariosEvaluacion = async (req, res) => {
 module.exports = {
     obtenerLogsAuditoria,
     obtenerNotificaciones,
-    marcarNotificacionLeida,
+    eliminarNotificacion,
     agregarComentario,
     obtenerComentariosEvaluacion
 };

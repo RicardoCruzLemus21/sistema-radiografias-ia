@@ -61,6 +61,8 @@ export class GestionUsuariosComponent implements OnInit {
 
   cursosDisponibles: any[] = [];
   catalogoCursos: any[] = [];
+  readonly valorCursoNuevo = '__nuevo__';
+  nombreCursoNuevo: string = '';
 
   constructor(
     private userService: UserService, 
@@ -239,6 +241,7 @@ export class GestionUsuariosComponent implements OnInit {
     this.mensajeRegistroError = '';
     this.nuevoUsuario = { carnet: '', nombre_completo: '', correo_electronico: '', contrasena: '', id_rol: this.idRolEstudiante, id_catedratico: '', id_curso: '', nombre_curso_asignar: '' };
     this.cursosDisponibles = [];
+    this.nombreCursoNuevo = '';
     this.modalRegistroAbierto = true;
   }
 
@@ -287,7 +290,15 @@ export class GestionUsuariosComponent implements OnInit {
         this.mensajeRegistroError = 'Para registrar un Catedrático, debe seleccionar un Curso que impartirá.';
         return;
       }
+      if (this.nuevoUsuario.nombre_curso_asignar === this.valorCursoNuevo && !this.nombreCursoNuevo.trim()) {
+        this.mensajeRegistroError = 'Escriba el nombre del curso nuevo.';
+        return;
+      }
     }
+
+    const cursoAAsignar = this.nuevoUsuario.nombre_curso_asignar === this.valorCursoNuevo
+      ? this.nombreCursoNuevo.trim()
+      : this.nuevoUsuario.nombre_curso_asignar;
 
     this.guardandoRegistro = true;
     this.mensajeRegistroError = '';
@@ -299,7 +310,7 @@ export class GestionUsuariosComponent implements OnInit {
       nombre_completo: this.nuevoUsuario.nombre_completo,
       correo_electronico: this.nuevoUsuario.correo_electronico,
       contrasena: this.nuevoUsuario.contrasena,
-      nombre_curso_asignar: this.nuevoUsuario.nombre_curso_asignar
+      nombre_curso_asignar: cursoAAsignar
     };
 
     // Usamos el authService para registrar cualquier tipo de usuario en el endpoint general
@@ -337,6 +348,7 @@ export class GestionUsuariosComponent implements OnInit {
     this.mensajeRegistroExito = mensaje;
     this.cdr.detectChanges();
     this.cargarUsuarios();
+    this.cargarCatalogoCursos();
     setTimeout(() => this.cerrarModalRegistro(), 1500);
   }
 }

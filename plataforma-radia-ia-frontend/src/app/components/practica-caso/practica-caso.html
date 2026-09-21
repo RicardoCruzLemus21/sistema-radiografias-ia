@@ -1,0 +1,94 @@
+<div class="practica">
+  <div class="practica-imagen">
+    <div class="rx-caja" (click)="ampliada = true" title="Clic para ampliar">
+      <img [src]="urlImagen(caso.imagen)" alt="Radiografía para practicar" draggable="false">
+      <!-- Después de responder: mapa de calor del modelo y recuadro del radiólogo (si existe) -->
+      <ng-container *ngIf="resultado && mostrarMapa && resultado.gradcam.length > 0">
+        <img class="rx-capa" [src]="urlRelativa(resultado.gradcam[0].url)" alt="Mapa de calor" draggable="false">
+      </ng-container>
+      <ng-container *ngIf="resultado">
+        <div class="rx-bbox" *ngFor="let b of resultado.bbox"
+             [style.left.%]="b.x * 100" [style.top.%]="b.y * 100" [style.width.%]="b.ancho * 100" [style.height.%]="b.alto * 100">
+          <span>Radiólogo</span>
+        </div>
+      </ng-container>
+    </div>
+    <div class="practica-herramientas">
+      <span class="practica-contador">Caso {{ indice }} de {{ total }}</span>
+      <button type="button" class="btn-mini" (click)="ampliada = true">Ampliar</button>
+      <button type="button" class="btn-mini" *ngIf="resultado && resultado.gradcam.length > 0" (click)="mostrarMapa = !mostrarMapa">
+        {{ mostrarMapa ? 'Ocultar mapa de calor' : 'Ver dónde miró el modelo' }}
+      </button>
+    </div>
+    <p class="nota-pequena" *ngIf="resultado && mostrarMapa">El mapa de calor muestra dónde se fijó el modelo para <strong>{{ resultado.gradcam[0].nombre }}</strong>; no es una prueba.</p>
+    <p class="nota-pequena" *ngIf="resultado && resultado.bbox.length > 0">El recuadro rojo es la zona que marcó un radiólogo.</p>
+  </div>
+
+  <div class="practica-panel">
+    <!-- Antes de responder -->
+    <ng-container *ngIf="!resultado">
+      <h3>¿Qué ves en esta radiografía?</h3>
+      <p class="ayuda">Marca lo que observas. Si no ves ninguna anomalía, elige <strong>Normal</strong>.</p>
+
+      <div class="opciones">
+        <label class="opcion" *ngFor="let c of clases" [class.marcada]="seleccion.has(c)" [style.--color-clase]="colorClase(c)">
+          <input type="checkbox" [checked]="seleccion.has(c)" (change)="alternar(c)">
+          <span class="punto" [style.background]="colorClase(c)"></span>
+          <span>{{ nombreClase(c) }}</span>
+        </label>
+      </div>
+
+      <div class="pista" *ngIf="pistas.length > 0">
+        <button type="button" class="btn-link" *ngIf="!mostrarPista" (click)="verPista()">Necesito una pista</button>
+        <div *ngIf="mostrarPista" class="pista-caja">
+          <strong>Pista sobre {{ nombreClase(claseObjetivo) }}:</strong>
+          <ul><li *ngFor="let p of pistas">{{ p }}</li></ul>
+          <small>Usar la pista adelanta el repaso de este caso.</small>
+        </div>
+      </div>
+
+      <p class="error-texto" *ngIf="error">{{ error }}</p>
+      <button type="button" class="btn-primario" [disabled]="seleccion.size === 0 || enviando" (click)="comprobar()">
+        {{ enviando ? 'Comprobando...' : 'Comprobar' }}
+      </button>
+    </ng-container>
+
+    <!-- Después de responder -->
+    <ng-container *ngIf="resultado">
+      <div class="veredicto" [ngClass]="etiquetaResultado().clase">{{ etiquetaResultado().texto }}</div>
+
+      <p class="linea-verdad">
+        <span class="etiqueta-fija">Era:</span>
+        <span class="chip-clase" *ngFor="let r of resultado.etiquetas_reales" [style.--color-clase]="colorClase(r)">{{ nombreClase(r) }}</span>
+        <span class="etiqueta-fija" style="margin-left: 10px;">Marcaste:</span>
+        <span class="chip-clase" *ngFor="let m of resultado.marcadas" [style.--color-clase]="colorClase(m)">{{ nombreClase(m) }}</span>
+      </p>
+
+      <div class="explicacion" *ngFor="let e of resultado.explicaciones">
+        <h4>{{ tituloExplicacion(e) }}</h4>
+        <p>{{ e.resumen }}</p>
+        <ul *ngIf="e.como_distinguir?.length"><li *ngFor="let paso of e.como_distinguir">{{ paso }}</li></ul>
+        <p class="pista-clave" *ngIf="e.pista"><strong>Clave:</strong> {{ e.pista }}</p>
+        <p class="proxima" *ngIf="e.proxima_vez">{{ e.proxima_vez }}</p>
+        <small class="origen" *ngIf="e.origen === 'ia'">Explicación generada con IA y revisada por tu docente.</small>
+      </div>
+
+      <div class="explicacion refuerzo" *ngFor="let r of resultado.refuerzo">
+        <h4>Para recordar: {{ r.nombre }}</h4>
+        <p class="pista-clave">{{ r.dato_clave }}</p>
+      </div>
+
+      <p class="repaso-aviso" *ngIf="resultado.proxima_revision">
+        Volverás a ver este caso en tu repaso el <strong>{{ resultado.proxima_revision | date:'d MMM y' }}</strong>.
+      </p>
+
+      <button type="button" class="btn-primario" (click)="siguiente()">{{ indice < total ? 'Siguiente caso' : 'Terminar' }}</button>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Imagen ampliada -->
+<div class="visor-ampliado" *ngIf="ampliada" (click)="ampliada = false" role="dialog" aria-label="Radiografía ampliada">
+  <button type="button" class="visor-cerrar" (click)="ampliada = false" aria-label="Cerrar">&times;</button>
+  <img [src]="urlImagen(caso.imagen)" alt="Radiografía ampliada" (click)="$event.stopPropagation()" draggable="false">
+</div>

@@ -1,0 +1,46 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="header-titles">
+      <h1>Código de Registro</h1>
+      <p>Comparte este código con tus estudiantes para que se inscriban en tus cursos sin que tengas que crearles la cuenta.</p>
+    </div>
+  </header>
+
+  <section class="codigo-panel glass-panel">
+    <span class="codigo-label">Tu código de docente</span>
+
+    <div class="codigo-fila" *ngIf="!errorCarga">
+      <div class="codigo-caja" [class.oculto]="!mostrarCodigo" [class.cargando]="cargando">
+        <span class="codigo-valor" [attr.aria-label]="mostrarCodigo ? 'Código de docente' : 'Código de docente oculto'">{{ cargando ? '········' : codigoVisible }}</span>
+        <button type="button" class="btn-ojo" (click)="alternarVisibilidad()" [disabled]="cargando || !codigoDocente"
+                [attr.aria-pressed]="mostrarCodigo" [attr.aria-label]="mostrarCodigo ? 'Ocultar código' : 'Mostrar código'" [title]="mostrarCodigo ? 'Ocultar código' : 'Mostrar código'">
+          <!-- Ojo abierto: el código está oculto, click para mostrarlo -->
+          <svg *ngIf="!mostrarCodigo" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+          <!-- Ojo tachado: el código está visible, click para ocultarlo -->
+          <svg *ngIf="mostrarCodigo" viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+        </button>
+      </div>
+
+      <div class="codigo-acciones">
+        <button type="button" class="btn-codigo" (click)="copiarCodigo()" [disabled]="cargando || !codigoDocente">{{ copiado ? 'Copiado' : 'Copiar' }}</button>
+        <button type="button" class="btn-codigo btn-codigo-sec" (click)="regenerarCodigo()" [disabled]="cargando || !codigoDocente || regenerando">{{ regenerando ? 'Generando...' : 'Regenerar' }}</button>
+      </div>
+    </div>
+
+    <div class="codigo-error" *ngIf="errorCarga">
+      No se pudo cargar tu código.
+      <button type="button" class="btn-codigo btn-codigo-sec" (click)="cargarCodigo()">Reintentar</button>
+    </div>
+
+    <p class="codigo-nota">Trátalo como una contraseña de inscripción: quien lo tenga puede unirse a tus cursos. Si se filtra, usa <strong>Regenerar</strong>.</p>
+  </section>
+
+  <section class="pasos-panel glass-panel">
+    <h2>Cómo se registran tus estudiantes</h2>
+    <ol class="pasos">
+      <li><span class="paso-num">1</span><span>Copia tu código y compártelo con ellos (clase, chat del curso, correo).</span></li>
+      <li><span class="paso-num">2</span><span>En la pantalla de inicio de sesión, tus estudiantes eligen <strong>Regístrate aquí</strong> y luego <strong>Soy estudiante</strong>.</span></li>
+      <li><span class="paso-num">3</span><span>Escriben tu código, verifican que aparezca tu nombre, completan sus datos y quedan inscritos en tu curso al instante.</span></li>
+    </ol>
+  </section>
+</div>
