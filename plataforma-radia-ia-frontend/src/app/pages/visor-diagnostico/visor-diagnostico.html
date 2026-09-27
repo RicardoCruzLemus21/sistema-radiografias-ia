@@ -146,8 +146,11 @@
           <p class="helper-text">El modelo no es perfecto, es tu compañero de estudio: una segunda opinión falible, no un diagnóstico.</p>
 
           <!-- El modelo se abstiene: esto es una fortaleza del diseño, no una falla -->
-          <div *ngIf="resultadoFase3?.abstiene" class="alert-box" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255,255,255,0.15); color: #ccc; padding: 15px; margin-top: 15px;">
-            <strong style="color: #fff;">🤐 El modelo se abstiene de opinar en este caso.</strong>
+          <div *ngIf="resultadoFase3?.abstiene" class="alert-box" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255,255,255,0.15); color: var(--text-muted); padding: 15px; margin-top: 15px;">
+            <strong style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-main);">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+              El modelo se abstiene de opinar en este caso.
+            </strong>
             <p class="helper-text" style="margin-top: 8px;">
               No es un error: el sistema solo emite juicio cuando su confianza supera un umbral calibrado para esa patología.
               Prefiere guardar silencio antes que dar una opinión poco fiable que pueda desorientarte. Esto también enseña algo:
@@ -234,24 +237,28 @@
           <div class="score-card" style="margin-top: 15px;" *ngIf="puntajesEstudiante">
             <h4>Eje 1: Diagnóstico</h4>
             <p class="helper-text">Precisión de Etiquetas: {{ puntajesEstudiante.diagnostico }}%</p>
-            <div class="alert-box" 
-                 [ngStyle]="{'background': puntajesEstudiante.diagnostico >= 80 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
-                             'border-color': puntajesEstudiante.diagnostico >= 80 ? 'rgba(0,255,136,0.3)' : 'rgba(245,158,11,0.3)', 
-                             'color': puntajesEstudiante.diagnostico >= 80 ? '#00ff88' : '#f59e0b', 
+            <div class="alert-box" style="display: flex; align-items: center; gap: 8px;"
+                 [ngStyle]="{'background': puntajesEstudiante.diagnostico >= 80 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                             'border-color': puntajesEstudiante.diagnostico >= 80 ? 'rgba(0,255,136,0.3)' : 'rgba(245,158,11,0.3)',
+                             'color': puntajesEstudiante.diagnostico >= 80 ? '#00ff88' : '#f59e0b',
                              'padding': '10px'}">
-              {{ puntajesEstudiante.diagnostico >= 80 ? '✅ Excelente diagnóstico.' : (puntajesEstudiante.diagnostico > 0 ? '⚠️ Tienes una coincidencia parcial.' : '❌ Diagnóstico incorrecto.') }}
+              <svg *ngIf="puntajesEstudiante.diagnostico >= 80" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12 11 15 16 9"></polyline></svg>
+              <svg *ngIf="puntajesEstudiante.diagnostico < 80" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <span>{{ puntajesEstudiante.diagnostico >= 80 ? 'Excelente diagnóstico.' : (puntajesEstudiante.diagnostico > 0 ? 'Tienes una coincidencia parcial.' : 'Diagnóstico incorrecto.') }}</span>
             </div>
           </div>
 
           <div class="score-card" style="margin-top: 15px;" *ngIf="puntajesEstudiante">
             <h4>Eje 2: Localización</h4>
             <p class="helper-text">Solapamiento de BBox (IoU): {{ puntajesEstudiante.localizacion !== null ? puntajesEstudiante.localizacion + '%' : 'N/A' }}</p>
-            <div *ngIf="puntajesEstudiante.localizacion !== null" class="alert-box" 
-                 [ngStyle]="{'background': puntajesEstudiante.localizacion >= 50 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(245, 158, 11, 0.1)', 
-                             'border-color': puntajesEstudiante.localizacion >= 50 ? 'rgba(0,255,136,0.3)' : 'rgba(245,158,11,0.3)', 
-                             'color': puntajesEstudiante.localizacion >= 50 ? '#00ff88' : '#f59e0b', 
+            <div *ngIf="puntajesEstudiante.localizacion !== null" class="alert-box" style="display: flex; align-items: center; gap: 8px;"
+                 [ngStyle]="{'background': puntajesEstudiante.localizacion >= 50 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                             'border-color': puntajesEstudiante.localizacion >= 50 ? 'rgba(0,255,136,0.3)' : 'rgba(245,158,11,0.3)',
+                             'color': puntajesEstudiante.localizacion >= 50 ? '#00ff88' : '#f59e0b',
                              'padding': '10px'}">
-              {{ puntajesEstudiante.localizacion >= 50 ? '✅ Muy buena localización.' : '⚠️ Tu marca está lejos del hallazgo real.' }}
+              <svg *ngIf="puntajesEstudiante.localizacion >= 50" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12 11 15 16 9"></polyline></svg>
+              <svg *ngIf="puntajesEstudiante.localizacion < 50" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+              <span>{{ puntajesEstudiante.localizacion >= 50 ? 'Muy buena localización.' : 'Tu marca está lejos del hallazgo real.' }}</span>
             </div>
             <div *ngIf="puntajesEstudiante.localizacion === null" class="alert-box" style="background: rgba(255, 255, 255, 0.05); padding: 10px; color: #888;">
               Este caso del NIH no cuenta con un recuadro de referencia del radiólogo.
@@ -261,12 +268,14 @@
           <div class="score-card" style="margin-top: 15px;" *ngIf="puntajesEstudiante">
             <h4>Eje 3: Calibración</h4>
             <p class="helper-text">Puntaje de Confianza (Realidad - Percepción): {{ puntajesEstudiante.calibracion }}%</p>
-            <div class="alert-box" 
-                 [ngStyle]="{'background': puntajesEstudiante.calibracion >= 70 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                             'border-color': puntajesEstudiante.calibracion >= 70 ? 'rgba(0,255,136,0.3)' : 'rgba(239,68,68,0.3)', 
-                             'color': puntajesEstudiante.calibracion >= 70 ? '#00ff88' : '#ef4444', 
+            <div class="alert-box" style="display: flex; align-items: center; gap: 8px;"
+                 [ngStyle]="{'background': puntajesEstudiante.calibracion >= 70 ? 'rgba(0, 255, 136, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                             'border-color': puntajesEstudiante.calibracion >= 70 ? 'rgba(0,255,136,0.3)' : 'rgba(239,68,68,0.3)',
+                             'color': puntajesEstudiante.calibracion >= 70 ? '#00ff88' : '#ef4444',
                              'padding': '10px'}">
-              {{ puntajesEstudiante.calibracion >= 70 ? '✅ Estás bien calibrado.' : '❌ Tu confianza no corresponde con tu desempeño (Sobreconfianza o Subconfianza).' }}
+              <svg *ngIf="puntajesEstudiante.calibracion >= 70" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12 11 15 16 9"></polyline></svg>
+              <svg *ngIf="puntajesEstudiante.calibracion < 70" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              <span>{{ puntajesEstudiante.calibracion >= 70 ? 'Estás bien calibrado.' : 'Tu confianza no corresponde con tu desempeño (Sobreconfianza o Subconfianza).' }}</span>
             </div>
           </div>
         </div>
@@ -286,7 +295,20 @@
   <div class="modal-backdrop fullscreen-modal" *ngIf="fullscreenAbierto" (click)="cerrarFullscreen()">
     <div class="modal-card fullscreen-card" (click)="$event.stopPropagation()">
       <button class="btn-close fullscreen-close" (click)="cerrarFullscreen()">×</button>
-      <img [src]="imagenUrl" alt="Radiografía Ampliada" class="fullscreen-image">
+      <img [src]="imagenUrl" alt="Radiografía Ampliada" class="fullscreen-image" (load)="alCargarImagenFullscreen()">
+
+      <!-- Grad-CAM también en el visor ampliado -->
+      <img *ngIf="faseActual >= 3 && mostrarGradcam && gradcamActual" [src]="gradcamActual.url" alt="Mapa de calor Grad-CAM" class="gradcam-overlay"
+           [ngStyle]="estiloCapaSobreImagen('.fullscreen-card .fullscreen-image', false)" draggable="false">
+
+      <!-- Marca de Verdad de Referencia (NIH) también en el visor ampliado -->
+      <ng-container *ngIf="faseActual >= 2 && resultadoFase2?.bbox">
+        <div *ngFor="let caja of resultadoFase2.bbox" class="nih-marker"
+             [ngStyle]="estiloCajaReal(caja, '.fullscreen-card .fullscreen-image')"
+             style="position: absolute; border: 2px solid #ff4757; background: rgba(255, 71, 87, 0.1); pointer-events: none; z-index: 9;">
+             <span style="position: absolute; top: -20px; left: 0; background: #ff4757; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px; white-space: nowrap;">Radiólogo (NIH)</span>
+        </div>
+      </ng-container>
     </div>
   </div>
 </div>

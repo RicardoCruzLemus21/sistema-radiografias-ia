@@ -146,6 +146,13 @@ const obtenerLeccion = async (clase) => {
     return { ...leccion, clase, ficha };
 };
 
+// Reinicia el aprendizaje de una sola patología: borra lección/comparador vistos, el historial de
+// casos guiados y repaso, y las tarjetas de repaso de esa categoría. El estudiante vuelve a empezarla desde cero.
+const reiniciarClase = async (idEst, clase) => {
+    validarClase(clase);
+    await pool.query('CALL sp_apr_reiniciar_clase(?, ?)', [idEst, clase]);
+};
+
 const marcarPaso = async (idEst, clase, paso) => {
     validarClase(clase);
     if (!['leccion', 'comparador'].includes(paso)) throw new ErrorAprendizaje('Paso no válido.');
@@ -350,6 +357,7 @@ module.exports = {
     obtenerResumen,
     obtenerLeccion,
     marcarPaso,
+    reiniciarClase,
     obtenerComparador,
     obtenerSesionGuiada,
     responder,

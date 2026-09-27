@@ -14,7 +14,17 @@
   --border-highlight: rgba(255, 255, 255, 0.25); /* Borde activo */
   --error-red: #ef4444;
   --success-green: #10b981;
+  --success-green-hover: #0ea876;
   --warning-yellow: #f59e0b;
+  /* Variantes de texto para insignias/badges: más claras que el color "sólido" de arriba para que
+     se lean bien sobre un fondo de tarjeta oscuro (el sólido se ve apagado ahí). */
+  --badge-success-text: #34d399;
+  --badge-warning-text: #fbbf24;
+  --badge-danger-text: #f87171;
+  /* Tinte translúcido del acento, para fondos/bordes suaves (reemplaza los rgba(0,229,255,...)
+     sueltos que quedaron de un acento anterior y ya no correspondían al --accent-cyan actual). */
+  --accent-wash-soft: rgba(255, 255, 255, 0.06);
+  --accent-wash-strong: rgba(255, 255, 255, 0.25);
   --sidebar-bg: rgba(9, 9, 11, 0.95);
   --input-bg: rgba(255, 255, 255, 0.05);
   --table-row-hover: rgba(255, 255, 255, 0.03);
@@ -45,7 +55,15 @@
   --border-highlight: rgba(14, 165, 233, 0.4);
   --error-red: #ef4444;
   --success-green: #10b981;
+  --success-green-hover: #059669;
   --warning-yellow: #f59e0b;
+  /* En tema claro el color "sólido" ya contrasta bien sobre una tarjeta blanca, pero se usan tonos
+     algo más oscuros/saturados que el equivalente oscuro para mantener buena lectura. */
+  --badge-success-text: #047857;
+  --badge-warning-text: #b45309;
+  --badge-danger-text: #b91c1c;
+  --accent-wash-soft: rgba(14, 165, 233, 0.08);
+  --accent-wash-strong: rgba(14, 165, 233, 0.3);
   --sidebar-bg: rgba(241, 245, 249, 0.95);
   --input-bg: rgba(0, 0, 0, 0.05);
   --table-row-hover: rgba(0, 0, 0, 0.04);
@@ -260,6 +278,13 @@ select, .glass-input, .glass-input[tagName="select"] {
   cursor: pointer;
   transition: all var(--transition-normal);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Un campo numérico no es una lista desplegable: se quita la flecha de "select" y se conservan
+   las flechitas nativas de incrementar/decrementar del navegador. */
+input[type="number"].glass-input {
+  background-image: none;
+  padding-right: 16px;
 }
 
 select:hover, .glass-input:hover {

@@ -49,16 +49,3 @@
 .alert-success { background: rgba(0, 255, 136, 0.1); border-left: 4px solid #00ff88; color: #00ff88; padding: 15px; border-radius: 4px; font-size: 13px; font-weight: 600; line-height: 1.4; }
 .alert-error { background: rgba(255, 51, 102, 0.1); border-left: 4px solid #ff3366; color: #ff3366; padding: 15px; border-radius: 4px; font-size: 13px; font-weight: 600; line-height: 1.4; }
 
-/* Modal Likert */
-.modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--modal-backdrop-bg); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-.likert-modal { width: 100%; max-width: 600px; background: var(--modal-bg); border-radius: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; max-height: 90vh; overflow-y: auto; }
-.modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border-color); }
-.modal-header h3 { color: var(--text-main); margin: 0 0 5px 0; font-size: 18px; }
-.modal-body { padding: 25px; display: flex; flex-direction: column; gap: 20px; }
-.likert-item { display: flex; flex-direction: column; gap: 10px; background: var(--input-bg); padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); }
-.likert-question { margin: 0; color: var(--text-main); font-size: 14px; font-weight: 500; }
-.likert-options { display: flex; justify-content: space-between; gap: 10px; margin-top: 5px; }
-.btn-likert { flex: 1; padding: 10px 0; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-muted); border-radius: 6px; cursor: pointer; transition: all var(--transition-fast); font-weight: bold; }
-.btn-likert:hover { background: rgba(6, 182, 212, 0.1); color: var(--text-main); border-color: rgba(6, 182, 212, 0.3); }
-.btn-likert.active { background: var(--accent-cyan); color: var(--btn-text-color); border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
-.modal-footer { padding: 20px 25px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; }

@@ -47,10 +47,23 @@
         </header>
 
         <ul class="pasos-lista">
-          <li [class.hecho]="c.leccion_vista"><span class="marca">{{ c.leccion_vista ? '✓' : '1' }}</span> Lección</li>
-          <li [class.hecho]="c.comparador_visto"><span class="marca">{{ c.comparador_visto ? '✓' : '2' }}</span> Comparador</li>
+          <li [class.hecho]="c.leccion_vista">
+            <span class="marca">
+              <svg *ngIf="c.leccion_vista" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <ng-container *ngIf="!c.leccion_vista">1</ng-container>
+            </span> Lección
+          </li>
+          <li [class.hecho]="c.comparador_visto">
+            <span class="marca">
+              <svg *ngIf="c.comparador_visto" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <ng-container *ngIf="!c.comparador_visto">2</ng-container>
+            </span> Comparador
+          </li>
           <li [class.hecho]="c.estado === 'dominada'">
-            <span class="marca">{{ c.estado === 'dominada' ? '✓' : '3' }}</span>
+            <span class="marca">
+              <svg *ngIf="c.estado === 'dominada'" viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="3" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <ng-container *ngIf="c.estado !== 'dominada'">3</ng-container>
+            </span>
             Casos guiados
             <small *ngIf="c.intentos_guiados > 0">· {{ c.aciertos_guiados }} de {{ c.intentos_guiados }} acertados</small>
           </li>
@@ -58,7 +71,13 @@
 
         <div class="barra" *ngIf="c.dominio !== null" title="Aciertos en tus últimos 10 casos guiados"><span [style.width.%]="c.dominio"></span></div>
 
-        <button type="button" class="btn-secundario" (click)="abrir(c.clase)">{{ textoBoton(c) }}</button>
+        <div class="tarjeta-acciones">
+          <button type="button" class="btn-secundario" (click)="abrir(c.clase)">{{ textoBoton(c) }}</button>
+          <button type="button" class="btn-restablecer" *ngIf="c.estado !== 'nueva'" [disabled]="restableciendo === c.clase"
+                  (click)="restablecer(c, $event)" title="Volver a aprender {{ nombreClase(c.clase) }} desde cero">
+            {{ restableciendo === c.clase ? 'Restableciendo...' : 'Restablecer' }}
+          </button>
+        </div>
       </article>
     </section>
   </ng-container>

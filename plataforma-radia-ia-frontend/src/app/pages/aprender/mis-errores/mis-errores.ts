@@ -67,8 +67,4 @@ export class MisErrores implements OnInit {
   practicar(clase: string): void {
     this.router.navigate(['/sistema/aprender', clase], { queryParams: { paso: 'practica' } });
   }
-
-  volver(): void {
-    this.router.navigate(['/sistema/aprender']);
-  }
 }

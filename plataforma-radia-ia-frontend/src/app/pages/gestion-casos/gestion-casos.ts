@@ -45,15 +45,12 @@ export class GestionCasosCatedratico implements OnInit {
   ];
   mostrarDropdownPatologias: boolean = false;
 
-  readonly NIVELES = [
-    { valor: 'Básico', texto: 'Solo Básico' },
-    { valor: 'Intermedio', texto: 'Hasta Intermedio' },
-    { valor: 'Avanzado', texto: 'Todos los niveles' }
-  ];
   readonly MAX_CASOS = 50;
+  // El nivel de dificultad se dejó fijo en "todos los niveles": no tenía sentido dejar que el
+  // docente lo restringiera cuando en la práctica siempre se quiere el universo completo de casos.
   criteriosComposicion = {
     nivel_dificultad: 'Avanzado',
-    total_casos: 10,
+    total_casos: 5,
     porcentaje_normales: 30 // % entero en pantalla; se divide entre 100 al enviar
   };
   mostrarAvanzadas: boolean = false;
@@ -87,7 +84,7 @@ export class GestionCasosCatedratico implements OnInit {
 
   // Misma fórmula que el servidor (componerEjercicio), solo para explicar la mezcla antes de componer
   get previsualizacion(): { normales: number; objetivo: number; distractores: number } {
-    const total = this.limitar(Math.trunc(Number(this.criteriosComposicion.total_casos)) || 10, 1, this.MAX_CASOS);
+    const total = this.limitar(Math.trunc(Number(this.criteriosComposicion.total_casos)) || 5, 1, this.MAX_CASOS);
     const p = this.limitar(Number(this.criteriosComposicion.porcentaje_normales) / 100, 0, 1);
     const normales = Math.round(total * p);
     const objetivo = Math.round(total * (1 - p) * 0.7);
@@ -111,12 +108,26 @@ export class GestionCasosCatedratico implements OnInit {
     return Math.min(Math.max(valor, minimo), maximo);
   }
 
-  @HostListener('document:click', ['$event'])
-  cerrarDropdownAlHacerClicAfuera(evento: Event): void {
+  // Cierra el desplegable de patologías si el clic fue afuera de él. Se usa desde dos lugares:
+  // - el backdrop del modal, que sí burbujea hasta "document" (clic realmente afuera de todo).
+  // - la propia tarjeta del modal, que detiene la propagación para no cerrar el modal al hacer clic
+  //   dentro de él; sin esto, un clic en cualquier otro campo del formulario nunca llegaba a cerrarlo.
+  private cerrarDropdownSiClicAfuera(evento: Event): void {
     const destino = evento.target as HTMLElement | null;
     if (this.mostrarDropdownPatologias && !destino?.closest?.('.pat-select')) {
       this.mostrarDropdownPatologias = false;
+      this.cdr.detectChanges(); // el clic llega fuera de Angular (document): sin esto no se repinta
     }
+  }
+
+  @HostListener('document:click', ['$event'])
+  cerrarDropdownAlHacerClicAfuera(evento: Event): void {
+    this.cerrarDropdownSiClicAfuera(evento);
+  }
+
+  alHacerClicDentroDelModal(evento: Event): void {
+    this.cerrarDropdownSiClicAfuera(evento);
+    evento.stopPropagation();
   }
 
   // Estado para el modal de Ver Detalle
@@ -329,7 +340,7 @@ export class GestionCasosCatedratico implements OnInit {
 
   private reiniciarEjercicio(): void {
     this.patologiasObjetivo.forEach(p => p.seleccionada = false);
-    this.criteriosComposicion = { nivel_dificultad: 'Avanzado', total_casos: 10, porcentaje_normales: 30 };
+    this.criteriosComposicion = { nivel_dificultad: 'Avanzado', total_casos: 5, porcentaje_normales: 30 };
     this.mostrarAvanzadas = false;
     this.mostrarDropdownPatologias = false;
     this.ejercicio = [];
@@ -355,10 +366,6 @@ export class GestionCasosCatedratico implements OnInit {
         this.cdr.detectChanges();
       }
     });
-  }
-
-  alCambiarNivel(): void {
-    this.cargarDisponibilidad();
   }
 
   // Al cambiar de curso cambian las radiografías ya asignadas: un ejercicio compuesto antes ya no vale
@@ -411,7 +418,7 @@ export class GestionCasosCatedratico implements OnInit {
 
     // Se corrigen valores fuera de rango (el campo permite teclear cualquier número)
     const c = this.criteriosComposicion;
-    c.total_casos = this.limitar(Math.trunc(Number(c.total_casos)) || 10, 1, this.MAX_CASOS);
+    c.total_casos = this.limitar(Math.trunc(Number(c.total_casos)) || 5, 1, this.MAX_CASOS);
     c.porcentaje_normales = this.limitar(Number.isFinite(Number(c.porcentaje_normales)) ? Math.round(Number(c.porcentaje_normales)) : 30, 0, 100);
 
     this.componiendoEjercicio = true;

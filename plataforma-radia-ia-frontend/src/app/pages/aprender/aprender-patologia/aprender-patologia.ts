@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription, combineLatest } from 'rxjs';
 import { AprendizajeService } from '../../../services/aprendizaje';
+import { AlertService } from '../../../services/alert.service';
 import { PracticaCaso } from '../../../components/practica-caso/practica-caso';
 import { environment } from '../../../../environments/environment';
 import { CLASES, nombreClase, colorClase } from '../../../utils/clases';
@@ -46,10 +47,13 @@ export class AprenderPatologia implements OnInit, OnDestroy {
   readonly colorClase = colorClase;
   private suscripcion?: Subscription;
 
+  restableciendo = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private aprendizajeService: AprendizajeService,
+    private alertService: AlertService,
     private cdr: ChangeDetectorRef
   ) {}
 
@@ -180,6 +184,31 @@ export class AprenderPatologia implements OnInit, OnDestroy {
 
   get aciertos(): number {
     return this.resultados.filter(r => r === 'acierto').length;
+  }
+
+  async restablecer(): Promise<void> {
+    const confirmado = await this.alertService.confirmDanger(
+      'Restablecer aprendizaje',
+      `Vas a restablecer tu aprendizaje de ${this.nombreClase(this.clase)}. Se borrará que ya viste la lección y el comparador, y tu historial de casos practicados de esta patología: volverá a quedar como si nunca la hubieras estudiado. Esta acción no se puede deshacer. ¿Deseas continuar?`,
+      'Sí, restablecer'
+    );
+    if (!confirmado) return;
+
+    this.restableciendo = true;
+    this.aprendizajeService.reiniciarClase(this.clase).subscribe({
+      next: () => {
+        this.restableciendo = false;
+        this.alertService.success('Aprendizaje restablecido', 'Esta patología volvió a empezar desde cero.');
+        this.reiniciarTodo();
+        this.irAPestana('leccion');
+        this.cargarLeccion();
+      },
+      error: (err) => {
+        this.restableciendo = false;
+        this.alertService.error('No se pudo restablecer', err.error?.message || 'Intenta de nuevo en un momento.');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   volverALaRuta(): void {

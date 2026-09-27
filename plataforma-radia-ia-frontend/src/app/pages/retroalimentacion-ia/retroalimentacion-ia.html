@@ -3,7 +3,7 @@
   <!-- BARRA SUPERIOR -->
   <header class="visor-header glass-panel">
     <div class="header-left">
-      <button class="btn-back" (click)="volverAlDashboard()" [disabled]="mostrarLikert || cargandoIA">
+      <button class="btn-back" (click)="volverAlDashboard()" [disabled]="cargandoIA">
         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         Volver a la Worklist
       </button>
@@ -43,16 +43,19 @@
 
       <div class="panel-section">
         <h3>CONCORDANCIA ESTUDIANTE-IA</h3>
-        <div class="alert-box" [ngClass]="resultadoIA.metricas.acierto_estudiante ? 'alert-success' : 'alert-error'">
-          {{ resultadoIA.metricas.acierto_estudiante ? '✅ ¡Excelente! Tu diagnóstico coincide con la inferencia de la IA.' : '⚠️ Discrepancia. Tu diagnóstico difiere del análisis de la red neuronal.' }}
+        <div class="alert-box" style="display: flex; align-items: center; gap: 8px;" [ngClass]="resultadoIA.metricas.acierto_estudiante ? 'alert-success' : 'alert-error'">
+          <svg *ngIf="resultadoIA.metricas.acierto_estudiante" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12 11 15 16 9"></polyline></svg>
+          <svg *ngIf="!resultadoIA.metricas.acierto_estudiante" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          <span>{{ resultadoIA.metricas.acierto_estudiante ? '¡Excelente! Tu diagnóstico coincide con la inferencia de la IA.' : 'Discrepancia. Tu diagnóstico difiere del análisis de la red neuronal.' }}</span>
         </div>
         <p class="helper-text" style="margin-top: 10px;">Nivel de Precisión Final: <strong class="highlight">{{ resultadoIA.metricas.nivel_precision }} ({{ resultadoIA.metricas.porcentaje_concordancia }}%)</strong></p>
       </div>
 
       <div class="panel-section">
         <h3>DIAGNÓSTICO AUTOMATIZADO</h3>
-        <div class="alert-box" style="background: rgba(0, 229, 255, 0.1); border-color: rgba(0,229,255,0.3); color: var(--accent-cyan);">
-          🧠 Hallazgos compatibles con: {{ resultadoIA.patologia }}
+        <div class="alert-box" style="display: flex; align-items: center; gap: 8px; background: rgba(0, 229, 255, 0.1); border-color: rgba(0,229,255,0.3); color: var(--accent-cyan);">
+          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+          <span>Hallazgos compatibles con: {{ resultadoIA.patologia }}</span>
         </div>
       </div>
 
@@ -69,41 +72,13 @@
           <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           DESCARGAR INFORME PDF
         </button>
-        <button class="btn-primary" (click)="abrirLikert()">
-          FINALIZAR Y EVALUAR PLATAFORMA
+        <button class="btn-primary" (click)="volverAlDashboard()">
+          FINALIZAR Y VOLVER A LA WORKLIST
         </button>
       </div>
 
     </aside>
   </main>
 
-  <!-- MODAL CUESTIONARIO LIKERT -->
-  <div class="modal-backdrop" *ngIf="mostrarLikert">
-    <div class="modal-card likert-modal glass-panel">
-      <div class="modal-header">
-        <h3>Evaluación de Percepción y Usabilidad</h3>
-        <p class="text-muted">Por favor, indica tu nivel de acuerdo con las siguientes afirmaciones (1 = Muy en desacuerdo, 5 = Muy de acuerdo).</p>
-      </div>
-      
-      <div class="modal-body">
-        <div class="likert-item" *ngFor="let item of encuesta; let i = index">
-          <p class="likert-question">{{ i + 1 }}. {{ item.pregunta }}</p>
-          <div class="likert-options">
-            <button class="btn-likert" [class.active]="item.puntaje === 1" (click)="seleccionarPuntaje(i, 1)">1</button>
-            <button class="btn-likert" [class.active]="item.puntaje === 2" (click)="seleccionarPuntaje(i, 2)">2</button>
-            <button class="btn-likert" [class.active]="item.puntaje === 3" (click)="seleccionarPuntaje(i, 3)">3</button>
-            <button class="btn-likert" [class.active]="item.puntaje === 4" (click)="seleccionarPuntaje(i, 4)">4</button>
-            <button class="btn-likert" [class.active]="item.puntaje === 5" (click)="seleccionarPuntaje(i, 5)">5</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn-primary" (click)="enviarLikert()" [disabled]="guardandoLikert">
-          {{ guardandoLikert ? 'Guardando...' : 'Enviar Respuestas y Finalizar' }}
-        </button>
-      </div>
-    </div>
-  </div>
 
 </div>

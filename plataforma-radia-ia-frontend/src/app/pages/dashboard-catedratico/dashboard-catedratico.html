@@ -10,18 +10,20 @@
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
           Informe PDF
         </button>
-        <button class="btn-primary btn-icon" (click)="abrirModalLikert()">
-          <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
-          Métricas Likert
-        </button>
-
       </div>
   </header>
+
+  <!-- Aviso: si el backend académico falla, se dice explícitamente en vez de dejar todo en 0 -->
+  <div class="banner-advertencia" *ngIf="errorCarga">
+    <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    <span>{{ errorCarga }}</span>
+    <button type="button" (click)="cargarDatosReales()">Reintentar</button>
+  </div>
 
   <!-- Tarjetas Globales del Docente -->
   <section class="stats-grid">
     <div class="stat-card glass-panel">
-      <div class="stat-icon" style="color: var(--accent-cyan);">
+      <div class="stat-icon primary">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
       </div>
       <div class="stat-info">
@@ -31,7 +33,7 @@
     </div>
 
     <div class="stat-card glass-panel">
-      <div class="stat-icon" style="color: #00e5ff;">
+      <div class="stat-icon primary">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
       </div>
       <div class="stat-info">
@@ -41,7 +43,7 @@
     </div>
 
     <div class="stat-card glass-panel">
-      <div class="stat-icon" style="color: #00ff88;">
+      <div class="stat-icon success">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
       </div>
       <div class="stat-info">
@@ -51,7 +53,7 @@
     </div>
 
     <div class="stat-card glass-panel">
-      <div class="stat-icon" style="color: #ffaa00;">
+      <div class="stat-icon warning">
         <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
       </div>
       <div class="stat-info">
@@ -84,26 +86,36 @@
   <section class="students-section">
     <div class="section-header">
       <h2>SUPERVISIÓN INDIVIDUAL DE ALUMNOS ({{ alumnosFiltrados.length }})</h2>
-      <span class="badge-sub">Evaluación por Rúbrica & IA</span>
+      <span class="badge-sub">Evaluación por Rúbrica</span>
     </div>
 
     <div class="table-container glass-panel">
       <!-- Estado de Carga -->
       <div *ngIf="cargando" style="padding: 50px 20px; text-align: center;">
-        <div class="spinner" style="margin: 0 auto; border-color: rgba(0, 229, 255, 0.2); border-top-color: var(--accent-cyan); border-width: 3px; width: 40px; height: 40px;"></div>
+        <div class="spinner" style="margin: 0 auto; border-color: var(--accent-wash-strong); border-top-color: var(--accent-cyan); border-width: 3px; width: 40px; height: 40px;"></div>
         <p style="color: var(--text-muted); margin-top: 15px;">Cargando lista de estudiantes...</p>
       </div>
 
       <!-- Empty State (No hay estudiantes registrados) -->
-      <div *ngIf="!cargando && alumnos.length === 0" class="empty-state" style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
+      <div *ngIf="!cargando && !errorCarga && alumnos.length === 0" class="empty-state" style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
         <svg viewBox="0 0 24 24" width="64" height="64" stroke="currentColor" stroke-width="1.5" fill="none" style="margin-bottom: 15px; opacity: 0.5;">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
         </svg>
-        <h3 style="color: #fff; margin: 0 0 10px 0; font-size: 18px;">Aún no tienes estudiantes</h3>
+        <h3 style="color: var(--text-main); margin: 0 0 10px 0; font-size: 18px;">Aún no tienes estudiantes</h3>
         <p style="margin: 0; font-size: 14px;">No hay alumnos matriculados en tus cursos asignados.</p>
+      </div>
+
+      <!-- Empty State (Fue un fallo de carga, no que realmente no haya estudiantes) -->
+      <div *ngIf="!cargando && errorCarga && alumnos.length === 0" class="empty-state" style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
+        <svg viewBox="0 0 24 24" width="56" height="56" stroke="var(--warning-yellow)" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 15px;">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <h3 style="color: var(--text-main); margin: 0 0 10px 0; font-size: 18px;">No se pudo cargar la lista</h3>
+        <p style="margin: 0 0 15px 0; font-size: 14px;">Intenta recargar; puede que sí tengas estudiantes inscritos.</p>
+        <button type="button" class="btn-secondary" (click)="cargarDatosReales()">Reintentar</button>
       </div>
 
       <!-- Empty State (Filtros no dieron resultados pero si hay estudiantes) -->
@@ -363,52 +375,5 @@
     </div>
   </div>
 
-  <!-- MODAL: MÉTRICAS LIKERT -->
-  <div class="modal-backdrop" *ngIf="modalLikertAbierto" (click)="cerrarModalLikert()">
-    <div class="modal-card likert-stats-modal glass-panel" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Métricas de Percepción y Usabilidad</h3>
-        <button class="btn-close" (click)="cerrarModalLikert()">×</button>
-      </div>
-      
-      <div class="modal-body" style="padding: 30px;">
-        <div class="loading-state" *ngIf="cargandoLikert">
-          <div class="spinner"></div>
-          <p>Calculando promedios...</p>
-        </div>
-
-        <div class="likert-content" *ngIf="!cargandoLikert">
-          
-          <div class="likert-summary">
-            <div class="global-score">
-              <h2>{{ promedioGlobalLikert }}<span style="font-size: 20px; color: var(--text-muted);">/5.0</span></h2>
-              <p>Promedio Global del Sistema</p>
-            </div>
-            <p class="helper-text" style="text-align: center; margin-top: 10px;">
-              Basado en las encuestas de percepción llenadas por los estudiantes tras utilizar la Inferencia de IA.
-            </p>
-          </div>
-
-          <div class="likert-bars" style="margin-top: 30px;">
-            <div class="likert-bar-item" *ngFor="let m of metricasLikert">
-              <div class="bar-labels">
-                <span class="bar-dimension">{{ m.dimension }}</span>
-                <span class="bar-score">{{ m.promedio }} / 5.0 ({{ m.total_respuestas }} votos)</span>
-              </div>
-              <div class="bar-track">
-                <!-- Se calcula el porcentaje en base a 5: ej. (4.5 / 5) * 100 -->
-                <div class="bar-fill" [style.width]="(m.promedio / 5) * 100 + '%'"></div>
-              </div>
-            </div>
-            
-            <div *ngIf="metricasLikert.length === 0" class="no-data">
-              No hay suficientes datos. Los estudiantes aún no han respondido la encuesta Likert.
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </div>
-  </div>
 
 </div>

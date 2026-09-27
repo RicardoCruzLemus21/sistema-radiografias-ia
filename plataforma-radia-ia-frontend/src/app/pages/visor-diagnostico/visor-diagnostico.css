@@ -376,7 +376,7 @@ textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 
 
 .score-card h4 {
   margin: 0 0 5px 0;
-  color: #f4f4f5;
+  color: var(--text-main);
   font-size: 1rem;
 }
 

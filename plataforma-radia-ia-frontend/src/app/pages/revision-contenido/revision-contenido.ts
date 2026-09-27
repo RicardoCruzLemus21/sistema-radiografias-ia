@@ -134,12 +134,24 @@ export class RevisionContenido implements OnInit, OnDestroy {
     });
   }
 
-  cambiarEstado(e: any, estado: 'aprobada' | 'rechazada' | 'pendiente'): void {
+  async cambiarEstado(e: any, estado: 'aprobada' | 'rechazada' | 'pendiente'): Promise<void> {
+    // Rechazar retira de inmediato el contenido de lo que ven los estudiantes: se confirma para
+    // que un clic accidental en la lista no lo oculte sin querer.
+    if (estado === 'rechazada') {
+      const confirmado = await this.alertService.confirm(
+        'Rechazar contenido',
+        `Se ocultará esta explicación de ${nombreClase(e.clase_marcada)} para los estudiantes hasta que la apruebes de nuevo. ¿Continuar?`,
+        'Sí, rechazar'
+      );
+      if (!confirmado) return;
+    }
+
     this.procesandoId = e.id_explicacion;
     this.aprendizajeService.revisarExplicacion(e.id_explicacion, e.contenido, estado).subscribe({
       next: () => {
         this.procesandoId = null;
         this.actualizarLocal(e.id_explicacion, { estado });
+        this.alertService.toast(estado === 'aprobada' ? 'Contenido aprobado' : 'Contenido rechazado', estado === 'aprobada' ? 'success' : 'warning');
         this.cdr.detectChanges();
       },
       error: (err) => {

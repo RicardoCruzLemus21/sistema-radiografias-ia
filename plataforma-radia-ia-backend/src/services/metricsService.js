@@ -31,36 +31,6 @@ const guardarCalificacionRubrica = async (bodyData) => {
     }
 };
 
-// 2. Guardar las respuestas de la encuesta Likert (Variable 3)
-const guardarRespuestasLikert = async (bodyData) => {
-    const { id_cuestionario, id_estudiante, respuestas } = bodyData;
-    // respuestas será un array: [{ dimension_evaluada: 'Educativa', puntaje: 4 }, ...]
-
-    const connection = await pool.getConnection();
-    try {
-        await connection.beginTransaction();
-
-        if (respuestas && respuestas.length > 0) {
-            for (const r of respuestas) {
-                await connection.query('CALL sp_guardar_respuesta_likert(?, ?, ?, ?)', [id_cuestionario, id_estudiante, r.dimension_evaluada, r.puntaje]);
-            }
-        }
-
-        await connection.commit();
-
-        return {
-            id_estudiante,
-            respuestas_registradas: respuestas.length,
-            mensaje: "Respuestas del cuestionario Likert registradas para medición científica."
-        };
-    } catch (error) {
-        await connection.rollback();
-        throw error;
-    } finally {
-        connection.release();
-    }
-};
-
 // 3. Obtener las calificaciones de rúbrica ya guardadas para una evaluación (o los criterios vacíos si aún no se calificó)
 const obtenerCalificacionesEvaluacion = async (id_evaluacion) => {
     const [rows] = await pool.query('CALL sp_obtener_calificaciones_evaluacion(?)', [id_evaluacion]);
@@ -78,19 +48,8 @@ const obtenerCatalogosMetricas = async () => {
     }
 };
 
-const obtenerResultadosLikert = async () => {
-    try {
-        const [resultadosArray] = await pool.query('CALL sp_obtener_resultados_likert()');
-        return resultadosArray[0];
-    } catch (error) {
-        throw error;
-    }
-};
-
 module.exports = {
     guardarCalificacionRubrica,
-    guardarRespuestasLikert,
     obtenerCatalogosMetricas,
-    obtenerResultadosLikert,
     obtenerCalificacionesEvaluacion
 };

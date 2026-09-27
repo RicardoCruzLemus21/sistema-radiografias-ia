@@ -2,7 +2,12 @@
 
   <header class="patologia-cabecera">
     <button type="button" class="btn-link" (click)="volverALaRuta()">&larr; Ruta de aprendizaje</button>
-    <h1><span class="clase-punto" [style.background]="colorClase(clase)"></span>{{ nombreClase(clase) }}</h1>
+    <div class="cabecera-fila">
+      <h1><span class="clase-punto" [style.background]="colorClase(clase)"></span>{{ nombreClase(clase) }}</h1>
+      <button type="button" class="btn-restablecer" [disabled]="restableciendo" (click)="restablecer()">
+        {{ restableciendo ? 'Restableciendo...' : 'Restablecer aprendizaje' }}
+      </button>
+    </div>
   </header>
 
   <nav class="pestanas" role="tablist">

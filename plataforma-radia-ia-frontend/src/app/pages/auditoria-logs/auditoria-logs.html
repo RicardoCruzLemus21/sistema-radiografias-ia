@@ -3,6 +3,7 @@
     <div class="header-titles">
       <h1>Auditoría y Actividad del Sistema</h1>
       <p>Monitoreo en tiempo real de las acciones de los usuarios en la plataforma.</p>
+      <p class="retencion-nota">Los registros se conservan 30 días; pasado ese tiempo se eliminan automáticamente.</p>
     </div>
     <div class="header-actions">
       <button class="btn-primary" (click)="cargarLogs()">
@@ -17,13 +18,13 @@
   <div class="timeline-container glass-panel" *ngIf="!cargando && logs.length > 0">
     <div class="timeline-item" *ngFor="let log of logs">
       <div class="timeline-icon" [ngClass]="getIconClass(log.accion)">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
       </div>
       <div class="timeline-content">
         <div class="timeline-header">
-          <strong>{{ log.nombre_completo }}</strong> 
+          <strong>{{ log.nombre_completo }}</strong>
           <span class="timeline-action">{{ log.accion }}</span>
-          <span class="timeline-time">{{ log.fecha_accion | date:'medium' }}</span>
+          <span class="timeline-time">{{ log.fecha_accion | date:'d MMM, h:mm a' }}</span>
         </div>
         <p class="timeline-detail">{{ log.detalle }}</p>
       </div>

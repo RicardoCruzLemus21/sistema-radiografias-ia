@@ -197,18 +197,26 @@ const generarInfoPatologia = async (patologia) => {
     return variantes[indiceAleatorio];
 };
 
-// Elimina un ejercicio completo con sus casos (solo si es de un curso del docente)
+// Elimina un ejercicio completo con sus casos (solo si es de un curso del docente).
+// Devuelve también id_curso/nombre (capturados ANTES de borrar) para poder avisarle a los
+// estudiantes del curso; el propio SP los borra como parte de la limpieza.
 const eliminarEjercicio = async (id_ejercicio, id_docente) => {
     const id = normalizarIdCurso(id_ejercicio);
     if (!id) throw new ErrorNegocio('Ejercicio no válido.');
     const conn = await pool.getConnection();
     try {
         await conn.beginTransaction();
+        const [filasEjercicio] = await conn.query('SELECT id_curso, nombre FROM Ejercicios WHERE id_ejercicio = ?', [id]);
+        const infoEjercicio = filasEjercicio[0] || null;
         const [res] = await conn.query('CALL sp_eliminar_ejercicio(?, ?)', [id, id_docente]);
         await conn.commit();
         const eliminados = res[0][0].casos_eliminados;
         if (!eliminados) throw new ErrorNegocio('Ese ejercicio no existe o no te pertenece.');
-        return eliminados;
+        return {
+            casos_eliminados: eliminados,
+            id_curso: infoEjercicio?.id_curso || null,
+            nombre: infoEjercicio?.nombre || 'un ejercicio'
+        };
     } catch (error) {
         await conn.rollback();
         throw error;

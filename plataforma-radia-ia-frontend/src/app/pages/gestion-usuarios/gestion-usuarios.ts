@@ -18,6 +18,9 @@ export class GestionUsuariosComponent implements OnInit {
   usuariosCargados: any[] = []; // Data original
   cargando: boolean = false;
 
+  // Si la tabla principal falla al cargar, se avisa en vez de dejarla vacía sin explicación.
+  errorCarga: string | null = null;
+
   filtroBusqueda: string = '';
 
   // Agrupaciones
@@ -99,7 +102,10 @@ export class GestionUsuariosComponent implements OnInit {
           this.aplicarFiltros();
         }
       },
-      error: (err) => console.error('Error al cargar roles:', err)
+      error: (err) => {
+        console.error('Error al cargar roles:', err);
+        this.alertService.toast('No se pudieron cargar los roles. Si vas a crear un usuario, recarga la página antes.', 'warning');
+      }
     });
   }
 
@@ -108,12 +114,16 @@ export class GestionUsuariosComponent implements OnInit {
       next: (res) => {
         this.catalogoCursos = res.data || [];
       },
-      error: (err) => console.error('Error al cargar catálogo de cursos:', err)
+      error: (err) => {
+        console.error('Error al cargar catálogo de cursos:', err);
+        this.alertService.toast('No se pudo cargar el catálogo de cursos.', 'warning');
+      }
     });
   }
 
   cargarUsuarios(): void {
     this.cargando = true;
+    this.errorCarga = null;
     this.userService.getUsuarios().subscribe({
       next: (resp) => {
         this.usuariosCargados = resp.data || [];
@@ -123,6 +133,7 @@ export class GestionUsuariosComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error al cargar usuarios:', err);
+        this.errorCarga = 'No se pudo cargar la lista de usuarios.';
         this.cargando = false;
         this.cdr.markForCheck();
       }

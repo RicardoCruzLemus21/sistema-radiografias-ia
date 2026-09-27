@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AprendizajeService } from '../../../services/aprendizaje';
+import { AlertService } from '../../../services/alert.service';
 import { nombreClase, colorClase } from '../../../utils/clases';
 
 @Component({
@@ -19,7 +20,14 @@ export class AprenderHub implements OnInit {
   readonly nombreClase = nombreClase;
   readonly colorClase = colorClase;
 
-  constructor(private aprendizajeService: AprendizajeService, private router: Router, private cdr: ChangeDetectorRef) {}
+  restableciendo: string | null = null;
+
+  constructor(
+    private aprendizajeService: AprendizajeService,
+    private alertService: AlertService,
+    private router: Router,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.aprendizajeService.resumen().subscribe({
@@ -47,6 +55,30 @@ export class AprenderHub implements OnInit {
 
   abrir(clase: string): void {
     this.router.navigate(['/sistema/aprender', clase]);
+  }
+
+  async restablecer(c: any, evento: Event): Promise<void> {
+    evento.stopPropagation();
+    const confirmado = await this.alertService.confirmDanger(
+      'Restablecer aprendizaje',
+      `Vas a restablecer tu aprendizaje de ${this.nombreClase(c.clase)}. Se borrará que ya viste la lección y el comparador, y tu historial de casos practicados de esta patología: volverá a quedar como si nunca la hubieras estudiado. Esta acción no se puede deshacer. ¿Deseas continuar?`,
+      'Sí, restablecer'
+    );
+    if (!confirmado) return;
+
+    this.restableciendo = c.clase;
+    this.aprendizajeService.reiniciarClase(c.clase).subscribe({
+      next: () => {
+        this.restableciendo = null;
+        this.alertService.success('Aprendizaje restablecido', `${this.nombreClase(c.clase)} volvió a empezar desde cero. Cuando quieras, repásala de nuevo.`);
+        this.ngOnInit();
+      },
+      error: (err) => {
+        this.restableciendo = null;
+        this.alertService.error('No se pudo restablecer', err.error?.message || 'Intenta de nuevo en un momento.');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   irRepaso(): void {

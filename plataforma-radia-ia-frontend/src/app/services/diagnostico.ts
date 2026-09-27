@@ -49,12 +49,6 @@ export class DiagnosticoService {
     return this.http.delete(`${this.apiUrl}/evaluacion/${id_evaluacion}`, { headers: this.authService.getAuthHeaders() });
   }
 
-  // Guardar Encuesta Likert
-  guardarLikert(datos: any): Observable<any> {
-    const headers = this.authService.getAuthHeaders();
-    return this.http.post<any>(`${this.metricsUrl}/likert`, datos, { headers });
-  }
-
   // Obtener el catálogo de criterios de la rúbrica
   getCatalogosMetricas(): Observable<any> {
     return this.http.get<any>(`${this.metricsUrl}/catalogos`, { headers: this.authService.getAuthHeaders() });

@@ -19,7 +19,6 @@ export class BibliotecaPatologias implements OnInit {
   patologiaSeleccionada: any = null;
   cargandoIA: boolean = false;
   infoIA: any = null;
-  varianteActual: number = 1;
 
   constructor(
     private diagnosticoService: DiagnosticoService,
@@ -52,7 +51,6 @@ export class BibliotecaPatologias implements OnInit {
     this.modalAbierto = true;
     this.cargandoIA = true;
     this.infoIA = null;
-    this.varianteActual = Math.floor(Math.random() * 5) + 1;
     this.cdr.markForCheck();
 
     this.clinicalService.obtenerInfoPatologiaIA(patologia.nombre).subscribe({
@@ -77,14 +75,16 @@ export class BibliotecaPatologias implements OnInit {
     });
   }
 
+  // Una sola imagen de referencia por patolog\u00eda (las 5 variantes que hab\u00eda en assets eran copias
+  // id\u00e9nticas del mismo archivo: mostraban "Ejemplo X de 5" pero siempre era la misma imagen).
   getImageForPatologia(nombre: string): string {
     if (!nombre) return `assets/patologias/normal_1.jpg`;
-    
+
     const normalize = nombre.toLowerCase()
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita acentos
       .replace(/\s+/g, '_');
-      
-    return `assets/patologias/${normalize}_${this.varianteActual}.jpg`;
+
+    return `assets/patologias/${normalize}_1.jpg`;
   }
 
   cerrarModal() {

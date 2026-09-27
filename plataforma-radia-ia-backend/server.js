@@ -26,6 +26,7 @@ const auditRoutes = require('./src/routes/auditRoutes');
 const userRoutes = require('./src/routes/userRoutes');
 const modeloRoutes = require('./src/routes/modeloRoutes');
 const aprendizajeRoutes = require('./src/routes/aprendizajeRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 
 // ==========================================
 // REGISTRO DE ENDPOINTS REST
@@ -43,8 +44,10 @@ app.use('/api/audit', auditRoutes);         // Visor de Auditoría (Timeline)
 app.use('/api/modelo', modeloRoutes);       // Ficha del modelo de IA (estadísticas)
 app.use('/api/aprendizaje', aprendizajeRoutes); // Módulo de aprendizaje: ruta por patología, repaso y errores
 app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)
+app.use('/api/admin', adminRoutes);         // Panel de Administración: KPIs globales del sistema
 
 const iaService = require('./src/services/iaService');
+const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
 
 const PORT = process.env.PORT || 3000;
 
@@ -67,4 +70,6 @@ app.listen(PORT, async () => {
     console.log(`🛡️  Módulo 5 (AI Engine API): EN LÍNEA`);
     console.log(`🛡️  Módulo 6 (Metrics & Likert API): EN LÍNEA`);
     console.log(`=================================================\n`);
+
+    iniciarLimpiezaProgramada(); // Auditoría: retiene solo los últimos 30 días
 });

@@ -60,5 +60,14 @@
 .fin-sesion .barra { margin-bottom: 14px; }
 
 .visor-ampliado { position: fixed; inset: 0; z-index: 3000; background: rgba(0, 0, 0, 0.94); display: flex; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
-.visor-ampliado img { max-width: 100%; max-height: 100%; object-fit: contain; cursor: default; }
+.visor-ampliado img { height: 100%; width: auto; max-width: 100%; object-fit: contain; cursor: default; }
 .visor-cerrar { position: absolute; top: 14px; right: 20px; width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255, 255, 255, 0.15); color: #fff; font-size: 26px; cursor: pointer; }
+
+.cabecera-fila { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; width: 100%; }
+.cabecera-fila h1 { flex: 1; min-width: 0; }
+.btn-restablecer {
+  padding: 9px 16px; border-radius: 10px; cursor: pointer; background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; font-size: 13px; font-weight: 600; white-space: nowrap;
+}
+.btn-restablecer:hover:not(:disabled) { background: rgba(239, 68, 68, 0.12); border-color: #ef4444; }
+.btn-restablecer:disabled { opacity: 0.5; cursor: wait; }

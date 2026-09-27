@@ -108,14 +108,6 @@ export class AcademicService {
     });
   }
 
-  // Obtiene los resultados promediados de Likert desde el módulo de métricas
-  getResultadosLikert(): Observable<any> {
-    const metricsUrl = `${environment.apiUrl}/api/metricas`;
-    return this.http.get<any>(`${metricsUrl}/likert/resultados`, {
-      headers: this.authService.getAuthHeaders()
-    });
-  }
-
   // Edita los datos básicos de un estudiante
   editarEstudiante(id_estudiante: string, datos: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/estudiante/${id_estudiante}`, datos, {

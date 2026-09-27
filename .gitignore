@@ -1,1 +1,5 @@
 .env
+
+# Backups de la base de datos: contienen datos reales de estudiantes (nombres, correos, carnés,
+# contraseñas con hash) y son pesados; no deben subirse al repositorio.
+/db_backups/

@@ -148,6 +148,8 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
   @HostListener('window:resize')
   alCambiarTamano(): void {
     if (this.modoRevision) this.ubicarMarcadorGuardado();
+    // Recalcula también las capas del visor ampliado (Grad-CAM, BBox del NIH) si está abierto
+    this.cdr.detectChanges();
   }
 
   // En revisión se puede repasar la verdad, la opinión de la IA y la discusión (la lectura a ciegas ya no se repite)
@@ -247,10 +249,18 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
 
   abrirFullscreen() {
     this.fullscreenAbierto = true;
+    // La imagen ampliada aún no existe en el DOM en este mismo ciclo: se recalculan las capas
+    // (Grad-CAM y BBox del NIH) apenas Angular la pinte, y de nuevo si el usuario redimensiona la ventana.
+    setTimeout(() => this.cdr.detectChanges(), 0);
   }
 
   cerrarFullscreen() {
     this.fullscreenAbierto = false;
+  }
+
+  // Al cargar la imagen ampliada recién se conoce su tamaño real renderizado (offsetWidth/Height)
+  alCargarImagenFullscreen(): void {
+    this.cdr.detectChanges();
   }
 
   // --- LÓGICA DE DIBUJO DE RECTÁNGULO EN LA IMAGEN ---
@@ -309,8 +319,9 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
 
   // Recuadro real del radiólogo: llega en proporciones (0-1) de la imagen; se convierte a píxeles del
   // contenedor usando la posición real de la imagen dentro de él (offsetLeft/Width ignoran el zoom).
-  estiloCajaReal(caja: any): Record<string, string> {
-    const img = document.querySelector('.image-container .xray-image') as HTMLElement | null;
+  // El selector es parametrizable para poder ubicar la misma capa sobre la imagen del visor ampliado (fullscreen).
+  estiloCajaReal(caja: any, selector: string = '.image-container .xray-image'): Record<string, string> {
+    const img = document.querySelector(selector) as HTMLElement | null;
     if (!img || !caja) return { display: 'none' };
     return {
       left: (img.offsetLeft + caja.x * img.offsetWidth) + 'px',
@@ -330,16 +341,18 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     return `${environment.apiUrl}/${limpia.startsWith('uploads/') ? limpia : 'uploads/banco_casos/' + limpia}`;
   }
 
-  // Coloca una capa exactamente sobre la radiografía (mismo recuadro y mismo zoom)
-  estiloCapaSobreImagen(): Record<string, string> {
-    const img = document.querySelector('.image-container .xray-image') as HTMLElement | null;
+  // Coloca una capa exactamente sobre la radiografía (mismo recuadro y mismo zoom).
+  // El selector es parametrizable para reutilizar esto también en el visor ampliado (fullscreen),
+  // donde no hay control de zoom propio.
+  estiloCapaSobreImagen(selector: string = '.image-container .xray-image', aplicarZoom: boolean = true): Record<string, string> {
+    const img = document.querySelector(selector) as HTMLElement | null;
     if (!img) return { display: 'none' };
     return {
       left: img.offsetLeft + 'px',
       top: img.offsetTop + 'px',
       width: img.offsetWidth + 'px',
       height: img.offsetHeight + 'px',
-      transform: 'scale(' + this.zoomLevel + ')'
+      transform: 'scale(' + (aplicarZoom ? this.zoomLevel : 1) + ')'
     };
   }
 
@@ -363,9 +376,9 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  enviarDiagnostico() {
+  async enviarDiagnostico(): Promise<void> {
     const patologiasSeleccionadas = this.patologias.filter(p => p.seleccionada).map(p => p.id);
-    
+
     if (patologiasSeleccionadas.length === 0) {
       this.alertService.warning("Selección Requerida", "Por favor, selecciona al menos una patología antes de enviar el diagnóstico.");
       return;
@@ -382,6 +395,16 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
       this.alertService.error('Sesión no válida', 'No se pudo identificar tu usuario. Vuelve a iniciar sesión antes de enviar el diagnóstico.');
       return;
     }
+
+    // Es un envío sin vuelta atrás: una vez bloqueada, la respuesta ya no se puede cambiar y la
+    // Fase 2 revela el diagnóstico real. Se confirma antes de cerrar la puerta.
+    const nombresElegidos = this.patologias.filter(p => p.seleccionada).map(p => p.nombre).join(', ');
+    const confirmado = await this.alertService.confirm(
+      'Bloquear tu respuesta',
+      `Vas a enviar como diagnóstico: ${nombresElegidos}. Una vez bloqueada no podrás modificarla, y a continuación verás el diagnóstico real del caso. ¿Confirmas que es tu respuesta final?`,
+      'Sí, bloquear y continuar'
+    );
+    if (!confirmado) return;
 
     const tiempoTranscurrido = Math.floor((Date.now() - this.horaInicioAnalisis) / 1000);
 

@@ -62,6 +62,18 @@ const notificarEjercicioPublicado = (id_curso, nombreEjercicio, totalCasos) => s
         `Tu docente publicó "${nombreEjercicio}" con ${totalCasos} ${totalCasos === 1 ? 'caso' : 'casos'} en ${nombreCurso}. Ingresa a tu worklist para resolverlo.`);
 });
 
+// El docente eliminó un ejercicio: avisa a todos los estudiantes del curso (sus intentos y
+// calificaciones de esos casos también se borraron).
+const notificarEjercicioEliminado = (id_curso, nombreEjercicio) => seguro('ejercicio eliminado', async () => {
+    const [curso] = await pool.query('CALL sp_datos_curso_notificacion(?)', [id_curso]);
+    const [est] = await pool.query('CALL sp_ids_estudiantes_curso(?)', [id_curso]);
+    const ids = est[0].map(e => e.id_estudiante);
+    if (ids.length === 0) return;
+    const nombreCurso = curso[0][0]?.nombre_curso || 'tu curso';
+    await enviarNotificacionMasiva(ids, 'Ejercicio eliminado',
+        `Tu docente eliminó "${nombreEjercicio}" de ${nombreCurso}. Tus intentos y calificaciones de esos casos ya no están disponibles.`);
+});
+
 // Un estudiante respondió un caso: si con eso termina el ejercicio, avisa a su docente (un aviso por ejercicio, no uno por caso).
 // Los casos sueltos, sin ejercicio, se avisan de uno en uno.
 const notificarProgresoDelEstudiante = (id_estudiante, id_caso) => seguro('progreso del estudiante', async () => {
@@ -101,6 +113,7 @@ const notificarMatricula = (id_estudiante, id_curso) => seguro('matrícula', asy
 
 module.exports = {
     notificarEjercicioPublicado,
+    notificarEjercicioEliminado,
     notificarProgresoDelEstudiante,
     notificarComentarioDelDocente,
     notificarNuevoEstudiante,

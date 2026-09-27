@@ -228,8 +228,12 @@ const asignarCasosBanco = async (req, res) => {
 
 const eliminarEjercicio = async (req, res) => {
     try {
-        const eliminados = await clinicalService.eliminarEjercicio(req.params.id, req.usuario.id_usuario);
-        res.status(200).json({ status: 'success', data: { casos_eliminados: eliminados } });
+        const resultado = await clinicalService.eliminarEjercicio(req.params.id, req.usuario.id_usuario);
+        // Avisa a los estudiantes del curso (sin esperar: el ejercicio ya quedó eliminado igual)
+        if (resultado.id_curso) {
+            notificationService.notificarEjercicioEliminado(resultado.id_curso, resultado.nombre);
+        }
+        res.status(200).json({ status: 'success', data: { casos_eliminados: resultado.casos_eliminados } });
     } catch (error) {
         res.status(estadoError(error)).json({ status: 'error', message: error.message });
     }

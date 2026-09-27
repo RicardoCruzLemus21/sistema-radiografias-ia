@@ -35,6 +35,7 @@ router.delete('/estudiante/:id', academicController.eliminarEstudiante);
 
 // Endpoints de Edición y Eliminación de Cursos
 router.put('/curso/:id', academicController.editarCurso);
-router.delete('/curso/:id', academicController.eliminarCurso);
+// El docente puede editar su curso, pero NO eliminarlo (borra en cascada casos/evaluaciones de sus alumnos)
+router.delete('/curso/:id', verificarRol(['admin']), academicController.eliminarCurso);
 
 module.exports = router;

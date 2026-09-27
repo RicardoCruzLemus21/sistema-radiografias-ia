@@ -9,6 +9,7 @@ router.use(verificarToken);
 router.get('/resumen', verificarRol(['estudiante']), c.resumen);
 router.get('/leccion/:clase', verificarRol(['estudiante']), c.leccion);
 router.post('/leccion/:clase/paso', verificarRol(['estudiante']), c.marcarPaso);
+router.post('/reiniciar/:clase', verificarRol(['estudiante']), c.reiniciarClase);
 router.get('/comparador', verificarRol(['estudiante']), c.comparador);
 router.get('/sesion/:clase', verificarRol(['estudiante']), c.sesion);
 router.post('/responder', verificarRol(['estudiante']), c.responder);

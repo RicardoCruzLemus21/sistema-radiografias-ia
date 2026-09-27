@@ -22,6 +22,11 @@ export class DashboardEstudiante implements OnInit {
 
   worklist: any[] = [];
 
+  // Si el backend falla, se avisa en vez de dejar el panel vacío sin explicación (indistinguible
+  // de "de verdad no tienes nada pendiente").
+  errorEstadisticas: string | null = null;
+  errorWorklist: string | null = null;
+
   // La worklist se agrupa por ejercicio (carpeta desplegable con sus casos)
   gruposAbiertos = new Set<number>();
 
@@ -88,6 +93,7 @@ export class DashboardEstudiante implements OnInit {
   }
 
   cargarEstadisticasReales() {
+    this.errorEstadisticas = null;
     this.clinicalService.getEstadisticasEstudiante().subscribe({
       next: (res: any) => {
         if (res && res.data) {
@@ -96,12 +102,17 @@ export class DashboardEstudiante implements OnInit {
           this.cdr.detectChanges();
         }
       },
-      error: (err) => console.error('Error al cargar estadísticas del estudiante:', err)
+      error: (err) => {
+        console.error('Error al cargar estadísticas del estudiante:', err);
+        this.errorEstadisticas = 'No se pudieron cargar tus estadísticas. Los números de arriba pueden no ser correctos.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
   cargarWorklistReal() {
     this.cargando = true;
+    this.errorWorklist = null;
     this.clinicalService.getWorklistEstudiante().subscribe({
       next: (datosBackend: any[]) => {
         if (Array.isArray(datosBackend) && datosBackend.length > 0) {
@@ -111,11 +122,12 @@ export class DashboardEstudiante implements OnInit {
           this.cargarCasosSimulados();
         }
         this.cargando = false;
-        this.cdr.detectChanges(); 
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Backend de worklist no disponible, cargando casos predeterminados:', err);
+        console.warn('Backend de worklist no disponible:', err);
         this.cargarCasosSimulados();
+        this.errorWorklist = 'No se pudo cargar tu worklist. Esto NO significa que estés al día: intenta recargar la página.';
         this.cargando = false;
         this.cdr.detectChanges();
       }

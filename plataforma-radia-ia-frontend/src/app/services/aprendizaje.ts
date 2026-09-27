@@ -30,6 +30,11 @@ export class AprendizajeService {
     return this.http.post<any>(`${this.api}/leccion/${encodeURIComponent(clase)}/paso`, { paso }, this.opciones());
   }
 
+  // Reinicia el aprendizaje de una sola patología (lección, comparador, casos guiados y repaso de esa categoría)
+  reiniciarClase(clase: string): Observable<any> {
+    return this.http.post<any>(`${this.api}/reiniciar/${encodeURIComponent(clase)}`, {}, this.opciones());
+  }
+
   comparador(clase: string, contra: string): Observable<any> {
     return this.http.get<any>(`${this.api}/comparador`, { ...this.opciones(), params: { clase, contra } });
   }

@@ -18,6 +18,7 @@ module.exports = {
     resumen: manejar((req) => aprendizajeService.obtenerResumen(idEstudiante(req)), 'resumen'),
     leccion: manejar((req) => aprendizajeService.obtenerLeccion(req.params.clase), 'lección'),
     marcarPaso: manejar(async (req) => { await aprendizajeService.marcarPaso(idEstudiante(req), req.params.clase, req.body?.paso); return { ok: true }; }, 'paso'),
+    reiniciarClase: manejar(async (req) => { await aprendizajeService.reiniciarClase(idEstudiante(req), req.params.clase); return { ok: true }; }, 'reiniciar clase'),
     comparador: manejar((req) => aprendizajeService.obtenerComparador(idEstudiante(req), req.query.clase, req.query.contra), 'comparador'),
     sesion: manejar((req) => aprendizajeService.obtenerSesionGuiada(idEstudiante(req), req.params.clase), 'sesión'),
     responder: manejar((req) => aprendizajeService.responder(idEstudiante(req), req.body || {}), 'responder'),

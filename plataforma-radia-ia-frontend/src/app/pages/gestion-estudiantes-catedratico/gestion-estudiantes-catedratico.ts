@@ -18,15 +18,24 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
   filtroTexto: string = '';
   cargando: boolean = false;
 
+  // Si el backend falla, se avisa: sin esto, la tabla vacía o "mi curso" en blanco se ve como
+  // si el docente de verdad no tuviera estudiantes o curso asignado.
+  errorCarga: string | null = null;
+  errorCurso: string | null = null;
+
   // --- MI CURSO ---
+  // Estándar de periodos académicos: cubre las 3 formas en que se organiza un ciclo (no se deja
+  // como texto libre para que no queden cursos con "Semestre 1", "1er semestre", "Sem I", etc.)
+  readonly TIPOS_CICLO = [
+    'Primer Bimestre', 'Segundo Bimestre', 'Tercer Bimestre', 'Cuarto Bimestre',
+    'Primer Trimestre', 'Segundo Trimestre', 'Tercer Trimestre',
+    'Primer Semestre', 'Segundo Semestre'
+  ];
   misCursos: any[] = [];
   cursoActual: any = null;
   modalEditarCursoAbierto: boolean = false;
   guardandoCurso: boolean = false;
   cursoEditando: any = { id_curso: null, nombre_curso: '', semestre: '', anio: null };
-
-  modalEliminarCursoAbierto: boolean = false;
-  eliminandoCurso: boolean = false;
 
   // --- EDITAR/ELIMINAR ESTUDIANTE ---
   modalEditarAlumnoAbierto: boolean = false;
@@ -51,13 +60,18 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
 
   // --- MI CURSO ---
   cargarMiCurso(): void {
+    this.errorCurso = null;
     this.academicService.getMisCursos().subscribe({
       next: (resp: any) => {
         this.misCursos = resp.data || [];
         this.cursoActual = this.misCursos.length > 0 ? this.misCursos[0] : null;
         this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error obteniendo el curso del catedrático:', err)
+      error: (err) => {
+        console.error('Error obteniendo el curso del catedrático:', err);
+        this.errorCurso = 'No se pudo cargar tu curso. Puede que sí tengas uno asignado.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -89,33 +103,6 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
       error: (err) => {
         this.guardandoCurso = false;
         this.alertService.error('Error', err.error?.message || 'No se pudo actualizar el curso.');
-      }
-    });
-  }
-
-  abrirModalEliminarCurso(): void {
-    this.modalEliminarCursoAbierto = true;
-  }
-
-  cerrarModalEliminarCurso(): void {
-    this.modalEliminarCursoAbierto = false;
-  }
-
-  confirmarEliminarCurso(): void {
-    if (!this.cursoActual) return;
-    this.eliminandoCurso = true;
-    this.academicService.eliminarCurso(this.cursoActual.id_curso).subscribe({
-      next: () => {
-        this.eliminandoCurso = false;
-        this.cerrarModalEliminarCurso();
-        this.alertService.success('Curso eliminado', 'El curso y todos sus casos/evaluaciones asociados fueron eliminados.');
-        this.cargarMiCurso();
-        this.cargarDatos();
-      },
-      error: (err) => {
-        this.eliminandoCurso = false;
-        this.cerrarModalEliminarCurso();
-        this.alertService.error('Error al eliminar', err.error?.message || 'No se pudo eliminar el curso.');
       }
     });
   }
@@ -181,6 +168,7 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
 
   cargarDatos(): void {
     this.cargando = true;
+    this.errorCarga = null;
     this.academicService.getResumenGeneral().subscribe({
       next: (respuesta: any) => {
         const datos = respuesta.data || respuesta;
@@ -193,6 +181,7 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error cargando estudiantes:', err);
+        this.errorCarga = 'No se pudo cargar la lista de estudiantes.';
         this.cargando = false;
         this.cdr.detectChanges();
       }

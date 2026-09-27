@@ -29,6 +29,9 @@ export class DashboardCatedratico implements OnInit {
   filtroEstado: string = 'TODOS';
   cargando: boolean = false;
 
+  // Si el backend académico falla, se avisa: sin esto, "0 alumnos" se ve igual que un error real.
+  errorCarga: string | null = null;
+
   // Estado para el Modal de Expediente del Estudiante
   modalAbierto: boolean = false;
   estudianteSeleccionado: any = null;
@@ -49,12 +52,6 @@ export class DashboardCatedratico implements OnInit {
     correo_electronico: '',
     contrasena: ''
   };
-
-  // Estado para el Modal de Métricas Likert
-  modalLikertAbierto: boolean = false;
-  cargandoLikert: boolean = false;
-  metricasLikert: any[] = [];
-  promedioGlobalLikert: number = 0;
 
   constructor(
     private academicService: AcademicService,
@@ -181,6 +178,7 @@ export class DashboardCatedratico implements OnInit {
 
   cargarDatosReales(): void {
     this.cargando = true;
+    this.errorCarga = null;
     this.academicService.getResumenGeneral().subscribe({
       next: (respuesta: any) => {
         const datos = respuesta.data || respuesta;
@@ -195,8 +193,9 @@ export class DashboardCatedratico implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.warn('Backend académico no respondió datos, cargando datos de prueba controlados:', err);
+        console.error('Error al cargar el panel académico:', err);
         this.cargarDatosSimulados();
+        this.errorCarga = 'No se pudieron cargar tus datos académicos. Lo que ves abajo puede estar vacío o desactualizado.';
         this.aplicarFiltros();
         this.cargando = false;
         this.cdr.detectChanges();
@@ -436,36 +435,5 @@ export class DashboardCatedratico implements OnInit {
         this.cdr.detectChanges();
       }
     });
-  }
-
-  // --- MÉTODOS PARA MÉTRICAS LIKERT ---
-  
-  abrirModalLikert(): void {
-    this.modalLikertAbierto = true;
-    this.cargandoLikert = true;
-    
-    this.academicService.getResultadosLikert().subscribe({
-      next: (resp: any) => {
-        if (resp.data && resp.data.length > 0) {
-          this.metricasLikert = resp.data;
-          const sumaPromedios = this.metricasLikert.reduce((acc, curr) => acc + parseFloat(curr.promedio), 0);
-          this.promedioGlobalLikert = (sumaPromedios / this.metricasLikert.length).toFixed(1) as unknown as number;
-        } else {
-          this.metricasLikert = [];
-          this.promedioGlobalLikert = 0;
-        }
-        this.cargandoLikert = false;
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        console.error('Error al cargar métricas Likert:', err);
-        this.cargandoLikert = false;
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  cerrarModalLikert(): void {
-    this.modalLikertAbierto = false;
   }
 }

@@ -1,5 +1,34 @@
 .dashboard-container { display: flex; flex-direction: column; gap: 24px; max-width: 1300px; margin: 0 auto; }
 
+/* Aviso de fallo al cargar datos (no se confunde con "no tengo curso/estudiantes") */
+.banner-advertencia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 8px;
+  color: var(--warning-yellow);
+  font-size: 13px;
+  font-weight: 600;
+}
+.banner-advertencia svg { flex-shrink: 0; }
+.banner-advertencia span { flex: 1; color: var(--text-main); font-weight: 500; }
+.banner-advertencia button {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--warning-yellow);
+  color: var(--warning-yellow);
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.banner-advertencia button:hover { background: rgba(245, 158, 11, 0.15); }
+
 .dashboard-header {
   display: flex;
   justify-content: space-between;

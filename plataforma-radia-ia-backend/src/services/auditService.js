@@ -16,7 +16,18 @@ const obtenerLogs = async (limite = 50) => {
     return logs[0];
 };
 
+// Retención de 30 días: borra acciones y accesos más antiguos que eso. Se llama sola desde
+// src/jobs/purgaAuditoria.js (al iniciar el servidor y luego una vez al día).
+const purgarAntiguos = async () => {
+    const [resultado] = await pool.query('CALL sp_purgar_auditoria_antigua()');
+    return {
+        acciones_eliminadas: resultado[0][0].acciones_eliminadas,
+        accesos_eliminados: resultado[1][0].accesos_eliminados
+    };
+};
+
 module.exports = {
     registrarAccion,
-    obtenerLogs
+    obtenerLogs,
+    purgarAntiguos
 };
