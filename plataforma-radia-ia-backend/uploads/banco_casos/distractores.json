@@ -1,0 +1,37 @@
+{
+  "Atelectasia": [
+    "Infiltracion",
+    "Derrame Pleural",
+    "Cardiomegalia"
+  ],
+  "Cardiomegalia": [
+    "Infiltracion",
+    "Derrame Pleural",
+    "Atelectasia"
+  ],
+  "Derrame Pleural": [
+    "Infiltracion",
+    "Atelectasia",
+    "Cardiomegalia"
+  ],
+  "Infiltracion": [
+    "Derrame Pleural",
+    "Atelectasia",
+    "Cardiomegalia"
+  ],
+  "Neumonia": [
+    "Infiltracion",
+    "Derrame Pleural",
+    "Atelectasia"
+  ],
+  "Neumotorax": [
+    "Derrame Pleural",
+    "Infiltracion",
+    "Atelectasia"
+  ],
+  "Nodulos": [
+    "Infiltracion",
+    "Atelectasia",
+    "Derrame Pleural"
+  ]
+}

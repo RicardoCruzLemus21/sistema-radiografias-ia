@@ -1,0 +1,26 @@
+{
+  "Cardiomegalia": {
+    "acierto": 0.9710144927536232,
+    "n": 138
+  },
+  "Nodulos": {
+    "acierto": 0.10344827586206896,
+    "n": 29
+  },
+  "Neumotorax": {
+    "acierto": 0.2972972972972973,
+    "n": 37
+  },
+  "Atelectasia": {
+    "acierto": 0.3617021276595745,
+    "n": 47
+  },
+  "Neumonia": {
+    "acierto": 0.3620689655172414,
+    "n": 116
+  },
+  "Derrame Pleural": {
+    "acierto": 0.4594594594594595,
+    "n": 37
+  }
+}
