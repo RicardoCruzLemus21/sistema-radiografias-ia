@@ -46,6 +46,20 @@ app.use('/api/aprendizaje', aprendizajeRoutes); // Módulo de aprendizaje: ruta 
 app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)
 app.use('/api/admin', adminRoutes);         // Panel de Administración: KPIs globales del sistema
 
+// TEMPORAL: diagnóstico de collation para depurar el despliegue en Railway. No expone datos
+// sensibles (solo variables de sesión de MySQL). Eliminar una vez resuelto.
+app.get('/api/diag-xyz987', async (req, res) => {
+    try {
+        const pool = require('./src/config/database');
+        const [vars] = await pool.query(
+            "SHOW VARIABLES WHERE Variable_name IN ('version','collation_connection','collation_server','collation_database','character_set_client','character_set_connection','character_set_server','default_collation_for_utf8mb4')"
+        );
+        res.json({ status: 'ok', vars });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+});
+
 const iaService = require('./src/services/iaService');
 const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
 const { aplicarMigracionCasing } = require('./src/jobs/migracionCasing');
