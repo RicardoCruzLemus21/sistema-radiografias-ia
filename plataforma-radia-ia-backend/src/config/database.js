@@ -8,6 +8,11 @@ const pool = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME, // Obliga a usar radia_ia_schema
+    // Las tablas se crearon con collation utf8mb4_unicode_ci (el default de MariaDB/XAMPP).
+    // MySQL 8 (Railway) por defecto negocia la sesión en utf8mb4_0900_ai_ci, lo que provocaba
+    // "Illegal mix of collations" al comparar parámetros de los procedimientos contra esas
+    // columnas. Fijar la collation de la conexión evita el choque sin tener que tocar las tablas.
+    charset: 'utf8mb4_unicode_ci',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
