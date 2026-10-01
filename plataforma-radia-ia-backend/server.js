@@ -46,6 +46,12 @@ app.use('/api/aprendizaje', aprendizajeRoutes); // Módulo de aprendizaje: ruta 
 app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)
 app.use('/api/admin', adminRoutes);         // Panel de Administración: KPIs globales del sistema
 
+// TEMPORAL: confirma que GEMINI_API_KEY existe en Railway sin exponer su valor. Eliminar
+// una vez confirmado.
+app.get('/api/diag-xyz991', (req, res) => {
+    res.json({ GEMINI_API_KEY_configurada: !!process.env.GEMINI_API_KEY });
+});
+
 const iaService = require('./src/services/iaService');
 const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
 const { aplicarMigracionCasing } = require('./src/jobs/migracionCasing');
