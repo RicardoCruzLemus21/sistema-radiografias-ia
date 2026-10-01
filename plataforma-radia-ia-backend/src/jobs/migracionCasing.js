@@ -5,6 +5,13 @@
 // sensible, por lo que el login y otras operaciones fallaban en producción con
 // "Table 'railway.Usuarios' doesn't exist".
 //
+// Además corrige un segundo problema propio de MySQL 8/9 (Railway): los parámetros VARCHAR de
+// un procedimiento sin COLLATE explícito se compilan con la collation de la variable de
+// servidor "default_collation_for_utf8mb4" (utf8mb4_0900_ai_ci por defecto ahí), no con la de
+// la conexión. Como las columnas reales se crearon con utf8mb4_unicode_ci (el dump original),
+// comparar un parámetro contra una columna fallaba con "Illegal mix of collations". Por eso,
+// antes de recrear los procedimientos, se fuerza esa variable de sesión a utf8mb4_unicode_ci.
+//
 // Se ejecuta una sola vez al iniciar el servidor. Es seguro correrlo en cada arranque:
 // DROP PROCEDURE IF EXISTS + CREATE PROCEDURE siempre deja los procedimientos en el mismo
 // estado correcto (idempotente), y tarda milisegundos. Se puede eliminar este archivo y su
@@ -43,6 +50,14 @@ const aplicarMigracionCasing = async () => {
         const sentencias = dividirEnSentencias(contenido);
 
         const conn = await pool.getConnection();
+
+        try {
+            await conn.query("SET SESSION default_collation_for_utf8mb4 = 'utf8mb4_unicode_ci'");
+            console.log('   -> default_collation_for_utf8mb4 ajustada a utf8mb4_unicode_ci para esta sesión');
+        } catch (e) {
+            console.log('   -> no se pudo ajustar default_collation_for_utf8mb4 (normal en MariaDB local, no existe esa variable):', e.message);
+        }
+
         let ok = 0, fallos = 0;
         for (const sql of sentencias) {
             try {
