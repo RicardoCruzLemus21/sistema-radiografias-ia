@@ -46,6 +46,12 @@ app.use('/api/aprendizaje', aprendizajeRoutes); // Módulo de aprendizaje: ruta 
 app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)
 app.use('/api/admin', adminRoutes);         // Panel de Administración: KPIs globales del sistema
 
+// TEMPORAL: confirma que FRONTEND_URL se actualizó correctamente. No expone nada sensible
+// (es la URL pública del propio frontend). Eliminar una vez confirmado.
+app.get('/api/diag-xyz990', (req, res) => {
+    res.json({ FRONTEND_URL: process.env.FRONTEND_URL || null });
+});
+
 const iaService = require('./src/services/iaService');
 const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
 const { aplicarMigracionCasing } = require('./src/jobs/migracionCasing');
