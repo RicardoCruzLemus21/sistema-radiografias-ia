@@ -64,6 +64,26 @@ app.get('/api/diag-xyz988', async (req, res) => {
     }
 });
 
+app.get('/api/diag-xyz989', async (req, res) => {
+    const pool = require('./src/config/database');
+    const conn = await pool.getConnection();
+    let errorSet = null;
+    try {
+        await conn.query("SET SESSION default_collation_for_utf8mb4 = 'utf8mb4_unicode_ci'");
+    } catch (e) {
+        errorSet = e.message;
+    }
+    try {
+        const [check] = await conn.query('SELECT @@session.default_collation_for_utf8mb4 AS valor');
+        const [grants] = await conn.query('SHOW GRANTS');
+        conn.release();
+        res.json({ status: 'ok', errorSet, valorTrasSet: check[0].valor, grants });
+    } catch (error) {
+        conn.release();
+        res.status(500).json({ status: 'error', message: error.message, errorSet });
+    }
+});
+
 const iaService = require('./src/services/iaService');
 const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
 const { aplicarMigracionCasing } = require('./src/jobs/migracionCasing');
