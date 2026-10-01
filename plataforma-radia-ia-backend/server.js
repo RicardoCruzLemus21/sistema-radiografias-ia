@@ -46,6 +46,24 @@ app.use('/api/aprendizaje', aprendizajeRoutes); // Módulo de aprendizaje: ruta 
 app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)
 app.use('/api/admin', adminRoutes);         // Panel de Administración: KPIs globales del sistema
 
+// TEMPORAL: diagnóstico de collation para depurar el despliegue en Railway. No expone datos
+// sensibles (solo metadatos de columnas/parámetros). Eliminar una vez resuelto.
+app.get('/api/diag-xyz988', async (req, res) => {
+    try {
+        const pool = require('./src/config/database');
+        const [global] = await pool.query("SHOW VARIABLES LIKE 'default_collation_for_utf8mb4'");
+        const [columna] = await pool.query(
+            "SELECT COLUMN_NAME, CHARACTER_SET_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'usuarios' AND COLUMN_NAME = 'correo_electronico'"
+        );
+        const [parametro] = await pool.query(
+            "SELECT PARAMETER_NAME, DATA_TYPE, CHARACTER_SET_NAME, COLLATION_NAME FROM INFORMATION_SCHEMA.PARAMETERS WHERE SPECIFIC_SCHEMA = DATABASE() AND SPECIFIC_NAME = 'sp_obtener_usuario_por_correo'"
+        );
+        res.json({ status: 'ok', global, columna, parametro });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+});
+
 const iaService = require('./src/services/iaService');
 const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
 const { aplicarMigracionCasing } = require('./src/jobs/migracionCasing');
