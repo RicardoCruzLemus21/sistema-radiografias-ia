@@ -2,46 +2,50 @@ module.exports = {
     TABLAS: {
 
         // Módulo 1: Seguridad y Accesos
-        ROLES: 'Roles',
-        USUARIOS: 'Usuarios',
-        AUDITORIA: 'Auditoria_Accesos',
+        // NOTA: estos nombres deben coincidir EXACTO (mayúsculas/minúsculas) con las tablas
+        // reales, todas creadas en minúscula. MariaDB/Windows (XAMPP local) es insensible a
+        // mayúsculas en nombres de tabla, así que un valor como 'Usuarios' funcionaba ahí sin
+        // problema; MySQL en Linux (Railway) sí distingue mayúsculas y fallaba con
+        // "Table 'railway.Usuarios' doesn't exist" en cualquier consulta armada con este valor.
+        ROLES: 'roles',
+        USUARIOS: 'usuarios',
+        AUDITORIA: 'auditoria_accesos',
 
         // Módulo 2
-        CURSOS: 'Cursos_Secciones',
-        ASIGNACIONES: 'Asignaciones_Estudiantes',
-        ESTADISTICAS: 'Estadisticas_Dashboard',
-        CATALOGO_CURSOS: 'Catalogo_Cursos',
-        USUARIOS: 'Usuarios',
-        
+        CURSOS: 'cursos_secciones',
+        ASIGNACIONES: 'asignaciones_estudiantes',
+        ESTADISTICAS: 'estadisticas_dashboard',
+        CATALOGO_CURSOS: 'catalogo_cursos',
+
         // Módulo 3
-        PACIENTES: 'Pacientes_Simulados',
-        CASOS: 'Casos_Clinicos',
-        RADIOGRAFIAS: 'Radiografias',
+        PACIENTES: 'pacientes_simulados',
+        CASOS: 'casos_clinicos',
+        RADIOGRAFIAS: 'radiografias',
 
         // Módulo 4: Interacción y Diagnóstico Estudiantil
-        CATALOGO_PATOLOGIAS: 'Catalogo_Patologias',
-        REGIONES_ANATOMICAS: 'Regiones_Anatomicas',
-        EVALUACIONES_ESTUDIANTES: 'Evaluaciones_Estudiantes',
-        DETALLE_HALLAZGOS: 'Detalle_Hallazgos_Estudiante',
-        LOCALIZACION_LESIONES: 'Localizacion_Lesiones_Estudiante',
-        METRICAS_MODELO_PATOLOGIA: 'Metricas_Modelo_Patologia',
+        CATALOGO_PATOLOGIAS: 'catalogo_patologias',
+        REGIONES_ANATOMICAS: 'regiones_anatomicas',
+        EVALUACIONES_ESTUDIANTES: 'evaluaciones_estudiantes',
+        DETALLE_HALLAZGOS: 'detalle_hallazgos_estudiante',
+        LOCALIZACION_LESIONES: 'localizacion_lesiones_estudiante',
+        METRICAS_MODELO_PATOLOGIA: 'metricas_modelo_patologia',
 
         // Módulo 5: Inferencia de IA
-        RESULTADOS_IA: 'Resultados_IA',
-        CONCORDANCIA: 'Concordancia_Diagnostica',
+        RESULTADOS_IA: 'resultados_ia',
+        CONCORDANCIA: 'concordancia_diagnostica',
 
         // Módulo 6: Medición Científica y Rúbricas
-        RUBRICAS: 'Rubricas_Definicion',
-        CALIFICACIONES: 'Calificaciones_Rubrica',
-        CUESTIONARIOS: 'Cuestionarios_Percepcion',
-        RESPUESTAS_LIKERT: 'Respuestas_Likert',
+        RUBRICAS: 'rubricas_definicion',
+        CALIFICACIONES: 'calificaciones_rubrica',
+        CUESTIONARIOS: 'cuestionarios_percepcion',
+        RESPUESTAS_LIKERT: 'respuestas_likert',
 
         // Módulo Extra: Empresarial
-        AUDITORIA_ACCIONES: 'Auditoria_Acciones',
-        NOTIFICACIONES: 'Notificaciones',
-        COMENTARIOS: 'Comentarios_Catedratico',
-        CONFIG_CORREOS: 'Configuracion_Correos',
-        PLANTILLAS_CORREOS: 'Plantillas_Correos'
+        AUDITORIA_ACCIONES: 'auditoria_acciones',
+        NOTIFICACIONES: 'notificaciones',
+        COMENTARIOS: 'comentarios_catedratico',
+        CONFIG_CORREOS: 'configuracion_correos',
+        PLANTILLAS_CORREOS: 'plantillas_correos'
     },
     COLUMNAS: {
         // Módulo 1
