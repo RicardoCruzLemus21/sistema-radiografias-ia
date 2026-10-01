@@ -6,7 +6,8 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "serve:prod": "serve -s dist/plataforma-radia-ia-frontend/browser -l $PORT"
   },
   "private": true,
   "packageManager": "npm@11.8.0",
@@ -19,6 +20,7 @@
     "@angular/router": "^21.2.0",
     "chart.js": "^4.5.1",
     "rxjs": "~7.8.0",
+    "serve": "^14.2.1",
     "sweetalert2": "^11.26.25",
     "tslib": "^2.3.0"
   },
