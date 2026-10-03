@@ -1,13 +1,12 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom, forkJoin } from 'rxjs';
+import { forkJoin } from 'rxjs';
 import { AprendizajeService } from '../../services/aprendizaje';
 import { AlertService } from '../../services/alert.service';
 import { nombreClase, colorClase } from '../../utils/clases';
 
 type FiltroEstado = 'pendiente' | 'aprobada' | 'rechazada' | 'todas';
-type FiltroOrigen = 'todos' | 'ia' | 'plantilla';
 
 // Pantalla del docente: revisar, editar y aprobar lo que ven los estudiantes en el módulo de aprendizaje
 @Component({
@@ -17,26 +16,18 @@ type FiltroOrigen = 'todos' | 'ia' | 'plantilla';
   templateUrl: './revision-contenido.html',
   styleUrls: ['../aprender/aprender-compartido.css', './revision-contenido.css']
 })
-export class RevisionContenido implements OnInit, OnDestroy {
+export class RevisionContenido implements OnInit {
   pestana: 'explicaciones' | 'lecciones' = 'explicaciones';
   cargando = true;
   error = '';
 
   // Explicaciones
   todas: any[] = [];
-  paresSinIa = 0;
-  filtro: FiltroEstado = 'pendiente';
-  filtroOrigen: FiltroOrigen = 'todos';
+  filtro: FiltroEstado = 'todas';
   editandoId: number | null = null;
   formulario = { resumen: '', pasos: '', pista: '', proxima_vez: '' };
   guardando = false;
   procesandoId: number | null = null;
-
-  // Generación con IA
-  generando = false;
-  private detener = false;
-  progreso = { generadas: 0, errores: 0 };
-  avisoGeneracion = '';
 
   // Lecciones
   lecciones: any[] = [];
@@ -52,29 +43,21 @@ export class RevisionContenido implements OnInit, OnDestroy {
     this.cargar();
   }
 
-  ngOnDestroy(): void {
-    this.detener = true; // si se sale de la pantalla, se corta la generación
-  }
-
-  cargar(): Promise<void> {
+  cargar(): void {
     this.cargando = true;
-    return new Promise((resolver) => {
-      forkJoin({ e: this.aprendizajeService.listarExplicaciones(), l: this.aprendizajeService.listarLecciones() }).subscribe({
-        next: ({ e, l }) => {
-          this.todas = e.data.explicaciones;
-          this.paresSinIa = e.data.pares_sin_ia;
-          this.lecciones = l.data;
-          this.cargando = false;
-          this.cdr.detectChanges();
-          resolver();
-        },
-        error: () => {
-          this.cargando = false;
-          this.error = 'No se pudo cargar el contenido. Intenta de nuevo en unos segundos.';
-          this.cdr.detectChanges();
-          resolver();
-        }
-      });
+    this.error = '';
+    forkJoin({ e: this.aprendizajeService.listarExplicaciones(), l: this.aprendizajeService.listarLecciones() }).subscribe({
+      next: ({ e, l }) => {
+        this.todas = e.data.explicaciones;
+        this.lecciones = l.data;
+        this.cargando = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargando = false;
+        this.error = 'No se pudo cargar el contenido. Intenta de nuevo en unos segundos.';
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -84,12 +67,7 @@ export class RevisionContenido implements OnInit, OnDestroy {
   }
 
   get visibles(): any[] {
-    return this.todas.filter(e =>
-      (this.filtro === 'todas' || e.estado === this.filtro) && (this.filtroOrigen === 'todos' || e.origen === this.filtroOrigen));
-  }
-
-  get pendientesIa(): number {
-    return this.todas.filter(e => e.origen === 'ia' && e.estado === 'pendiente').length;
+    return this.filtro === 'todas' ? this.todas : this.todas.filter(e => e.estado === this.filtro);
   }
 
   iniciarEdicion(e: any): void {
@@ -134,13 +112,13 @@ export class RevisionContenido implements OnInit, OnDestroy {
     });
   }
 
-  async cambiarEstado(e: any, estado: 'aprobada' | 'rechazada' | 'pendiente'): Promise<void> {
+  async cambiarEstado(e: any, estado: 'aprobada' | 'rechazada'): Promise<void> {
     // Rechazar retira de inmediato el contenido de lo que ven los estudiantes: se confirma para
     // que un clic accidental en la lista no lo oculte sin querer.
     if (estado === 'rechazada') {
       const confirmado = await this.alertService.confirm(
-        'Rechazar contenido',
-        `Se ocultará esta explicación de ${nombreClase(e.clase_marcada)} para los estudiantes hasta que la apruebes de nuevo. ¿Continuar?`,
+        'Rechazar explicación',
+        `Los estudiantes dejarán de ver esta explicación de ${nombreClase(e.clase_marcada)} hasta que la apruebes de nuevo. ¿Continuar?`,
         'Sí, rechazar'
       );
       if (!confirmado) return;
@@ -151,7 +129,7 @@ export class RevisionContenido implements OnInit, OnDestroy {
       next: () => {
         this.procesandoId = null;
         this.actualizarLocal(e.id_explicacion, { estado });
-        this.alertService.toast(estado === 'aprobada' ? 'Contenido aprobado' : 'Contenido rechazado', estado === 'aprobada' ? 'success' : 'warning');
+        this.alertService.toast(estado === 'aprobada' ? 'Explicación aprobada' : 'Explicación rechazada', estado === 'aprobada' ? 'success' : 'warning');
         this.cdr.detectChanges();
       },
       error: (err) => {
@@ -160,57 +138,6 @@ export class RevisionContenido implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
-  }
-
-  regenerar(e: any): void {
-    this.procesandoId = e.id_explicacion;
-    this.aprendizajeService.regenerarExplicacion(e.id_explicacion).subscribe({
-      next: (resp) => {
-        this.procesandoId = null;
-        this.actualizarLocal(e.id_explicacion, { contenido: resp.data.contenido, estado: 'pendiente' });
-        this.alertService.success('Texto regenerado', 'Quedó pendiente de tu revisión.');
-        this.cdr.detectChanges();
-      },
-      error: (err) => {
-        this.procesandoId = null;
-        this.alertService.error('No se pudo regenerar', err.error?.message || 'Intenta de nuevo.');
-        this.cdr.detectChanges();
-      }
-    });
-  }
-
-  // Genera lotes pequeños hasta completar los pares que faltan (el ritmo lo marca el límite de Gemini)
-  async generarFaltantes(): Promise<void> {
-    this.generando = true;
-    this.detener = false;
-    this.progreso = { generadas: 0, errores: 0 };
-    this.avisoGeneracion = '';
-    let sinProgreso = 0;
-    try {
-      while (!this.detener) {
-        const resp: any = await firstValueFrom(this.aprendizajeService.generarExplicaciones(3));
-        const d = resp.data;
-        this.progreso.generadas += d.generadas;
-        this.progreso.errores += d.errores.length;
-        this.paresSinIa = d.restantes;
-        this.cdr.detectChanges();
-        if (d.cuota_agotada) { this.avisoGeneracion = d.mensaje; break; }
-        if (d.restantes === 0) break;
-        sinProgreso = d.generadas === 0 ? sinProgreso + 1 : 0;
-        if (sinProgreso >= 2) { this.avisoGeneracion = 'Gemini no está respondiendo ahora. Inténtalo de nuevo en unos minutos.'; break; }
-      }
-    } catch (err: any) {
-      this.avisoGeneracion = err?.error?.message || 'No se pudo generar. Inténtalo de nuevo.';
-    }
-    this.generando = false;
-    await this.cargar();
-    this.filtro = 'pendiente';
-    this.filtroOrigen = 'ia';
-    this.cdr.detectChanges();
-  }
-
-  detenerGeneracion(): void {
-    this.detener = true;
   }
 
   // ===== Lecciones =====

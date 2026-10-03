@@ -29,7 +29,5 @@ module.exports = {
     listarLecciones: manejar(() => adminService.listarLecciones(), 'lecciones'),
     guardarLeccion: manejar((req) => adminService.guardarLeccion(req.params.clase, req.body?.contenido, req.body?.estado, req.usuario.id_usuario), 'guardar lección'),
     listarExplicaciones: manejar((req) => adminService.listarExplicaciones(req.query.estado), 'explicaciones'),
-    revisarExplicacion: manejar((req) => adminService.revisarExplicacion(req.params.id, req.body?.contenido, req.body?.estado, req.usuario.id_usuario), 'revisar explicación'),
-    generarExplicaciones: manejar((req) => adminService.generarExplicaciones(req.body?.limite), 'generar explicaciones'),
-    regenerarExplicacion: manejar((req) => adminService.regenerarExplicacion(req.params.id, req.usuario.id_usuario), 'regenerar explicación')
+    revisarExplicacion: manejar((req) => adminService.revisarExplicacion(req.params.id, req.body?.contenido, req.body?.estado, req.usuario.id_usuario), 'revisar explicación')
 };

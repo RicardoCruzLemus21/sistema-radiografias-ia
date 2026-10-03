@@ -22,7 +22,5 @@ router.get('/admin/lecciones', revisores, c.listarLecciones);
 router.put('/admin/lecciones/:clase', revisores, c.guardarLeccion);
 router.get('/admin/explicaciones', revisores, c.listarExplicaciones);
 router.put('/admin/explicaciones/:id', revisores, c.revisarExplicacion);
-router.post('/admin/explicaciones/generar', revisores, c.generarExplicaciones);
-router.post('/admin/explicaciones/:id/regenerar', revisores, c.regenerarExplicacion);
 
 module.exports = router;

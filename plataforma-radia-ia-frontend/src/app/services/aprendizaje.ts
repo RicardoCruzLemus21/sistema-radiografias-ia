@@ -71,12 +71,4 @@ export class AprendizajeService {
   revisarExplicacion(id: number, contenido: any, estado: 'pendiente' | 'aprobada' | 'rechazada'): Observable<any> {
     return this.http.put<any>(`${this.api}/admin/explicaciones/${id}`, { contenido, estado }, this.opciones());
   }
-
-  generarExplicaciones(limite = 3): Observable<any> {
-    return this.http.post<any>(`${this.api}/admin/explicaciones/generar`, { limite }, this.opciones());
-  }
-
-  regenerarExplicacion(id: number): Observable<any> {
-    return this.http.post<any>(`${this.api}/admin/explicaciones/${id}/regenerar`, {}, this.opciones());
-  }
 }

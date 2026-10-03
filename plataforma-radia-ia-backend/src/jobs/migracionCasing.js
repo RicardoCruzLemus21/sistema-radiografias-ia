@@ -93,11 +93,25 @@ const convertirTablasACollationMySQL8 = async (conn) => {
     console.log(`🔧 Collation de tablas a utf8mb4_0900_ai_ci: ${ok}/${tablas.length} tablas convertidas` + (fallos ? ` (${fallos} fallos)` : ''));
 };
 
+// Desactiva las explicaciones antiguas generadas con IA (quedan como 'rechazada', no se borran)
+const desactivarExplicacionesIa = async (conn) => {
+    const archivo = path.join(__dirname, '../../scripts_temporales/desactivar_explicaciones_ia.sql');
+    const sentencias = dividirEnSentencias(fs.readFileSync(archivo, 'utf8'));
+    for (const sql of sentencias) {
+        try {
+            await conn.query(sql);
+        } catch (e) {
+            console.error('   -> error al desactivar explicaciones de IA:', e.message);
+        }
+    }
+};
+
 const aplicarMigracionCasing = async () => {
     try {
         const conn = await pool.getConnection();
         await corregirNombresDeTabla(conn);
         await convertirTablasACollationMySQL8(conn);
+        await desactivarExplicacionesIa(conn);
         conn.release();
     } catch (error) {
         console.error('Error al aplicar la migración de casing/collation:', error.message);
