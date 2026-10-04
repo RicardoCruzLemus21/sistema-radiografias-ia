@@ -106,12 +106,40 @@ const desactivarExplicacionesIa = async (conn) => {
     }
 };
 
+// Procedimientos de notificaciones: "marcar como leída" sin borrar nada (idempotente)
+const aplicarProcedimientosNotificaciones = async (conn) => {
+    const archivo = path.join(__dirname, '../../scripts_temporales/notificaciones_leidas.sql');
+    const sentencias = dividirEnSentencias(fs.readFileSync(archivo, 'utf8'));
+    for (const sql of sentencias) {
+        try {
+            await conn.query(sql);
+        } catch (e) {
+            console.error('   -> error al crear procedimientos de notificaciones:', e.message);
+        }
+    }
+};
+
+// Historial permanente de notificaciones (tabla + trigger que copia cada notificación nueva)
+const aplicarHistorialNotificaciones = async (conn) => {
+    const archivo = path.join(__dirname, '../../scripts_temporales/notificaciones_historial.sql');
+    const sentencias = dividirEnSentencias(fs.readFileSync(archivo, 'utf8'));
+    for (const sql of sentencias) {
+        try {
+            await conn.query(sql);
+        } catch (e) {
+            console.error('   -> error al crear el historial de notificaciones:', e.message);
+        }
+    }
+};
+
 const aplicarMigracionCasing = async () => {
     try {
         const conn = await pool.getConnection();
         await corregirNombresDeTabla(conn);
         await convertirTablasACollationMySQL8(conn);
         await desactivarExplicacionesIa(conn);
+        await aplicarProcedimientosNotificaciones(conn);
+        await aplicarHistorialNotificaciones(conn);
         conn.release();
     } catch (error) {
         console.error('Error al aplicar la migración de casing/collation:', error.message);

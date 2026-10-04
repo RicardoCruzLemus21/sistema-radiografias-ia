@@ -30,3 +30,11 @@
 .btn-check-notif:hover:not(:disabled) { background: #00c853; color: #fff; transform: scale(1.08); }
 .btn-check-notif:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
 .btn-check-notif:disabled { opacity: 0.4; cursor: wait; }
+
+.campana-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border-color); }
+.campana-cabecera .campana-titulo { margin: 0; padding: 0; border: none; }
+.campana-todas { background: none; border: none; color: var(--accent-cyan); font-size: 12px; font-weight: 700; cursor: pointer; padding: 0; }
+.campana-todas:hover { text-decoration: underline; }
+.campana-seccion { margin: 6px 0 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }
+.notif-item:not(.no-leida) { opacity: 0.75; }
+.notif-item[role="button"] { cursor: pointer; }

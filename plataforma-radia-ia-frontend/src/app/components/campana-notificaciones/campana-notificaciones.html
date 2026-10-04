@@ -8,20 +8,33 @@
   </button>
 
   <div *ngIf="abierto" class="campana-panel glass-panel">
-    <h3 class="campana-titulo">Notificaciones</h3>
+    <div class="campana-cabecera">
+      <h3 class="campana-titulo">Notificaciones</h3>
+      <button type="button" class="campana-todas" *ngIf="noLeidas > 0" (click)="marcarTodasLeidas()">Marcar todas como leídas</button>
+    </div>
 
     <div *ngIf="notificaciones.length === 0" class="campana-vacio">No tienes notificaciones.</div>
 
-    <div *ngFor="let n of notificaciones" class="notif-item" [class.no-leida]="!n.leida">
-      <div class="notif-contenido">
-        <strong class="notif-titulo">{{ n.titulo }}</strong>
-        <p class="notif-mensaje">{{ n.mensaje }}</p>
-        <small class="notif-fecha">{{ n.fecha_creacion | date:'short' }}</small>
+    <ng-container *ngIf="sinLeer.length > 0">
+      <div class="campana-seccion">Sin leer ({{ sinLeer.length }})</div>
+      <div *ngFor="let n of sinLeer" class="notif-item no-leida" (click)="marcarLeida(n)" role="button" tabindex="0">
+        <div class="notif-contenido">
+          <strong class="notif-titulo">{{ n.titulo }}</strong>
+          <p class="notif-mensaje">{{ n.mensaje }}</p>
+          <small class="notif-fecha">{{ n.fecha_creacion | date:'short' }}</small>
+        </div>
       </div>
-      <button type="button" class="btn-check-notif" (click)="eliminar(n)" [disabled]="n._eliminando"
-              title="Marcar como leída y eliminar" aria-label="Marcar como leída y eliminar">
-        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-      </button>
-    </div>
+    </ng-container>
+
+    <ng-container *ngIf="leidas.length > 0">
+      <div class="campana-seccion">Leídas</div>
+      <div *ngFor="let n of leidas" class="notif-item">
+        <div class="notif-contenido">
+          <strong class="notif-titulo">{{ n.titulo }}</strong>
+          <p class="notif-mensaje">{{ n.mensaje }}</p>
+          <small class="notif-fecha">{{ n.fecha_creacion | date:'short' }}</small>
+        </div>
+      </div>
+    </ng-container>
   </div>
 </div>

@@ -28,8 +28,12 @@ export class ExtraService {
   }
 
   // El check de una notificación: la marca como leída y la elimina
-  eliminarNotificacion(id_notificacion: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/notificaciones/${id_notificacion}`, { headers: this.getHeaders() });
+  marcarNotificacionLeida(id_notificacion: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/notificaciones/${id_notificacion}/leida`, {}, { headers: this.getHeaders() });
+  }
+
+  marcarTodasLeidas(): Observable<any> {
+    return this.http.put(`${this.apiUrl}/notificaciones/leidas`, {}, { headers: this.getHeaders() });
   }
 
   // --- Comentarios ---

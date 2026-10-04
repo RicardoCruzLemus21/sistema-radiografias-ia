@@ -67,23 +67,42 @@ export class CampanaNotificaciones implements OnInit, OnDestroy {
     });
   }
 
-  // El check de la notificación: la marca como leída y la elimina
-  eliminar(notif: any): void {
-    if (notif._eliminando) return;
-    notif._eliminando = true;
+  get sinLeer(): any[] {
+    return this.notificaciones.filter(n => !n.leida);
+  }
 
-    const quitarDeLaLista = () => {
-      this.notificaciones = this.notificaciones.filter(n => n.id_notificacion !== notif.id_notificacion);
-      this.noLeidas = this.notificaciones.filter(n => !n.leida).length;
-      this.cdr.detectChanges();
-    };
+  get leidas(): any[] {
+    return this.notificaciones.filter(n => n.leida);
+  }
 
-    this.extraService.eliminarNotificacion(notif.id_notificacion).subscribe({
-      next: () => quitarDeLaLista(),
-      error: (err) => {
-        if (err.status === 404) { quitarDeLaLista(); return; } // ya no existía
-        notif._eliminando = false;
-        this.alertService.error('No se pudo eliminar', 'Intenta de nuevo en un momento.');
+  // Marcar como leída: la notificación se queda guardada en la base y en la lista
+  marcarLeida(notif: any): void {
+    if (notif.leida || notif._marcando) return;
+    notif._marcando = true;
+    this.extraService.marcarNotificacionLeida(notif.id_notificacion).subscribe({
+      next: () => {
+        notif.leida = true;
+        notif._marcando = false;
+        this.noLeidas = this.sinLeer.length;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        notif._marcando = false;
+        this.alertService.error('No se pudo actualizar', 'Intenta de nuevo en un momento.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  marcarTodasLeidas(): void {
+    this.extraService.marcarTodasLeidas().subscribe({
+      next: () => {
+        this.notificaciones.forEach(n => (n.leida = true));
+        this.noLeidas = 0;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.alertService.error('No se pudieron marcar', 'Intenta de nuevo en un momento.');
         this.cdr.detectChanges();
       }
     });

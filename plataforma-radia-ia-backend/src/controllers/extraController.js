@@ -25,20 +25,31 @@ const obtenerNotificaciones = async (req, res) => {
     }
 };
 
-const eliminarNotificacion = async (req, res) => {
+// Marca una notificación como leída (no se borra)
+const marcarNotificacionLeida = async (req, res) => {
     try {
         const id_notificacion = Number(req.params.id_notificacion);
         if (!Number.isInteger(id_notificacion) || id_notificacion <= 0) {
             return res.status(400).json({ status: 'error', message: 'Identificador de notificación inválido.' });
         }
-        const eliminada = await notificationService.eliminarNotificacion(id_notificacion, req.usuario.id_usuario);
-        if (!eliminada) {
+        const actualizada = await notificationService.marcarLeida(id_notificacion, req.usuario.id_usuario);
+        if (!actualizada) {
             return res.status(404).json({ status: 'error', message: 'La notificación no existe.' });
         }
-        res.status(200).json({ status: 'success', message: 'Notificación eliminada.' });
+        res.status(200).json({ status: 'success', message: 'Notificación marcada como leída.' });
     } catch (error) {
-        console.error('Error al eliminar notificación:', error);
-        res.status(500).json({ status: 'error', message: 'Error al eliminar la notificación.' });
+        console.error('Error al marcar notificación como leída:', error);
+        res.status(500).json({ status: 'error', message: 'No se pudo actualizar la notificación.' });
+    }
+};
+
+const marcarTodasLeidas = async (req, res) => {
+    try {
+        const actualizadas = await notificationService.marcarTodasLeidas(req.usuario.id_usuario);
+        res.status(200).json({ status: 'success', data: { actualizadas } });
+    } catch (error) {
+        console.error('Error al marcar notificaciones como leídas:', error);
+        res.status(500).json({ status: 'error', message: 'No se pudieron actualizar las notificaciones.' });
     }
 };
 
@@ -70,7 +81,8 @@ const obtenerComentariosEvaluacion = async (req, res) => {
 module.exports = {
     obtenerLogsAuditoria,
     obtenerNotificaciones,
-    eliminarNotificacion,
+    marcarNotificacionLeida,
+    marcarTodasLeidas,
     agregarComentario,
     obtenerComentariosEvaluacion
 };

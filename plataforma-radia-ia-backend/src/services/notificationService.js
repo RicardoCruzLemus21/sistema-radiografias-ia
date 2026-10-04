@@ -30,20 +30,29 @@ const enviarNotificacionMasiva = async (ids_usuarios, titulo, mensaje) => {
     }
 };
 
+// Las notificaciones nunca se borran: se guardan en la base y solo cambian su estado "leida".
+// Se devuelven las 100 más recientes para que la lista no crezca sin límite.
 const obtenerNotificaciones = async (id_usuario) => {
     const query = `
-        SELECT * FROM ${dict.TABLAS.NOTIFICACIONES} 
-        WHERE ${dict.COLUMNAS.ID_USUARIO_DESTINO} = ? 
+        SELECT * FROM ${dict.TABLAS.NOTIFICACIONES}
+        WHERE ${dict.COLUMNAS.ID_USUARIO_DESTINO} = ?
         ORDER BY ${dict.COLUMNAS.FECHA_CREACION} DESC
+        LIMIT 100
     `;
     const [notificaciones] = await pool.query(query, [id_usuario]);
     return notificaciones;
 };
 
-// Marca como leída y elimina (el check de la campana). Devuelve false si no existe o no es del usuario.
-const eliminarNotificacion = async (id_notificacion, id_usuario) => {
-    const [res] = await pool.query('CALL sp_eliminar_notificacion(?, ?)', [id_notificacion, id_usuario]);
+// Marca una notificación como leída. Devuelve false si no existe o no es del usuario.
+const marcarLeida = async (id_notificacion, id_usuario) => {
+    const [res] = await pool.query('CALL sp_marcar_notificacion_leida(?, ?)', [id_notificacion, id_usuario]);
     return res[0][0].filas > 0;
+};
+
+// Marca todas las no leídas del usuario. Devuelve cuántas cambiaron.
+const marcarTodasLeidas = async (id_usuario) => {
+    const [res] = await pool.query('CALL sp_marcar_todas_notificaciones_leidas(?)', [id_usuario]);
+    return res[0][0].filas;
 };
 
 // --- Eventos ---
@@ -121,5 +130,6 @@ module.exports = {
     crearNotificacion,
     enviarNotificacionMasiva,
     obtenerNotificaciones,
-    eliminarNotificacion
+    marcarLeida,
+    marcarTodasLeidas
 };
