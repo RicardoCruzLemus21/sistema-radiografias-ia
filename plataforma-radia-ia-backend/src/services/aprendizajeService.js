@@ -1,8 +1,7 @@
 const pool = require('../config/database');
 const { fsrs, createEmptyCard, generatorParameters, Rating } = require('ts-fsrs');
 const { LECCIONES, CLASES } = require('../data/leccionesBase');
-const { construirExplicacionPlantilla } = require('../data/plantillasExplicacion');
-const { DISTRACTORES } = require('../config/distractoresConfig');
+const { obtenerDistractores } = require('../config/distractores');
 
 // Error causado por datos del usuario (el controlador responde 400)
 class ErrorAprendizaje extends Error {}
@@ -51,7 +50,8 @@ const explicacionDelPar = async (real, marcada) => {
     const [res] = await pool.query('CALL sp_apr_explicacion(?, ?)', [real, marcada]);
     const fila = res[0][0];
     if (fila) return { ...parseJson(fila.contenido, {}), origen: fila.origen };
-    return { ...construirExplicacionPlantilla(real, marcada), origen: 'plantilla' };
+    // Sin explicación aprobada para este par: el estudiante ve solo el resultado, sin texto de apoyo
+    return { origen: null, resumen: null, como_distinguir: [], pista: null, proxima_vez: null };
 };
 
 // ===== Repaso espaciado =====
@@ -204,7 +204,7 @@ const obtenerSesionGuiada = async (idEst, clase) => {
     // Mezcla: la mayoría de la categoría elegida, más casos con los que se suele confundir y casos normales
     const confundibles = clase === 'Normal'
         ? barajar(CLASES.filter(c => c !== 'Normal')).slice(0, 3)
-        : (DISTRACTORES[clase] || []).map(d => claseDe(d)).filter(c => c && c !== 'Normal' && c !== clase);
+        : (obtenerDistractores()[clase] || []).map(d => claseDe(d)).filter(c => c && c !== 'Normal' && c !== clase);
     const plan = clase === 'Normal'
         ? [['Normal', 3], ...confundibles.map(c => [c, 1])]
         : [[clase, 4], ['Normal', 1], [elegir(confundibles.length ? confundibles : CLASES.filter(c => c !== clase && c !== 'Normal')), 1]];

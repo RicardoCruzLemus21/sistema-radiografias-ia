@@ -13,8 +13,7 @@ module.exports = {
 
         // Módulo 2
         CURSOS: 'cursos_secciones',
-        ASIGNACIONES: 'asignaciones_estudiantes',
-        ESTADISTICAS: 'estadisticas_dashboard',
+        ASIGNACIONES: 'asignaciones_estudiantes',
         CATALOGO_CURSOS: 'catalogo_cursos',
 
         // Módulo 3
@@ -26,8 +25,7 @@ module.exports = {
         CATALOGO_PATOLOGIAS: 'catalogo_patologias',
         REGIONES_ANATOMICAS: 'regiones_anatomicas',
         EVALUACIONES_ESTUDIANTES: 'evaluaciones_estudiantes',
-        DETALLE_HALLAZGOS: 'detalle_hallazgos_estudiante',
-        LOCALIZACION_LESIONES: 'localizacion_lesiones_estudiante',
+        DETALLE_HALLAZGOS: 'detalle_hallazgos_estudiante',
         METRICAS_MODELO_PATOLOGIA: 'metricas_modelo_patologia',
 
         // Módulo 5: Inferencia de IA
@@ -35,8 +33,7 @@ module.exports = {
         CONCORDANCIA: 'concordancia_diagnostica',
 
         // Módulo 6: Medición Científica y Rúbricas
-        RUBRICAS: 'rubricas_definicion',
-        CALIFICACIONES: 'calificaciones_rubrica',
+        RUBRICAS: 'rubricas_definicion',
         CUESTIONARIOS: 'cuestionarios_percepcion',
         RESPUESTAS_LIKERT: 'respuestas_likert',
 

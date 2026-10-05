@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const dict = require('../config/dbDictionary');
-const { DISTRACTORES, ORDEN_NIVELES } = require('../config/distractoresConfig');
+const { ORDEN_NIVELES } = require('../config/distractoresConfig');
+const { obtenerDistractores } = require('../config/distractores');
 
 const MAX_CASOS_EJERCICIO = 50;
 
@@ -290,7 +291,7 @@ const componerEjercicio = async (criterios) => {
     const casosDistractores = Math.max(0, total - casosNormales - casosDiana);
 
     const patologiasDistractor = [...new Set(
-        patologias_objetivo.flatMap(p => DISTRACTORES[p] || [])
+        patologias_objetivo.flatMap(p => obtenerDistractores()[p] || [])
     )].filter(p => !patologias_objetivo.includes(p) && p !== 'Normal');
 
     const nivelesIncluidos = nivelesHasta(nivel_dificultad);
@@ -385,7 +386,7 @@ const obtenerDisponibilidadBanco = async ({ nivel_dificultad = 'Avanzado', id_cu
     const niveles = nivelesHasta(nivel_dificultad).join(',');
     const idCurso = normalizarIdCurso(id_curso);
     const disponibilidad = [];
-    for (const patologia of Object.keys(DISTRACTORES)) {
+    for (const patologia of Object.keys(obtenerDistractores())) {
         const [res] = await pool.query(
             'CALL sp_contar_casos_banco_nih(?,?,?,?,?,?,?,?,?,?,?)',
             [patologia, null, null, null, null, null, null, null, niveles, '', idCurso]

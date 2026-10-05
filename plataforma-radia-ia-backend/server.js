@@ -47,6 +47,7 @@ app.use('/api/users', userRoutes);          // Gestión de Usuarios (CRUD)
 app.use('/api/admin', adminRoutes);         // Panel de Administración: KPIs globales del sistema
 
 const iaService = require('./src/services/iaService');
+const { cargarDistractores } = require('./src/config/distractores');
 const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
 
 const PORT = process.env.PORT || 3000;
@@ -61,6 +62,13 @@ app.listen(PORT, async () => {
         await iaService.cargarModeloIA();
     } catch (error) {
         console.error("❌ Error al pre-cargar el modelo de IA:", error.message);
+    }
+
+    // Distractores por patología (tabla distractores) en memoria
+    try {
+        await cargarDistractores();
+    } catch (error) {
+        console.error("❌ Error al cargar los distractores desde la base:", error.message);
     }
     console.log(`🛡️  Módulo 1 (Auth API): EN LÍNEA`);
     console.log(`🛡️  Módulo 2 (Academic API): EN LÍNEA`);
