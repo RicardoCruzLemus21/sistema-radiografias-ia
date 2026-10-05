@@ -48,7 +48,6 @@ app.use('/api/admin', adminRoutes);         // Panel de Administración: KPIs gl
 
 const iaService = require('./src/services/iaService');
 const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
-const { aplicarMigracionCasing } = require('./src/jobs/migracionCasing');
 
 const PORT = process.env.PORT || 3000;
 
@@ -73,5 +72,4 @@ app.listen(PORT, async () => {
     console.log(`=================================================\n`);
 
     iniciarLimpiezaProgramada(); // Auditoría: retiene solo los últimos 30 días
-    await aplicarMigracionCasing(); // Corrige nombres de tabla en mayúsculas dentro de procedimientos (una vez)
 });

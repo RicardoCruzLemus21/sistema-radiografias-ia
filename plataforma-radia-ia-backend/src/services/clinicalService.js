@@ -167,8 +167,6 @@ const eliminarCaso = async (id_caso) => {
 };
 
 // 10. Obtener Info de Patología: elige al azar una de las variantes pre-generadas por IA.
-// La generación con Gemini se hace de forma independiente (scripts_temporales/generar_variantes_patologias.js),
-// nunca en esta ruta, para que el estudiante nunca dependa de la disponibilidad ni la cuota de la IA.
 const generarInfoPatologia = async (patologia) => {
     const [catalogoRows] = await pool.query(
         `SELECT ficha_ia_json FROM ${dict.TABLAS.CATALOGO_PATOLOGIAS} WHERE ${dict.COLUMNAS.NOMBRE_PATOLOGIA} = ?`,
