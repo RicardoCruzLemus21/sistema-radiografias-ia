@@ -9,6 +9,9 @@
   transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* En tema claro el panel es azul: el texto secundario se oscurece para mantener el contraste */
+[data-theme="light"] .sidebar { --text-muted: #334155; }
+
 .app-layout.sidebar-collapsed {
   grid-template-columns: 80px 1fr;
 }

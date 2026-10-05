@@ -64,7 +64,7 @@
   --badge-danger-text: #b91c1c;
   --accent-wash-soft: rgba(14, 165, 233, 0.08);
   --accent-wash-strong: rgba(14, 165, 233, 0.3);
-  --sidebar-bg: rgba(241, 245, 249, 0.95);
+  --sidebar-bg: rgba(186, 230, 253, 0.95); /* Azul celeste suave: combina con el blanco del resto de la pantalla */
   --input-bg: rgba(0, 0, 0, 0.05);
   --table-row-hover: rgba(0, 0, 0, 0.04);
   --modal-bg: #ffffff;
