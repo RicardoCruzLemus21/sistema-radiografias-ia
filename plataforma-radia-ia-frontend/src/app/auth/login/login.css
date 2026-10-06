@@ -217,7 +217,7 @@
 :host-context([data-theme="light"]) .image-overlay {
   background:
     linear-gradient(to right, var(--bg-dark-base) 0%, transparent 50%, rgba(0, 229, 255, 0.1) 100%),
-    linear-gradient(to top, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.85) 40%, transparent 68%);
+    linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.4) 26%, transparent 46%);
 }
 
 :host-context([data-theme="light"]) .hero-text h3 {
