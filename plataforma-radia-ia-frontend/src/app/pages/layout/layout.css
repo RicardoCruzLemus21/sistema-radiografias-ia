@@ -10,7 +10,7 @@
 }
 
 /* En tema claro el panel es azul: el texto secundario se oscurece para mantener el contraste */
-[data-theme="light"] .sidebar { --text-muted: #334155; }
+:host-context([data-theme="light"]) .sidebar { --text-muted: #334155; }
 
 .app-layout.sidebar-collapsed {
   grid-template-columns: 80px 1fr;
