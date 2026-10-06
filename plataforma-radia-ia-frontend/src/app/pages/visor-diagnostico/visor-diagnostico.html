@@ -117,25 +117,30 @@
       <!-- ================= FASE 2: VERDAD DE REFERENCIA ================= -->
       <div *ngIf="faseActual === 2" class="fase-container fade-in">
         <div class="panel-section">
-          <h3>VERDAD DE REFERENCIA (NIH)</h3>
-          <p class="helper-text">Estas son las etiquetas reales extraídas del informe radiológico original.</p>
-          
-          <div class="alert-box" style="background: rgba(255, 71, 87, 0.1); border-color: rgba(255,71,87,0.3); color: #ff4757; margin-top: 15px;">
-            <strong>Diagnóstico Real:</strong> {{ resultadoFase2?.etiquetas_nih?.join(', ') || 'Sin hallazgos' }}
+          <h3 class="fase-titulo">Verdad de referencia (NIH)</h3>
+          <p class="helper-text">Etiquetas reales extraídas del informe radiológico original.</p>
+
+          <div class="verdad-tarjeta">
+            <span class="verdad-etiqueta">Diagnóstico real</span>
+            <div class="verdad-valores">
+              <ng-container *ngIf="resultadoFase2?.etiquetas_nih?.length; else sinHallazgos">
+                <span class="verdad-chip" *ngFor="let e of resultadoFase2.etiquetas_nih">{{ e }}</span>
+              </ng-container>
+              <ng-template #sinHallazgos><span class="verdad-chip neutro">Sin hallazgos</span></ng-template>
+            </div>
           </div>
-          
-          <p class="helper-text highlight-box" style="margin-top: 15px;" *ngIf="resultadoFase2?.bbox">
-            Observa el recuadro rojo en la imagen. Ese es el Bounding Box (BBox) trazado por el radiólogo profesional. <ng-container *ngIf="marcadorEstudiante">¿Coincide con tu marca verde?</ng-container>
-          </p>
-          <p class="helper-text highlight-box" style="margin-top: 15px;" *ngIf="!resultadoFase2?.bbox">
-            Este caso no tiene un recuadro trazado por el radiólogo: el informe original solo indica los diagnósticos, sin localizar la lesión en la imagen.
-          </p>
+
+          <div class="verdad-nota" *ngIf="resultadoFase2?.bbox">
+            Observa el recuadro rojo en la imagen. Es el Bounding Box (BBox) trazado por el radiólogo profesional.
+            <ng-container *ngIf="marcadorEstudiante"><strong>¿Coincide con tu marca verde?</strong></ng-container>
+          </div>
+          <div class="verdad-nota neutro" *ngIf="!resultadoFase2?.bbox">
+            Este caso no tiene recuadro trazado por el radiólogo: el informe original solo indica los diagnósticos, sin localizar la lesión en la imagen.
+          </div>
         </div>
 
-        <div class="panel-actions" style="margin-top: auto;">
-          <button class="btn-primary" (click)="avanzarFase3()" style="width: 100%;">
-            ¿QUÉ OPINÓ LA IA? (FASE 3)
-          </button>
+        <div class="panel-actions fase-acciones">
+          <button class="btn-primary btn-ancho" (click)="avanzarFase3()">Ver opinión de la IA</button>
         </div>
       </div>
 

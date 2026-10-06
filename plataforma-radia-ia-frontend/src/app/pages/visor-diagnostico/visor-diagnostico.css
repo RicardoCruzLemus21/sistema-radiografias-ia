@@ -424,3 +424,16 @@ textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 
 .resultado-caso-valor.res-bajo { color: #ff4757; }
 .resultado-caso-texto { font-size: 14px; font-weight: 700; color: var(--text-main); line-height: 1.35; }
 .resultado-caso-texto small { font-weight: 400; color: var(--text-muted); font-size: 12px; }
+
+/* --- Fase 2: verdad de referencia (tarjeta con etiquetas, nota y acción) --- */
+.fase-titulo { margin: 0 0 8px; font-size: 15px; letter-spacing: 0.6px; text-transform: uppercase; color: var(--text-main); }
+.verdad-tarjeta { margin-top: 16px; padding: 16px 18px; border-radius: 12px; background: var(--bg-panel); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px; }
+.verdad-etiqueta { font-size: 11px; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-muted); }
+.verdad-valores { display: flex; flex-wrap: wrap; gap: 8px; }
+.verdad-chip { padding: 6px 12px; border-radius: 999px; font-size: 14px; font-weight: 700; background: rgba(239, 68, 68, 0.14); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
+.verdad-chip.neutro { background: rgba(148, 163, 184, 0.14); color: var(--text-muted); border-color: var(--border-color); }
+[data-theme="light"] .verdad-chip { color: #b91c1c; }
+.verdad-nota { margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.55; color: var(--text-main); background: rgba(14, 165, 233, 0.08); border-left: 3px solid var(--accent-cyan); }
+.verdad-nota.neutro { color: var(--text-muted); background: rgba(148, 163, 184, 0.08); border-left-color: var(--border-color); }
+.fase-acciones { margin-top: auto; padding-top: 16px; }
+.btn-ancho { width: 100%; }
