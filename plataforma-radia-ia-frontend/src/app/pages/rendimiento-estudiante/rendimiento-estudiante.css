@@ -197,3 +197,7 @@
 .paginacion-controles button { padding: 6px 14px; border-radius: 8px; cursor: pointer; background: transparent; border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; font-weight: 700; }
 .paginacion-controles button:hover:not(:disabled) { border-color: var(--accent-cyan); color: var(--accent-cyan); }
 .paginacion-controles button:disabled { opacity: 0.4; cursor: default; }
+
+/* --- Observación del docente en el historial --- */
+.observacion-celda { max-width: 320px; font-size: 13px; line-height: 1.45; color: var(--text-main); }
+.sin-observacion { font-size: 12px; font-style: italic; color: var(--text-muted); }

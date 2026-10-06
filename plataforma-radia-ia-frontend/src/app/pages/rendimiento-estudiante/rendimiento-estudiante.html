@@ -60,7 +60,7 @@
               <th>Dificultad</th>
               <th>Precisión (IA)</th>
               <th>Resultado</th>
-              <th>Acción</th>
+              <th>Observación del docente</th>
             </tr>
           </thead>
           <tbody>
@@ -75,10 +75,9 @@
                 </div>
               </td>
               <td>{{ ev.nivel_precision }}</td>
-              <td>
-                <button class="btn-action" (click)="verDetalle(ev)" title="Ver Detalles y Comentarios">
-                  Ver Detalles
-                </button>
+              <td class="observacion-celda">
+                <span *ngIf="ev.observacion_docente; else sinObservacion">{{ ev.observacion_docente }}</span>
+                <ng-template #sinObservacion><span class="sin-observacion">Sin observación aún</span></ng-template>
               </td>
             </tr>
           </tbody>

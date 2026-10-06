@@ -82,10 +82,4 @@ export class RendimientoEstudiante implements OnInit {
     return 'bg-danger';
   }
 
-  verDetalle(evaluacion: any) {
-    // Redirige a la vista de retroalimentación de la IA usando el id de la evaluación
-    this.router.navigate(['/sistema/resultado', evaluacion.id_caso], {
-      queryParams: { eval: evaluacion.id_evaluacion }
-    });
-  }
 }
