@@ -7,6 +7,7 @@
 .hi-btn.activo { background: var(--accent-cyan); border-color: var(--accent-cyan); color: var(--btn-text-color); }
 .hi-btn:disabled { opacity: 0.4; cursor: default; }
 .hi-btn-icono { width: 32px; padding: 6px 0; text-align: center; font-size: 16px; }
+.hi-ayuda { margin: 0; font-size: 12px; color: var(--text-muted); text-align: center; }
 .hi-btn-texto { min-width: 56px; text-align: center; font-variant-numeric: tabular-nums; }
 
 .hi-control { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
