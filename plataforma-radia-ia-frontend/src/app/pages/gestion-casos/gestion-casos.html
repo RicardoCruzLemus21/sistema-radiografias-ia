@@ -62,6 +62,7 @@
       <button [class.active]="filtroEstado === 'COMPLETADO'" (click)="setFiltroEstado('COMPLETADO')">Completados ({{ contarEstado('completado') }})</button>
       <button [class.active]="filtroEstado === 'PENDIENTE'" (click)="setFiltroEstado('PENDIENTE')">Pendientes de completar ({{ contarEstado('pendiente') }})</button>
       <button [class.active]="filtroEstado === 'SIN_INICIAR'" (click)="setFiltroEstado('SIN_INICIAR')">Sin iniciar ({{ contarEstado('sin_iniciar') }})</button>
+      <button [class.active]="verOcultos" (click)="toggleVerOcultos()">{{ verOcultos ? 'Volver a visibles' : 'Ver ocultos' }} ({{ cantidadOcultos }})</button>
     </div>
   </section>
 
@@ -79,6 +80,7 @@
           <span class="carpeta-curso">{{ f.nombre_curso }}</span>
           <span class="carpeta-meta">{{ f.casos.length }} {{ f.casos.length === 1 ? 'caso' : 'casos' }} · {{ f.alumnos_completados }}/{{ f.total_alumnos }} alumnos completaron</span>
           <span class="estado-progreso" [ngClass]="f.estado_progreso">{{ etiquetaEstado(f.estado_progreso) }}</span>
+          <button type="button" class="btn-visibilidad" (click)="toggleVisibilidad(f, $event)">{{ f.oculto ? 'Mostrar' : 'Ocultar' }}</button>
         </div>
       </div>
     </div>

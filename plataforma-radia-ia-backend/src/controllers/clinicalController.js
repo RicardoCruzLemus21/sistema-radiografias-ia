@@ -306,7 +306,25 @@ const bitacoraEjercicio = async (req, res) => {
     }
 };
 
+const visibilidadEjercicio = async (req, res) => {
+    try {
+        const id_ejercicio = Number(req.params.id);
+        if (!Number.isInteger(id_ejercicio) || id_ejercicio <= 0) {
+            return res.status(400).json({ status: 'error', message: 'Ejercicio no válido.' });
+        }
+        if (typeof req.body?.oculto !== 'boolean') {
+            return res.status(400).json({ status: 'error', message: 'Indica si el ejercicio se oculta (true) o se muestra (false).' });
+        }
+        const ok = await clinicalService.cambiarVisibilidadEjercicio(id_ejercicio, req.usuario.id_usuario, req.body.oculto);
+        if (!ok) return res.status(404).json({ status: 'error', message: 'El ejercicio no existe en tus cursos.' });
+        res.status(200).json({ status: 'success', data: { id_ejercicio, oculto: req.body.oculto } });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'No se pudo cambiar la visibilidad del ejercicio.' });
+    }
+};
+
 module.exports = {
+    visibilidadEjercicio,
     progresoEjercicios,
     bitacoraEjercicio,
     registrarPaciente,

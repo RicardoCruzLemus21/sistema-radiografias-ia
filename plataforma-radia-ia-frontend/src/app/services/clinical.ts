@@ -36,6 +36,13 @@ export class ClinicalService {
     });
   }
 
+  // Oculta (true) o vuelve a mostrar (false) un ejercicio en el panel del docente
+  cambiarVisibilidadEjercicio(idEjercicio: number, oculto: boolean): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/ejercicios/${idEjercicio}/visibilidad`, { oculto }, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   // Alumnos de un ejercicio con su avance (bitácora)
   getBitacoraEjercicio(idEjercicio: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/ejercicios/${idEjercicio}/bitacora`, {

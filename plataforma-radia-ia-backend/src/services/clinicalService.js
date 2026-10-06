@@ -615,7 +615,15 @@ const obtenerBitacoraEjercicio = async (id_ejercicio, id_catedratico) => {
     }));
 };
 
+// Oculta o vuelve a mostrar un ejercicio en el panel del docente (no borra nada).
+// Devuelve false si el ejercicio no existe o no es de ese docente.
+const cambiarVisibilidadEjercicio = async (id_ejercicio, id_catedratico, oculto) => {
+    const [res] = await pool.query('CALL sp_ejercicio_cambiar_visibilidad(?, ?, ?)', [id_ejercicio, id_catedratico, oculto ? 1 : 0]);
+    return res[0][0].filas > 0;
+};
+
 module.exports = {
+    cambiarVisibilidadEjercicio,
     obtenerProgresoEjercicios,
     obtenerBitacoraEjercicio,
     obtenerRetroalimentacionEstudiante,

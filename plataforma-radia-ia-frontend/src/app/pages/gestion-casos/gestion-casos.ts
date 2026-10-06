@@ -30,6 +30,8 @@ export class GestionCasosCatedratico implements OnInit {
 
   // Progreso por ejercicio (viene del backend) y bitácora del ejercicio abierto
   progresoPorEjercicio = new Map<number, any>();
+  // Por defecto el panel muestra solo los ejercicios visibles; "verOcultos" muestra los ocultos
+  verOcultos: boolean = false;
   bitacora: any[] = [];
   cargandoBitacora: boolean = false;
 
@@ -241,6 +243,7 @@ export class GestionCasosCatedratico implements OnInit {
     this.agruparEnCarpetas();
 
     this.carpetas = this.carpetas.filter(f =>
+      f.oculto === this.verOcultos &&
       (!q || (f.nombre || '').toLowerCase().includes(q)) &&
       (this.filtroEstado === 'TODOS' || f.estado_progreso === this.filtroEstado)
     );
@@ -253,7 +256,7 @@ export class GestionCasosCatedratico implements OnInit {
 
   // Cuántos ejercicios hay en cada estado (para los contadores de los filtros)
   contarEstado(estado: string): number {
-    const base = this.todasLasCarpetas();
+    const base = this.todasLasCarpetas().filter(f => !f.oculto);
     return estado === 'TODOS' ? base.length : base.filter(f => f.estado_progreso === estado).length;
   }
 
@@ -264,7 +267,37 @@ export class GestionCasosCatedratico implements OnInit {
       if (!c.id_ejercicio || porEjercicio.has(c.id_ejercicio)) continue;
       porEjercicio.set(c.id_ejercicio, { id_ejercicio: c.id_ejercicio });
     }
-    return [...porEjercicio.values()].map(f => ({ ...f, estado_progreso: this.progresoPorEjercicio.get(f.id_ejercicio)?.estado_progreso || 'sin_iniciar' }));
+    return [...porEjercicio.values()].map(f => {
+      const prog = this.progresoPorEjercicio.get(f.id_ejercicio);
+      return { ...f, estado_progreso: prog?.estado_progreso || 'sin_iniciar', oculto: !!prog?.oculto };
+    });
+  }
+
+  get cantidadOcultos(): number {
+    return [...this.progresoPorEjercicio.values()].filter(p => p.oculto).length;
+  }
+
+  toggleVerOcultos(): void {
+    this.verOcultos = !this.verOcultos;
+    this.aplicarFiltros();
+  }
+
+  // Oculta o muestra un ejercicio sin borrarlo ni perder sus datos
+  toggleVisibilidad(carpeta: any, evento: Event): void {
+    evento.stopPropagation(); // que no abra el ejercicio al pulsar el botón
+    const nuevoOculto = !carpeta.oculto;
+    this.clinicalService.cambiarVisibilidadEjercicio(carpeta.id_ejercicio, nuevoOculto).subscribe({
+      next: () => {
+        const prog = this.progresoPorEjercicio.get(carpeta.id_ejercicio) || { id_ejercicio: carpeta.id_ejercicio };
+        this.progresoPorEjercicio.set(carpeta.id_ejercicio, { ...prog, oculto: nuevoOculto });
+        this.aplicarFiltros();
+        this.alertService.toast(nuevoOculto ? 'Ejercicio ocultado' : 'Ejercicio visible de nuevo', 'success');
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.alertService.error('No se pudo cambiar', 'Intenta de nuevo en un momento.');
+      }
+    });
   }
 
   cargarProgreso(): void {
@@ -293,6 +326,7 @@ export class GestionCasosCatedratico implements OnInit {
           id_ejercicio: c.id_ejercicio, nombre: c.ejercicio_nombre, numero: c.ejercicio_numero,
           id_curso: c.id_curso, nombre_curso: c.nombre_curso, casos: [], intentos: 0,
           estado_progreso: prog?.estado_progreso || 'sin_iniciar',
+          oculto: !!prog?.oculto,
           alumnos_completados: Number(prog?.estudiantes_completados) || 0,
           total_alumnos: Number(prog?.total_estudiantes) || 0
         };
