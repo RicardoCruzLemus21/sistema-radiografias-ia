@@ -61,35 +61,8 @@
   border: 1px solid var(--border-color);
 }
 
-.toolbar {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  z-index: 10;
-}
 
-.toolbar button {
-  background: var(--input-bg);
-  border: 1px solid rgba(6, 182, 212, 0.3);
-  color: var(--accent-cyan);
-  border-radius: 8px;
-  padding: 10px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.toolbar button:hover { background: var(--accent-cyan); color: var(--btn-text-color); }
-
-.image-container {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-}
+.xray-viewer app-herramientas-imagen { flex: 1; min-height: 0; width: 100%; }
 
 .xray-image {
   /* Las radiografías del banco son pequeñas (224 px): se escalan para llenar el visor */
@@ -97,7 +70,7 @@
   width: auto;   /* el ancho sigue la proporción: el elemento mide exactamente lo que se ve */
   max-width: 100%;
   object-fit: contain;
-  filter: grayscale(100%) contrast(1.2); /* Aspecto más radiológico */
+  filter: grayscale(100%) contrast(1.2) var(--hi-filter, brightness(1)); /* Aspecto más radiológico */
 }
 
 /* Panel de Diagnóstico (Derecha) */
@@ -216,63 +189,7 @@ textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 
 
 
 
-/* FULLSCREEN MODAL */
-.fullscreen-modal {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 9999;
-  background-color: rgba(0, 0, 0, 0.95);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
 
-.fullscreen-card {
-  width: 95vw;
-  height: 95vh;
-  background: transparent;
-  border: none;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
-
-.fullscreen-image {
-  /* Se escala para llenar la pantalla (las imágenes del banco miden 224 px) */
-  height: 100%;
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-  filter: grayscale(100%) contrast(1.2) var(--hi-filter, brightness(1));
-}
-
-/* Las herramientas de imagen llenan la tarjeta ampliada: barra arriba y la imagen ocupa el resto */
-.fullscreen-card app-herramientas-imagen { height: 100%; width: 100%; }
-
-.fullscreen-close {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  font-size: 30px;
-  color: white;
-  background: rgba(0,0,0,0.5);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  line-height: 40px;
-  text-align: center;
-  cursor: pointer;
-  border: none;
-  z-index: 10000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.fullscreen-close:hover {
-  background: rgba(255, 0, 0, 0.7);
-}
 
 /* =========================================
    ESTILOS DEL STEPPER Y FLUJO EDUCATIVO
@@ -368,7 +285,7 @@ textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 
 /* =========================================
    ESTILOS DE MARCADORES (BBOX Y CLICS)
    ========================================= */
-.user-marker, .nih-marker {
+.nih-marker {
   box-shadow: 0 0 8px rgba(0,0,0,0.5);
 }
 

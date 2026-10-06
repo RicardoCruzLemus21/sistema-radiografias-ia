@@ -1,14 +1,13 @@
-import { Component, ElementRef, HostBinding, ViewChild } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostBinding, HostListener, Input, Output, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-interface Marca { x: number; y: number; w: number; h: number; }
+export interface Marca { x: number; y: number; w: number; h: number; }
 
-// Barra de herramientas para ver una radiografía ampliada: invertir colores, brillo, zoom, rotar y
-// señalizar una zona (rectángulo). Envuelve la imagen y sus capas (mapa de calor, marcas) para que
-// el zoom y la rotación las muevan juntas. La imagen debe llevar la clase "imagen-base" para recibir
-// el filtro (brillo/inversión).
-// Las marcas se guardan en coordenadas de la imagen sin rotar, así siguen en su sitio al girar.
+// Barra de herramientas para la radiografía: invertir, brillo, zoom, rotar, marcar una zona y ampliar.
+// Envuelve la imagen y sus capas (mapa de calor, recuadro del radiólogo) para que el zoom, la rotación
+// y la ampliación las muevan juntas. La imagen debe llevar la clase "imagen-base" para recibir el filtro.
+// Las marcas se guardan en porcentajes de la imagen sin rotar, así siguen en su sitio al girar.
 @Component({
   selector: 'app-herramientas-imagen',
   standalone: true,
@@ -17,23 +16,46 @@ interface Marca { x: number; y: number; w: number; h: number; }
   styleUrl: './herramientas-imagen.css'
 })
 export class HerramientasImagen {
+  @Input() marcas: Marca[] = [];
+  @Output() marcasChange = new EventEmitter<Marca[]>();
+  @Input() soloLectura = false;
+  @Input() unicaMarca = false;
+  @Input() ampliable = true;
+
+  ampliado = false;
   invertir = false;
   brillo = 100;          // 50 a 150
   zoom = 1;              // 0.5 a 3
   rotacion = 0;          // 0, 90, 180 o 270 grados (sentido horario)
   senalizando = false;
-  marcas: Marca[] = [];  // en coordenadas de la imagen sin rotar
-  trazo: Marca | null = null;
-  tx = 0;                // desplazamiento de la imagen en pantalla (px)
+  tx = 0;                // desplazamiento en pantalla (px)
   ty = 0;
+  trazo: Marca | null = null;
   private inicio: { x: number; y: number } | null = null;
   private arrastre: { x: number; y: number; tx: number; ty: number } | null = null;
   @ViewChild('lienzo') private lienzo?: ElementRef<HTMLElement>;
+
+  @HostBinding('class.hi-ampliado')
+  get esAmpliado(): boolean {
+    return this.ampliado;
+  }
 
   // Las variables CSS llegan a la imagen, que las usa en su filtro
   @HostBinding('style.--hi-filter')
   get filtro(): string {
     return `${this.invertir ? 'invert(1) ' : ''}brightness(${this.brillo / 100})`;
+  }
+
+  @HostListener('document:keydown.escape')
+  alPulsarEscape(): void {
+    if (this.ampliado) this.alternarAmpliado();
+  }
+
+  alternarAmpliado(): void {
+    this.ampliado = !this.ampliado;
+    this.senalizando = false;
+    this.tx = 0;
+    this.ty = 0;
   }
 
   cambiarZoom(delta: number): void {
@@ -72,6 +94,7 @@ export class HerramientasImagen {
 
   borrarMarcas(): void {
     this.marcas = [];
+    this.marcasChange.emit(this.marcas);
   }
 
   // Coordenadas de la pantalla (ya rotada) -> coordenadas de la imagen sin rotar
@@ -102,7 +125,7 @@ export class HerramientasImagen {
 
   iniciarTrazo(evento: PointerEvent): void {
     const contenedor = evento.currentTarget as HTMLElement;
-    if (!this.senalizando) {
+    if (!this.senalizando || this.soloLectura) {
       this.arrastre = { x: evento.clientX, y: evento.clientY, tx: this.tx, ty: this.ty };
       contenedor.setPointerCapture(evento.pointerId);
       return;
@@ -131,7 +154,10 @@ export class HerramientasImagen {
 
   terminarTrazo(): void {
     this.arrastre = null;
-    if (this.trazo && this.trazo.w > 1 && this.trazo.h > 1) this.marcas.push(this.trazo);
+    if (this.trazo && this.trazo.w > 1 && this.trazo.h > 1) {
+      this.marcas = this.unicaMarca ? [this.trazo] : [...this.marcas, this.trazo];
+      this.marcasChange.emit(this.marcas);
+    }
     this.trazo = null;
     this.inicio = null;
   }

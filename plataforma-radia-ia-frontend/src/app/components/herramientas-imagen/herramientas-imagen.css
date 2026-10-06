@@ -7,8 +7,8 @@
 .hi-btn.activo { background: var(--accent-cyan); border-color: var(--accent-cyan); color: var(--btn-text-color); }
 .hi-btn:disabled { opacity: 0.4; cursor: default; }
 .hi-btn-icono { width: 32px; padding: 6px 0; text-align: center; font-size: 16px; }
-.hi-ayuda { margin: 0; font-size: 12px; color: var(--text-muted); text-align: center; }
 .hi-btn-texto { min-width: 56px; text-align: center; font-variant-numeric: tabular-nums; }
+.hi-ayuda { margin: 0; font-size: 12px; color: var(--text-muted); text-align: center; }
 
 .hi-control { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
 .hi-control input[type="range"] { width: 130px; accent-color: var(--accent-cyan); }
@@ -18,7 +18,7 @@
 
 /* Lienzo: la imagen y las marcas comparten este contenedor, así el zoom las mueve juntas */
 .hi-marco { flex: 1; min-height: 0; width: 100%; max-width: 100%; overflow: hidden; display: flex; justify-content: center; align-items: center; }
-.hi-contenido { position: relative; height: 100%; user-select: none; -webkit-user-drag: none; transform-origin: center center; transition: transform 0.15s ease; touch-action: none; }
+.hi-contenido { position: relative; height: 100%; user-select: none; -webkit-user-drag: none; transform-origin: center center; touch-action: none; }
 .hi-contenido.dibujando { cursor: crosshair; }
 .hi-contenido.desplazable { cursor: grab; }
 
@@ -26,9 +26,9 @@
 .hi-marca.en-curso { border-style: dashed; }
 .hi-icono { width: 15px; height: 15px; vertical-align: -2px; margin-right: 4px; }
 
-/* Visor ampliado: barra a la izquierda y la imagen ocupa el resto */
-:host(.hi-lateral) { flex-direction: row; align-items: stretch; gap: 16px; }
-:host(.hi-lateral) .hi-barra { flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; flex: 0 0 190px; }
-:host(.hi-lateral) .hi-control input[type="range"] { width: 100%; }
-:host(.hi-lateral) .hi-zoom { justify-content: space-between; }
-:host(.hi-lateral) .hi-marco { flex: 1; width: auto; min-width: 0; }
+/* Vista ampliada: pantalla completa, barra a la izquierda y la imagen ocupa el resto */
+:host(.hi-ampliado) { position: fixed; inset: 0; z-index: 9999; box-sizing: border-box; padding: 20px; background: rgba(0, 0, 0, 0.95); flex-direction: row; align-items: stretch; gap: 16px; max-width: none; }
+:host(.hi-ampliado) .hi-barra { flex-direction: column; flex-wrap: nowrap; align-items: stretch; justify-content: flex-start; flex: 0 0 190px; }
+:host(.hi-ampliado) .hi-control input[type="range"] { width: 100%; }
+:host(.hi-ampliado) .hi-zoom { justify-content: space-between; }
+:host(.hi-ampliado) .hi-marco { flex: 1; width: auto; min-width: 0; }

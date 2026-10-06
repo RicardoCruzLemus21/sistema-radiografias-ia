@@ -25,7 +25,7 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
   // Nuevas variables para el Flujo de 4 Fases
   faseActual: number = 1;
   nivelConfianza: number = 50; // Slider de 0 a 100
-  marcadorEstudiante: any = null;
+  marcasEstudiante: { x: number; y: number; w: number; h: number }[] = [];
   resultadoFase2: any = null;
   resultadoFase3: any = null;
   puntajesEstudiante: any = null;
@@ -36,19 +36,7 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
   mostrarGradcam: boolean = true;
   enviandoDiagnostico: boolean = false;
   
-  // Modos de interacción en la imagen
-  isDrawing: boolean = false;
-  startX: number = 0;
-  startY: number = 0;
-  
-  // Variables para la imagen y herramientas
   imagenUrl: string = '';
-  fullscreenAbierto: boolean = false;
-  
-  zoomLevel: number = 1;
-  isInverted: boolean = false;
-  brightness: number = 1;
-  contrast: number = 1.2;
 
   // Variables de datos clínicos
   casoDetalle: any = null;
@@ -74,10 +62,9 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
   private observadorTamano?: ResizeObserver;
 
   ngAfterViewInit(): void {
-    const area = this.host.nativeElement.querySelector('.image-container');
+    const area = this.host.nativeElement.querySelector('.xray-viewer');
     if (area && typeof ResizeObserver !== 'undefined') {
       this.observadorTamano = new ResizeObserver(() => {
-        if (this.modoRevision) this.ubicarMarcadorGuardado();
         this.cdr.detectChanges();
       });
       this.observadorTamano.observe(area);
@@ -124,32 +111,22 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     this.marcadorRelativoGuardado = datos.marcador_estudiante || null;
     this.faseActual = 4;
     this.cdr.detectChanges();
-    setTimeout(() => this.ubicarMarcadorGuardado(), 0);
+    this.mostrarMarcaGuardada();
   }
 
-  // La marca se guarda en proporciones de la imagen; aquí se vuelve a convertir a píxeles según cómo se ve ahora
-  private ubicarMarcadorGuardado(): void {
+  // La marca guardada llega en proporciones de la imagen; el componente trabaja en porcentajes
+  private mostrarMarcaGuardada(): void {
     const rel = this.marcadorRelativoGuardado;
-    const img = document.querySelector('.image-container .xray-image') as HTMLElement | null;
-    if (!rel || !img || img.offsetWidth === 0) return;
-    this.marcadorEstudiante = {
-      x: img.offsetLeft + rel.x * img.offsetWidth,
-      y: img.offsetTop + rel.y * img.offsetHeight,
-      width: rel.w * img.offsetWidth,
-      height: rel.h * img.offsetHeight,
-      type: 'rect'
-    };
+    this.marcasEstudiante = rel ? [{ x: rel.x * 100, y: rel.y * 100, w: rel.w * 100, h: rel.h * 100 }] : [];
     this.cdr.detectChanges();
   }
 
   alCargarImagen(): void {
-    if (this.modoRevision) this.ubicarMarcadorGuardado();
+    this.cdr.detectChanges();
   }
 
   @HostListener('window:resize')
   alCambiarTamano(): void {
-    if (this.modoRevision) this.ubicarMarcadorGuardado();
-    // Recalcula también las capas del visor ampliado (Grad-CAM, BBox del NIH) si está abierto
     this.cdr.detectChanges();
   }
 
@@ -209,29 +186,6 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     }, 1000);
   }
 
-  // Herramientas del Visor
-  toggleInvert() {
-    this.isInverted = !this.isInverted;
-  }
-
-  ajustarContraste() {
-    // Cicla entre valores básicos de brillo/contraste para simular windowing
-    if (this.contrast === 1.2) {
-      this.contrast = 1.5;
-      this.brightness = 1.1;
-    } else if (this.contrast === 1.5) {
-      this.contrast = 2.0;
-      this.brightness = 0.9;
-    } else {
-      this.contrast = 1.2;
-      this.brightness = 1.0;
-    }
-  }
-
-  hacerZoom() {
-    this.zoomLevel = this.zoomLevel >= 2 ? 1 : this.zoomLevel + 0.5;
-  }
-
   cargarPatologias() {
     this.diagnosticoService.getCatalogos().subscribe({
       next: (respuesta: any) => { 
@@ -248,81 +202,10 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     this.router.navigate(['/sistema/estudiante']);
   }
 
-  abrirFullscreen() {
-    this.fullscreenAbierto = true;
-    // La imagen ampliada aún no existe en el DOM en este mismo ciclo: se recalculan las capas
-    // (Grad-CAM y BBox del NIH) apenas Angular la pinte, y de nuevo si el usuario redimensiona la ventana.
-    setTimeout(() => this.cdr.detectChanges(), 0);
-  }
-
-  cerrarFullscreen() {
-    this.fullscreenAbierto = false;
-  }
-
-  // Al cargar la imagen ampliada recién se conoce su tamaño real renderizado (offsetWidth/Height)
-  alCargarImagenFullscreen(): void {
-    this.cdr.detectChanges();
-  }
-
-  // --- LÓGICA DE DIBUJO DE RECTÁNGULO EN LA IMAGEN ---
-  onImageMouseDown(event: MouseEvent) {
-    if (this.faseActual !== 1) return; // Solo se puede dibujar en Fase 1
-    this.isDrawing = true;
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect(); // siempre el contenedor, no el elemento bajo el cursor
-    this.startX = event.clientX - rect.left;
-    this.startY = event.clientY - rect.top;
-    
-    // Iniciar rectángulo
-    this.marcadorEstudiante = {
-      x: this.startX,
-      y: this.startY,
-      width: 0,
-      height: 0
-    };
-  }
-
-  onImageMouseMove(event: MouseEvent) {
-    if (!this.isDrawing || this.faseActual !== 1) return;
-    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect(); // siempre el contenedor, no el elemento bajo el cursor
-    const currentX = event.clientX - rect.left;
-    const currentY = event.clientY - rect.top;
-
-    this.marcadorEstudiante.width = currentX - this.startX;
-    this.marcadorEstudiante.height = currentY - this.startY;
-  }
-
-  onImageMouseUp(event: MouseEvent) {
-    if (!this.isDrawing) return;
-    this.isDrawing = false;
-    
-    // Normalizar dimensiones negativas (si arrastra hacia arriba o izquierda)
-    if (this.marcadorEstudiante.width < 0) {
-      this.marcadorEstudiante.x += this.marcadorEstudiante.width;
-      this.marcadorEstudiante.width = Math.abs(this.marcadorEstudiante.width);
-    }
-    if (this.marcadorEstudiante.height < 0) {
-      this.marcadorEstudiante.y += this.marcadorEstudiante.height;
-      this.marcadorEstudiante.height = Math.abs(this.marcadorEstudiante.height);
-    }
-
-    // Si fue un clic simple sin arrastrar (área muy pequeña), lo borramos o consideramos "clic"
-    if (this.marcadorEstudiante.width < 5 && this.marcadorEstudiante.height < 5) {
-      // Lo convertimos en un marcador de punto (clic simple)
-      this.marcadorEstudiante.width = 20;
-      this.marcadorEstudiante.height = 20;
-      this.marcadorEstudiante.x -= 10;
-      this.marcadorEstudiante.y -= 10;
-      this.marcadorEstudiante.type = 'point';
-    } else {
-      this.marcadorEstudiante.type = 'rect';
-    }
-  }
-
   // Recuadro real del radiólogo: llega en proporciones (0-1) de la imagen; se convierte a píxeles del
   // contenedor usando la posición real de la imagen dentro de él (offsetLeft/Width ignoran el zoom).
-  // El selector es parametrizable para poder ubicar la misma capa sobre la imagen del visor ampliado (fullscreen).
-  estiloCajaReal(caja: any, selector: string = '.image-container .xray-image'): Record<string, string> {
-    const img = document.querySelector(selector) as HTMLElement | null;
+  estiloCajaReal(caja: any): Record<string, string> {
+    const img = document.querySelector('.xray-image') as HTMLElement | null;
     if (!img || !caja) return { display: 'none' };
     return {
       left: (img.offsetLeft + caja.x * img.offsetWidth) + 'px',
@@ -342,23 +225,16 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     return `${environment.apiUrl}/${limpia.startsWith('uploads/') ? limpia : 'uploads/banco_casos/' + limpia}`;
   }
 
-  // Coloca una capa exactamente sobre la radiografía (mismo recuadro y mismo zoom).
-  // El selector es parametrizable para reutilizar esto también en el visor ampliado (fullscreen),
-  // donde no hay control de zoom propio.
-  estiloCapaSobreImagen(selector: string = '.image-container .xray-image', aplicarZoom: boolean = true): Record<string, string> {
-    const img = document.querySelector(selector) as HTMLElement | null;
+  // Coloca una capa exactamente sobre la radiografía (mismo recuadro que la imagen dentro del componente de herramientas).
+  estiloCapaSobreImagen(): Record<string, string> {
+    const img = document.querySelector('.xray-image') as HTMLElement | null;
     if (!img) return { display: 'none' };
     return {
       left: img.offsetLeft + 'px',
       top: img.offsetTop + 'px',
       width: img.offsetWidth + 'px',
-      height: img.offsetHeight + 'px',
-      transform: 'scale(' + (aplicarZoom ? this.zoomLevel : 1) + ')'
+      height: img.offsetHeight + 'px'
     };
-  }
-
-  clearMarker() {
-    this.marcadorEstudiante = null;
   }
 
   // --- TRANSICIONES DE FASE ---
@@ -386,7 +262,7 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     }
     // Si el estudiante solo marcó "Normal" no hay ninguna región que señalar
     const soloNormal = this.patologias.filter(p => p.seleccionada).every(p => String(p.nombre).trim().toLowerCase() === 'normal');
-    if (!this.marcadorEstudiante && !soloNormal) {
+    if (this.marcasEstudiante.length === 0 && !soloNormal) {
       this.alertService.warning("Marca de Región Requerida", "Dibuja un rectángulo o haz clic sobre la región sospechosa en la radiografía (no hace falta si marcas solo 'Normal').");
       return;
     }
@@ -409,18 +285,8 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
 
     const tiempoTranscurrido = Math.floor((Date.now() - this.horaInicioAnalisis) / 1000);
 
-    // La marca está en píxeles del contenedor; se normaliza respecto a la imagen (que puede tener
-    // márgenes dentro del contenedor). offsetLeft/offsetWidth ignoran el zoom (transform).
-    const imgEl = document.querySelector('.image-container .xray-image') as HTMLElement;
-    let marcadorRelativo = null;
-    if (this.marcadorEstudiante && imgEl && imgEl.offsetWidth > 0 && imgEl.offsetHeight > 0) {
-      marcadorRelativo = {
-        x: (this.marcadorEstudiante.x - imgEl.offsetLeft) / imgEl.offsetWidth,
-        y: (this.marcadorEstudiante.y - imgEl.offsetTop) / imgEl.offsetHeight,
-        w: this.marcadorEstudiante.width / imgEl.offsetWidth,
-        h: this.marcadorEstudiante.height / imgEl.offsetHeight
-      };
-    }
+    const marca = this.marcasEstudiante[0];
+    const marcadorRelativo = marca ? { x: marca.x / 100, y: marca.y / 100, w: marca.w / 100, h: marca.h / 100 } : null;
 
     const payload = {
       id_estudiante: idUsuarioDinamico,

@@ -29,34 +29,12 @@
     
     <!-- COLUMNA IZQUIERDA: Visor de Radiografía -->
     <section class="xray-viewer">
-      <div class="toolbar">
-        <button title="Pantalla Completa" (click)="abrirFullscreen()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg></button>
-        <button title="Ajustar Brillo/Contraste" (click)="ajustarContraste()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg></button>
-        <button title="Zoom" (click)="hacerZoom()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg></button>
-        <button title="Invertir Colores" (click)="toggleInvert()" [ngClass]="{'active': isInverted}"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></button>
-        <button title="Borrar Marca" *ngIf="marcadorEstudiante && faseActual === 1" (click)="clearMarker()"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-      </div>
-      
-      <!-- Contenedor Interactivo -->
-      <div class="image-container" style="position: relative; cursor: crosshair; overflow: hidden;"
-           (mousedown)="onImageMouseDown($event)" 
-           (mousemove)="onImageMouseMove($event)" 
-           (mouseup)="onImageMouseUp($event)">
-           
-        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image" (load)="alCargarImagen()"
-             [ngStyle]="{'transform': 'scale(' + zoomLevel + ')', 'filter': (isInverted ? 'invert(1) ' : 'grayscale(100%) ') + 'brightness(' + brightness + ') contrast(' + contrast + ')'}" 
-             style="transition: transform 0.3s ease, filter 0.3s ease; user-select: none;" draggable="false">
+      <app-herramientas-imagen [(marcas)]="marcasEstudiante" [soloLectura]="faseActual !== 1" [unicaMarca]="true">
+        <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image imagen-base" (load)="alCargarImagen()">
 
         <!-- Grad-CAM (Fase 3 y 4): capa de calor con transparencia, alineada exactamente sobre la radiografía -->
         <img *ngIf="faseActual >= 3 && mostrarGradcam && gradcamActual" [src]="gradcamActual.url" alt="Mapa de calor Grad-CAM" class="gradcam-overlay"
              [ngStyle]="estiloCapaSobreImagen()" draggable="false">
-
-        <!-- Marca del Estudiante -->
-        <div *ngIf="marcadorEstudiante" class="user-marker"
-             [ngStyle]="{'left.px': marcadorEstudiante.x, 'top.px': marcadorEstudiante.y, 'width.px': marcadorEstudiante.width, 'height.px': marcadorEstudiante.height, 'border-radius': marcadorEstudiante.type === 'point' ? '50%' : '0'}"
-             style="position: absolute; border: 2px solid #00ff88; background: rgba(0, 255, 136, 0.2); pointer-events: none; z-index: 10;">
-             <span style="position: absolute; top: -20px; left: 0; background: #00ff88; color: #000; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px;">Tú</span>
-        </div>
 
         <!-- Marca de Verdad de Referencia (NIH) (Fase 2, 3, 4) -->
         <ng-container *ngIf="faseActual >= 2 && resultadoFase2?.bbox">
@@ -66,8 +44,7 @@
                <span style="position: absolute; top: -20px; left: 0; background: #ff4757; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px; white-space: nowrap;">Radiólogo (NIH)</span>
           </div>
         </ng-container>
-
-      </div>
+      </app-herramientas-imagen>
     </section>
 
     <!-- COLUMNA DERECHA: Fases Educativas -->
@@ -132,7 +109,7 @@
 
           <div class="verdad-nota" *ngIf="resultadoFase2?.bbox">
             Observa el recuadro rojo en la imagen. Es el Bounding Box (BBox) trazado por el radiólogo profesional.
-            <ng-container *ngIf="marcadorEstudiante"><strong>¿Coincide con tu marca verde?</strong></ng-container>
+            <ng-container *ngIf="marcasEstudiante.length > 0"><strong>¿Coincide con tu marca?</strong></ng-container>
           </div>
           <div class="verdad-nota neutro" *ngIf="!resultadoFase2?.bbox">
             Este caso no tiene recuadro trazado por el radiólogo: el informe original solo indica los diagnósticos, sin localizar la lesión en la imagen.
@@ -283,26 +260,4 @@
 
   </main>
 
-  <!-- MODAL FULLSCREEN -->
-  <div class="modal-backdrop fullscreen-modal" *ngIf="fullscreenAbierto" (click)="cerrarFullscreen()">
-    <div class="modal-card fullscreen-card" (click)="$event.stopPropagation()">
-      <button class="btn-close fullscreen-close" (click)="cerrarFullscreen()">×</button>
-      <app-herramientas-imagen class="hi-lateral" (click)="$event.stopPropagation()">
-        <img [src]="imagenUrl" alt="Radiografía Ampliada" class="fullscreen-image imagen-base" (load)="alCargarImagenFullscreen()">
-
-        <!-- Grad-CAM también en el visor ampliado -->
-        <img *ngIf="faseActual >= 3 && mostrarGradcam && gradcamActual" [src]="gradcamActual.url" alt="Mapa de calor Grad-CAM" class="gradcam-overlay"
-             [ngStyle]="estiloCapaSobreImagen('.fullscreen-card .fullscreen-image', false)" draggable="false">
-
-        <!-- Marca de Verdad de Referencia (NIH) también en el visor ampliado -->
-        <ng-container *ngIf="faseActual >= 2 && resultadoFase2?.bbox">
-          <div *ngFor="let caja of resultadoFase2.bbox" class="nih-marker"
-               [ngStyle]="estiloCajaReal(caja, '.fullscreen-card .fullscreen-image')"
-               style="position: absolute; border: 2px solid #ff4757; background: rgba(255, 71, 87, 0.1); pointer-events: none; z-index: 9;">
-               <span style="position: absolute; top: -20px; left: 0; background: #ff4757; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px; white-space: nowrap;">Radiólogo (NIH)</span>
-          </div>
-        </ng-container>
-      </app-herramientas-imagen>
-    </div>
-  </div>
 </div>
