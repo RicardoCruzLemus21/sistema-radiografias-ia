@@ -31,7 +31,7 @@
   <div class="hi-contenido" [style.transform]="'rotate(' + rotacion + 'deg) scale(' + zoom + ')'"
        [class.dibujando]="senalizando"
        (pointerdown)="iniciarTrazo($event)" (pointermove)="moverTrazo($event)"
-       (pointerup)="terminarTrazo()" (pointercancel)="terminarTrazo()">
+       (pointerup)="terminarTrazo()" (pointercancel)="terminarTrazo()" (dragstart)="$event.preventDefault()">
     <ng-content></ng-content>
 
     <div class="hi-marca" *ngFor="let m of marcas"

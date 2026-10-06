@@ -17,7 +17,7 @@
 
 /* Lienzo: la imagen y las marcas comparten este contenedor, así el zoom las mueve juntas */
 .hi-marco { flex: 1; min-height: 0; width: 100%; max-width: 100%; overflow: auto; display: flex; justify-content: center; align-items: center; }
-.hi-contenido { position: relative; height: 100%; transform-origin: center center; transition: transform 0.15s ease; touch-action: none; }
+.hi-contenido { position: relative; height: 100%; user-select: none; -webkit-user-drag: none; transform-origin: center center; transition: transform 0.15s ease; touch-action: none; }
 .hi-contenido.dibujando { cursor: crosshair; }
 
 .hi-marca { position: absolute; border: 2px solid #22d3ee; background: rgba(34, 211, 238, 0.12); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4); pointer-events: none; }
