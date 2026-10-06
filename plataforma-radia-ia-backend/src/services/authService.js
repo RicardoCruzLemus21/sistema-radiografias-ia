@@ -33,6 +33,9 @@ const registrarUsuario = async (datosUsuario) => {
 
     const nuevoIdUsuario = resultado[0][0].id_usuario;
 
+    // La contraseña la puso otra persona (docente o admin): el usuario debe cambiarla al entrar
+    await pool.query('CALL sp_marcar_clave_temporal(?)', [nuevoIdUsuario]);
+
     // Todo docente recibe un código único que comparte con sus estudiantes para que se registren solos
     if (Number(id_rol) === 1) {
         await asignarCodigoNuevo(nuevoIdUsuario);
