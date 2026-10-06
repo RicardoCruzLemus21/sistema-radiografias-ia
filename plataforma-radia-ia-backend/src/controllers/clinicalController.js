@@ -284,7 +284,31 @@ const obtenerEstadisticasEstudiante = async (req, res) => {
     }
 };
 
+const progresoEjercicios = async (req, res) => {
+    try {
+        const ejercicios = await clinicalService.obtenerProgresoEjercicios(req.usuario.id_usuario);
+        res.status(200).json({ status: 'success', data: ejercicios });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'No se pudo cargar el progreso de los ejercicios.' });
+    }
+};
+
+const bitacoraEjercicio = async (req, res) => {
+    try {
+        const id_ejercicio = Number(req.params.id);
+        if (!Number.isInteger(id_ejercicio) || id_ejercicio <= 0) {
+            return res.status(400).json({ status: 'error', message: 'Ejercicio no válido.' });
+        }
+        const alumnos = await clinicalService.obtenerBitacoraEjercicio(id_ejercicio, req.usuario.id_usuario);
+        res.status(200).json({ status: 'success', data: alumnos });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'No se pudo cargar la bitácora del ejercicio.' });
+    }
+};
+
 module.exports = {
+    progresoEjercicios,
+    bitacoraEjercicio,
     registrarPaciente,
     armarCaso,
     subirImagenRad,

@@ -10,6 +10,8 @@ router.use(verificarToken);
 // === ESTE ES EL ENDPOINT QUE BUSCA POSTMAN Y ANGULAR ===
 router.get('/casos-clinicos', clinicalController.obtenerWorklist);
 router.get('/casos-admin', clinicalController.listarCasosCatedratico);
+router.get('/ejercicios-progreso', verificarRol(['catedratico', 'admin']), clinicalController.progresoEjercicios);
+router.get('/ejercicios/:id/bitacora', verificarRol(['catedratico', 'admin']), clinicalController.bitacoraEjercicio);
 router.get('/caso/:id', clinicalController.obtenerCasoPorId);
 router.get('/next-paciente', clinicalController.obtenerSiguienteCodigoPaciente);
 router.get('/library/:patologia', clinicalController.obtenerInfoPatologiaIA);

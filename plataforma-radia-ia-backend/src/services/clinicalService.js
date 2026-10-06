@@ -593,7 +593,31 @@ const obtenerRetroalimentacionEstudiante = async (id_estudiante, id_caso) => {
     };
 };
 
+// Progreso de cada ejercicio para el docente: sin_iniciar | pendiente | completado.
+// completado = todos los alumnos inscritos resolvieron todos los casos del ejercicio.
+const obtenerProgresoEjercicios = async (id_catedratico) => {
+    const [res] = await pool.query('CALL sp_ejercicios_progreso_catedratico(?)', [id_catedratico]);
+    return res[0].map(e => {
+        const totalAlumnos = Number(e.total_estudiantes) || 0;
+        let estado_progreso = 'sin_iniciar';
+        if (totalAlumnos > 0 && Number(e.estudiantes_completados) === totalAlumnos) estado_progreso = 'completado';
+        else if (Number(e.estudiantes_con_intentos) > 0) estado_progreso = 'pendiente';
+        return { ...e, estado_progreso };
+    });
+};
+
+// Bitácora de un ejercicio: quién lo completó y cuánto lleva cada alumno inscrito
+const obtenerBitacoraEjercicio = async (id_ejercicio, id_catedratico) => {
+    const [res] = await pool.query('CALL sp_ejercicio_bitacora(?, ?)', [id_ejercicio, id_catedratico]);
+    return res[0].map(a => ({
+        ...a,
+        completado: Number(a.total_casos) > 0 && Number(a.casos_resueltos) === Number(a.total_casos)
+    }));
+};
+
 module.exports = {
+    obtenerProgresoEjercicios,
+    obtenerBitacoraEjercicio,
     obtenerRetroalimentacionEstudiante,
     ErrorNegocio,
     crearPaciente,

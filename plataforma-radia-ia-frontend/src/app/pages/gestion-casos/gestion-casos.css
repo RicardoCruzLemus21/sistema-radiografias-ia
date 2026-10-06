@@ -964,3 +964,20 @@
 .rx-zoom-valor { min-width: 52px; text-align: center; font-size: 13px; }
 .rx-lightbox-lienzo { flex: 1; min-height: 0; overflow: auto; display: flex; padding: 16px; }
 .rx-lightbox-lienzo img { max-width: none; width: auto; flex-shrink: 0; margin: auto; user-select: none; }
+
+/* --- Estado de avance de los ejercicios (completado / pendiente / sin iniciar) --- */
+.estado-progreso { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.3px; border: 1px solid transparent; }
+.estado-progreso.completado { background: rgba(16, 185, 129, 0.16); color: #34d399; border-color: rgba(16, 185, 129, 0.4); }
+.estado-progreso.pendiente, .estado-progreso.en_curso { background: rgba(245, 158, 11, 0.16); color: #fbbf24; border-color: rgba(245, 158, 11, 0.4); }
+.estado-progreso.sin_iniciar { background: rgba(148, 163, 184, 0.16); color: var(--text-muted); border-color: var(--border-color); }
+[data-theme="light"] .estado-progreso.completado { color: #047857; }
+[data-theme="light"] .estado-progreso.pendiente, [data-theme="light"] .estado-progreso.en_curso { color: #b45309; }
+
+/* --- Bitácora del ejercicio --- */
+.bitacora { margin-top: 16px; padding: 18px 20px; border-radius: 14px; }
+.bitacora-titulo { margin: 0 0 12px; font-size: 16px; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+.bitacora-vacio { margin: 0; font-size: 13px; color: var(--text-muted); }
+.bitacora-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.bitacora-tabla th { text-align: left; padding: 8px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); }
+.bitacora-tabla td { padding: 10px; color: var(--text-main); border-bottom: 1px solid var(--border-color); }
+.bitacora-tabla tr:last-child td { border-bottom: none; }

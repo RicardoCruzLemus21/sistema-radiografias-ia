@@ -24,8 +24,14 @@ export class GestionCasosCatedratico implements OnInit {
   ejercicioAbierto: any = null;  // carpeta que se está viendo por dentro
   eliminandoEjercicio: boolean = false;
   filtroTexto: string = '';
-  filtroEstado: string = 'TODOS'; // Cambiado de filtroDificultad
+  // Filtro por estado de avance de los ejercicios: TODOS | COMPLETADO | PENDIENTE | SIN_INICIAR
+  filtroEstado: string = 'TODOS';
   cargando: boolean = false;
+
+  // Progreso por ejercicio (viene del backend) y bitácora del ejercicio abierto
+  progresoPorEjercicio = new Map<number, any>();
+  bitacora: any[] = [];
+  cargandoBitacora: boolean = false;
 
   // === ASIGNAR CASOS DEL BANCO NIH: un solo flujo ===
   // curso destino -> qué evaluar (patologías, nivel, cantidad) -> componer -> revisar -> publicar
@@ -190,6 +196,7 @@ export class GestionCasosCatedratico implements OnInit {
         this.aplicarFiltros();
         this.cargando = false;
         this.cdr.detectChanges();
+        this.cargarProgreso();
       },
       error: () => {
         this.cargarCasosPorDefecto();
@@ -227,24 +234,51 @@ export class GestionCasosCatedratico implements OnInit {
 
 
   aplicarFiltros(): void {
-    let res = [...this.casos];
+    const q = this.filtroTexto.toLowerCase().trim();
 
-    if (this.filtroTexto.trim()) {
-      const q = this.filtroTexto.toLowerCase().trim();
-      res = res.filter(c => 
-        (c.titulo && c.titulo.toLowerCase().includes(q)) || 
-        (c.paciente && c.paciente.toLowerCase().includes(q)) ||
-        (c.ejercicio_nombre && c.ejercicio_nombre.toLowerCase().includes(q)) ||
-        (c.motivo_consulta && c.motivo_consulta.toLowerCase().includes(q))
-      );
-    }
-
-    if (this.filtroEstado !== 'TODOS') {
-      res = res.filter(c => c.estado?.toUpperCase() === this.filtroEstado.toUpperCase());
-    }
-
-    this.casosFiltrados = res;
+    // Los ejercicios se agrupan con todos los casos; luego se filtran por nombre y por estado de avance
+    this.casosFiltrados = [...this.casos];
     this.agruparEnCarpetas();
+
+    this.carpetas = this.carpetas.filter(f =>
+      (!q || (f.nombre || '').toLowerCase().includes(q)) &&
+      (this.filtroEstado === 'TODOS' || f.estado_progreso === this.filtroEstado)
+    );
+
+    // Los casos sueltos (sin ejercicio) se buscan por título o paciente
+    this.casosSueltos = this.casosSueltos.filter(c =>
+      !q || (c.titulo || '').toLowerCase().includes(q) || (c.paciente || '').toLowerCase().includes(q)
+    );
+  }
+
+  // Cuántos ejercicios hay en cada estado (para los contadores de los filtros)
+  contarEstado(estado: string): number {
+    const base = this.todasLasCarpetas();
+    return estado === 'TODOS' ? base.length : base.filter(f => f.estado_progreso === estado).length;
+  }
+
+  // Todos los ejercicios sin filtrar (para contar aunque el filtro actual esté activo)
+  private todasLasCarpetas(): any[] {
+    const porEjercicio = new Map<number, any>();
+    for (const c of this.casos) {
+      if (!c.id_ejercicio || porEjercicio.has(c.id_ejercicio)) continue;
+      porEjercicio.set(c.id_ejercicio, { id_ejercicio: c.id_ejercicio });
+    }
+    return [...porEjercicio.values()].map(f => ({ ...f, estado_progreso: this.progresoPorEjercicio.get(f.id_ejercicio)?.estado_progreso || 'sin_iniciar' }));
+  }
+
+  cargarProgreso(): void {
+    this.clinicalService.getProgresoEjercicios().subscribe({
+      next: (resp: any) => {
+        this.progresoPorEjercicio = new Map((resp.data || []).map((e: any) => [e.id_ejercicio, e]));
+        this.aplicarFiltros();
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        // Sin progreso, los ejercicios se muestran sin estado (todos cuentan como sin iniciar)
+        this.aplicarFiltros();
+      }
+    });
   }
 
   private agruparEnCarpetas(): void {
@@ -254,7 +288,14 @@ export class GestionCasosCatedratico implements OnInit {
       if (!c.id_ejercicio) { sueltos.push(c); continue; }
       let carpeta = porEjercicio.get(c.id_ejercicio);
       if (!carpeta) {
-        carpeta = { id_ejercicio: c.id_ejercicio, nombre: c.ejercicio_nombre, numero: c.ejercicio_numero, id_curso: c.id_curso, nombre_curso: c.nombre_curso, casos: [], intentos: 0 };
+        const prog = this.progresoPorEjercicio.get(c.id_ejercicio);
+        carpeta = {
+          id_ejercicio: c.id_ejercicio, nombre: c.ejercicio_nombre, numero: c.ejercicio_numero,
+          id_curso: c.id_curso, nombre_curso: c.nombre_curso, casos: [], intentos: 0,
+          estado_progreso: prog?.estado_progreso || 'sin_iniciar',
+          alumnos_completados: Number(prog?.estudiantes_completados) || 0,
+          total_alumnos: Number(prog?.total_estudiantes) || 0
+        };
         porEjercicio.set(c.id_ejercicio, carpeta);
       }
       carpeta.casos.push(c);
@@ -277,10 +318,37 @@ export class GestionCasosCatedratico implements OnInit {
 
   abrirCarpeta(carpeta: any): void {
     this.ejercicioAbierto = carpeta;
+    this.cargarBitacora(carpeta.id_ejercicio);
   }
 
   cerrarCarpeta(): void {
     this.ejercicioAbierto = null;
+    this.bitacora = [];
+  }
+
+  // Quién completó el ejercicio y cuánto lleva cada alumno inscrito
+  cargarBitacora(idEjercicio: number): void {
+    this.bitacora = [];
+    this.cargandoBitacora = true;
+    this.clinicalService.getBitacoraEjercicio(idEjercicio).subscribe({
+      next: (resp: any) => {
+        this.bitacora = resp.data || [];
+        this.cargandoBitacora = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoBitacora = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  etiquetaEstado(estado: string): string {
+    return estado === 'completado' ? 'Completado' : estado === 'pendiente' ? 'Pendiente de completar' : 'Sin iniciar';
+  }
+
+  estadoAlumno(a: any): string {
+    return a.completado ? 'completado' : Number(a.casos_resueltos) > 0 ? 'en_curso' : 'sin_iniciar';
   }
 
   async eliminarCarpeta(carpeta: any): Promise<void> {

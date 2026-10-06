@@ -54,13 +54,14 @@
         type="text" 
         [(ngModel)]="filtroTexto" 
         (ngModelChange)="aplicarFiltros()" 
-        placeholder="Buscar caso por título, código o cuadro clínico...">
+        placeholder="Buscar ejercicio por nombre...">
     </div>
 
     <div class="filter-chips">
-      <button [class.active]="filtroEstado === 'TODOS'" (click)="setFiltroEstado('TODOS')">Todos los Estados</button>
-      <button [class.active]="filtroEstado === 'PENDIENTE'" (click)="setFiltroEstado('PENDIENTE')">Pendientes</button>
-      <button [class.active]="filtroEstado === 'DISPONIBLE'" (click)="setFiltroEstado('DISPONIBLE')">Disponibles</button>
+      <button [class.active]="filtroEstado === 'TODOS'" (click)="setFiltroEstado('TODOS')">Todos ({{ contarEstado('TODOS') }})</button>
+      <button [class.active]="filtroEstado === 'COMPLETADO'" (click)="setFiltroEstado('COMPLETADO')">Completados ({{ contarEstado('completado') }})</button>
+      <button [class.active]="filtroEstado === 'PENDIENTE'" (click)="setFiltroEstado('PENDIENTE')">Pendientes de completar ({{ contarEstado('pendiente') }})</button>
+      <button [class.active]="filtroEstado === 'SIN_INICIAR'" (click)="setFiltroEstado('SIN_INICIAR')">Sin iniciar ({{ contarEstado('sin_iniciar') }})</button>
     </div>
   </section>
 
@@ -76,7 +77,8 @@
         <div class="carpeta-info">
           <h3>{{ f.nombre }}</h3>
           <span class="carpeta-curso">{{ f.nombre_curso }}</span>
-          <span class="carpeta-meta">{{ f.casos.length }} {{ f.casos.length === 1 ? 'caso' : 'casos' }} · {{ f.intentos }} intentos</span>
+          <span class="carpeta-meta">{{ f.casos.length }} {{ f.casos.length === 1 ? 'caso' : 'casos' }} · {{ f.alumnos_completados }}/{{ f.total_alumnos }} alumnos completaron</span>
+          <span class="estado-progreso" [ngClass]="f.estado_progreso">{{ etiquetaEstado(f.estado_progreso) }}</span>
         </div>
       </div>
     </div>
@@ -90,6 +92,28 @@
       <span class="carpeta-curso">{{ ejercicioAbierto.nombre_curso }} · {{ ejercicioAbierto.casos.length }} casos</span>
     </div>
     <button class="btn-peligro" [disabled]="eliminandoEjercicio" (click)="eliminarCarpeta(ejercicioAbierto)">Eliminar ejercicio</button>
+  </section>
+
+  <!-- Bitácora: quién completó el ejercicio y cuánto lleva cada alumno -->
+  <section class="bitacora glass-panel" *ngIf="ejercicioAbierto">
+    <h3 class="bitacora-titulo">Bitácora del ejercicio
+      <span class="estado-progreso" [ngClass]="ejercicioAbierto.estado_progreso">{{ etiquetaEstado(ejercicioAbierto.estado_progreso) }}</span>
+    </h3>
+    <p class="bitacora-vacio" *ngIf="cargandoBitacora">Cargando alumnos...</p>
+    <p class="bitacora-vacio" *ngIf="!cargandoBitacora && bitacora.length === 0">No hay alumnos inscritos en este curso.</p>
+    <table class="bitacora-tabla" *ngIf="!cargandoBitacora && bitacora.length > 0">
+      <thead>
+        <tr><th>Alumno</th><th>Casos resueltos</th><th>Estado</th><th>Última actividad</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let a of bitacora">
+          <td>{{ a.nombre_completo }}</td>
+          <td>{{ a.casos_resueltos }} / {{ a.total_casos }}</td>
+          <td><span class="estado-progreso" [ngClass]="estadoAlumno(a)">{{ estadoAlumno(a) === 'completado' ? 'Completado' : estadoAlumno(a) === 'en_curso' ? 'En curso' : 'Sin iniciar' }}</span></td>
+          <td>{{ a.ultima_actividad ? (a.ultima_actividad | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
   </section>
 
   <h2 class="seccion-titulo" *ngIf="!ejercicioAbierto && carpetas.length > 0 && casosSueltos.length > 0">Casos individuales</h2>

@@ -29,6 +29,20 @@ export class ClinicalService {
     });
   }
 
+  // Estado de avance de cada ejercicio (sin_iniciar | pendiente | completado)
+  getProgresoEjercicios(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/ejercicios-progreso`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Alumnos de un ejercicio con su avance (bitácora)
+  getBitacoraEjercicio(idEjercicio: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/ejercicios/${idEjercicio}/bitacora`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   // Obtiene el detalle de un caso clínico específico (NO SEGURO - uso de admin)
   getCasoPorId(id: string | number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/caso/${id}`, {
