@@ -54,10 +54,15 @@
   <section class="worklist-section">
     <div class="section-header">
       <h2>WORKLIST DE PACIENTES</h2>
-      <div class="filtro-ejercicios" role="group" aria-label="Filtrar ejercicios">
-        <button type="button" [class.activo]="filtroEjercicios === 'TODOS'" (click)="filtroEjercicios = 'TODOS'">Todos ({{ todosLosGrupos.length }})</button>
-        <button type="button" [class.activo]="filtroEjercicios === 'PENDIENTES'" (click)="filtroEjercicios = 'PENDIENTES'">Pendientes ({{ ejerciciosPendientes }})</button>
-        <button type="button" [class.activo]="filtroEjercicios === 'COMPLETADOS'" (click)="filtroEjercicios = 'COMPLETADOS'">Completados ({{ ejerciciosCompletados }})</button>
+      <div class="filtro-ejercicios-barra">
+        <input type="text" class="buscador-ejercicios" [(ngModel)]="busquedaEjercicios"
+               placeholder="Buscar ejercicio por nombre..." aria-label="Buscar ejercicio por nombre">
+        <div class="filtro-ejercicios" role="group" aria-label="Filtrar ejercicios">
+          <button type="button" [class.activo]="filtroEjercicios === 'TODOS'" (click)="filtroEjercicios = 'TODOS'">Todos ({{ contarEstado('TODOS') }})</button>
+          <button type="button" [class.activo]="filtroEjercicios === 'COMPLETADO'" (click)="filtroEjercicios = 'COMPLETADO'">Completados ({{ contarEstado('COMPLETADO') }})</button>
+          <button type="button" [class.activo]="filtroEjercicios === 'PENDIENTE'" (click)="filtroEjercicios = 'PENDIENTE'">Pendientes de completar ({{ contarEstado('PENDIENTE') }})</button>
+          <button type="button" [class.activo]="filtroEjercicios === 'SIN_INICIAR'" (click)="filtroEjercicios = 'SIN_INICIAR'">Sin iniciar ({{ contarEstado('SIN_INICIAR') }})</button>
+        </div>
       </div>
     </div>
 
@@ -89,7 +94,7 @@
       </div>
 
       <div *ngIf="!cargando && worklist.length > 0 && grupos.length === 0" class="empty-state" style="padding: 40px 20px; text-align: center; color: var(--text-muted);">
-        {{ filtroEjercicios === 'PENDIENTES' ? 'No tienes ejercicios pendientes.' : 'Todavía no has completado ningún ejercicio.' }}
+        {{ busquedaEjercicios ? 'Ningún ejercicio coincide con la búsqueda.' : filtroEjercicios === 'COMPLETADO' ? 'Aún no has completado ningún ejercicio.' : filtroEjercicios === 'PENDIENTE' ? 'No tienes ejercicios pendientes de completar.' : filtroEjercicios === 'SIN_INICIAR' ? 'No tienes ejercicios sin iniciar.' : 'No hay ejercicios con este filtro.' }}
       </div>
 
       <!-- Un ejercicio = una carpeta desplegable con sus casos -->

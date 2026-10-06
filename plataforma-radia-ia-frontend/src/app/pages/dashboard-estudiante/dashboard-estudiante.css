@@ -125,3 +125,10 @@
 
 .btn-retro { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 18px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all var(--transition-fast); }
 .btn-retro:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); transform: translateY(-2px); }
+
+/* --- Buscador y filtros de ejercicios (mismo criterio que el panel del docente) --- */
+.section-header { flex-wrap: wrap; gap: 12px; }
+.filtro-ejercicios-barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; flex: 1; }
+.buscador-ejercicios { width: 240px; max-width: 100%; padding: 7px 12px; border-radius: 8px; background: var(--input-bg); border: 1px solid var(--border-color); color: var(--text-main); font-size: 13px; }
+.buscador-ejercicios:focus { outline: none; border-color: var(--accent-cyan); }
+.filtro-ejercicios { flex-wrap: wrap; }

@@ -1,5 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ClinicalService } from '../../services/clinical'; 
 import { AuthService } from '../../services/auth';
@@ -8,7 +9,7 @@ import { CampanaNotificaciones } from '../../components/campana-notificaciones/c
 @Component({
   selector: 'app-dashboard-estudiante',
   standalone: true,
-  imports: [CommonModule, CampanaNotificaciones],
+  imports: [CommonModule, FormsModule, CampanaNotificaciones],
   templateUrl: './dashboard-estudiante.html',
   styleUrl: './dashboard-estudiante.css'
 })
@@ -31,7 +32,8 @@ export class DashboardEstudiante implements OnInit {
   gruposAbiertos = new Set<number>();
 
   // Filtro por estado del ejercicio: pendiente = aún le faltan casos; completado = ya resolviste todos
-  filtroEjercicios: 'TODOS' | 'PENDIENTES' | 'COMPLETADOS' = 'TODOS';
+  filtroEjercicios: 'TODOS' | 'COMPLETADO' | 'PENDIENTE' | 'SIN_INICIAR' = 'TODOS';
+  busquedaEjercicios: string = '';
 
   get todosLosGrupos(): { clave: number; nombre: string; casos: any[]; completados: number; pendientes: number; promedio: number | null }[] {
     const mapa = new Map<number, any>();
@@ -55,19 +57,32 @@ export class DashboardEstudiante implements OnInit {
     return p >= 80 ? 'res-alto' : p >= 50 ? 'res-medio' : 'res-bajo';
   }
 
+  // Mismos estados que en el panel del docente:
+  // completado = resolvió todos los casos; sin_iniciar = no ha resuelto ninguno; pendiente = en medio
+  estadoGrupo(g: { completados: number; pendientes: number }): 'completado' | 'pendiente' | 'sin_iniciar' {
+    if (g.completados === 0) return 'sin_iniciar';
+    return g.pendientes === 0 ? 'completado' : 'pendiente';
+  }
+
   get grupos() {
-    const todos = this.todosLosGrupos;
-    if (this.filtroEjercicios === 'PENDIENTES') return todos.filter(g => g.pendientes > 0);
-    if (this.filtroEjercicios === 'COMPLETADOS') return todos.filter(g => g.pendientes === 0);
-    return todos;
+    const q = this.busquedaEjercicios.toLowerCase().trim();
+    return this.todosLosGrupos.filter(g =>
+      (this.filtroEjercicios === 'TODOS' || this.estadoGrupo(g) === this.filtroEjercicios.toLowerCase()) &&
+      (!q || (g.nombre || '').toLowerCase().includes(q))
+    );
+  }
+
+  contarEstado(estado: 'TODOS' | 'COMPLETADO' | 'PENDIENTE' | 'SIN_INICIAR'): number {
+    if (estado === 'TODOS') return this.todosLosGrupos.length;
+    return this.todosLosGrupos.filter(g => this.estadoGrupo(g) === estado.toLowerCase()).length;
   }
 
   get ejerciciosPendientes(): number {
-    return this.todosLosGrupos.filter(g => g.pendientes > 0).length;
+    return this.contarEstado('PENDIENTE');
   }
 
   get ejerciciosCompletados(): number {
-    return this.todosLosGrupos.filter(g => g.pendientes === 0).length;
+    return this.contarEstado('COMPLETADO');
   }
 
   get totalPendientes(): number {
