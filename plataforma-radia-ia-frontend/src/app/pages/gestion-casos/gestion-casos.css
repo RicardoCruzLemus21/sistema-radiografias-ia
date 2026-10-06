@@ -985,3 +985,22 @@
 /* --- Ocultar / mostrar ejercicio (sin borrarlo) --- */
 .btn-visibilidad { margin-top: 6px; align-self: flex-start; padding: 4px 12px; border-radius: 8px; cursor: pointer; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px; font-weight: 700; }
 .btn-visibilidad:hover { color: var(--text-main); border-color: var(--accent-cyan); }
+
+/* --- Rediseño de la tarjeta de ejercicio (estado arriba, avance al centro, acción abajo) --- */
+.carpeta-card { display: flex; flex-direction: column; align-items: stretch; gap: 14px; padding: 18px 18px 16px; border-radius: 14px; }
+.carpeta-cabeza { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.carpeta-cabeza .carpeta-icono { width: 44px; height: 44px; border-radius: 10px; }
+.carpeta-texto { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.carpeta-nombre { margin: 0; font-size: 17px; font-weight: 700; color: var(--text-main); }
+.carpeta-avance { display: flex; flex-direction: column; gap: 6px; }
+.barra-avance { height: 6px; border-radius: 999px; background: var(--border-color); overflow: hidden; }
+.barra-relleno { height: 100%; border-radius: 999px; background: var(--accent-cyan); transition: width 0.3s ease; }
+.barra-relleno.completo { background: #10b981; }
+.carpeta-meta { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+.carpeta-pie { display: flex; justify-content: flex-end; padding-top: 10px; border-top: 1px solid var(--border-color); }
+
+/* --- Vista de ocultos y mensaje sin resultados --- */
+.vista-ocultos { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin: 4px 0 14px; }
+.vista-ocultos-aviso { font-size: 13px; color: var(--text-muted); }
+.vacio-filtro { padding: 28px; border-radius: 14px; text-align: center; margin-bottom: 24px; }
+.vacio-filtro p { margin: 0; font-size: 14px; color: var(--text-muted); }

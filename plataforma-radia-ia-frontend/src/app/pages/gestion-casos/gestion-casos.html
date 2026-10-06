@@ -62,9 +62,16 @@
       <button [class.active]="filtroEstado === 'COMPLETADO'" (click)="setFiltroEstado('COMPLETADO')">Completados ({{ contarEstado('completado') }})</button>
       <button [class.active]="filtroEstado === 'PENDIENTE'" (click)="setFiltroEstado('PENDIENTE')">Pendientes de completar ({{ contarEstado('pendiente') }})</button>
       <button [class.active]="filtroEstado === 'SIN_INICIAR'" (click)="setFiltroEstado('SIN_INICIAR')">Sin iniciar ({{ contarEstado('sin_iniciar') }})</button>
-      <button [class.active]="verOcultos" (click)="toggleVerOcultos()">{{ verOcultos ? 'Volver a visibles' : 'Ver ocultos' }} ({{ cantidadOcultos }})</button>
     </div>
   </section>
+
+  <!-- Vista de ocultos: separada de los filtros, para no confundirla con un estado -->
+  <div class="vista-ocultos" *ngIf="!ejercicioAbierto">
+    <span *ngIf="verOcultos" class="vista-ocultos-aviso">Estás viendo los ejercicios ocultos.</span>
+    <button type="button" class="btn-visibilidad" (click)="toggleVerOcultos()">
+      {{ verOcultos ? 'Volver a los ejercicios visibles' : 'Ver ejercicios ocultos (' + cantidadOcultos + ')' }}
+    </button>
+  </div>
 
   <!-- Carpetas de ejercicios: cada publicación es un conjunto de casos (Ejercicio 1, 2, ...) -->
   <section class="ejercicios-seccion" *ngIf="!ejercicioAbierto && carpetas.length > 0">
@@ -72,18 +79,37 @@
     <div class="carpetas-grid">
       <div class="carpeta-card glass-panel" *ngFor="let f of carpetas" role="button" tabindex="0"
            (click)="abrirCarpeta(f)" (keydown.enter)="abrirCarpeta(f)">
-        <div class="carpeta-icono">
-          <svg viewBox="0 0 24 24" width="30" height="30" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-        </div>
-        <div class="carpeta-info">
-          <h3>{{ f.nombre }}</h3>
-          <span class="carpeta-curso">{{ f.nombre_curso }}</span>
-          <span class="carpeta-meta">{{ f.casos.length }} {{ f.casos.length === 1 ? 'caso' : 'casos' }} · {{ f.alumnos_completados }}/{{ f.total_alumnos }} alumnos completaron</span>
+        <div class="carpeta-cabeza">
+          <div class="carpeta-icono">
+            <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="1.8" fill="none"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+          </div>
           <span class="estado-progreso" [ngClass]="f.estado_progreso">{{ etiquetaEstado(f.estado_progreso) }}</span>
-          <button type="button" class="btn-visibilidad" (click)="toggleVisibilidad(f, $event)">{{ f.oculto ? 'Mostrar' : 'Ocultar' }}</button>
+        </div>
+
+        <div class="carpeta-texto">
+          <h3 class="carpeta-nombre">{{ f.nombre }}</h3>
+          <span class="carpeta-curso">{{ f.nombre_curso }}</span>
+        </div>
+
+        <div class="carpeta-avance">
+          <div class="barra-avance">
+            <div class="barra-relleno" [class.completo]="f.estado_progreso === 'completado'"
+                 [style.width.%]="f.total_alumnos ? (f.alumnos_completados / f.total_alumnos) * 100 : 0"></div>
+          </div>
+          <span class="carpeta-meta">{{ f.alumnos_completados }} de {{ f.total_alumnos }} alumnos completaron · {{ f.casos.length }} {{ f.casos.length === 1 ? 'caso' : 'casos' }}</span>
+        </div>
+
+        <div class="carpeta-pie">
+          <button type="button" class="btn-visibilidad" (click)="toggleVisibilidad(f, $event)">{{ f.oculto ? 'Mostrar en el panel' : 'Ocultar' }}</button>
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- Sin resultados con el filtro actual -->
+  <section class="vacio-filtro glass-panel" *ngIf="!ejercicioAbierto && carpetas.length === 0 && casosSueltos.length === 0">
+    <p *ngIf="!verOcultos">No hay ejercicios con este filtro.</p>
+    <p *ngIf="verOcultos">No tienes ejercicios ocultos.</p>
   </section>
 
   <!-- Vista interna de un ejercicio -->
