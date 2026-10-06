@@ -212,6 +212,23 @@
   margin: 0;
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.7);
 }
+
+/* En tema claro la radiografía es muy luminosa: se oscurece la zona del texto para que se lea */
+[data-theme="light"] .image-overlay {
+  background:
+    linear-gradient(to right, var(--bg-dark-base) 0%, transparent 50%, rgba(0, 229, 255, 0.1) 100%),
+    linear-gradient(to top, rgba(0, 0, 0, 0.92) 0%, rgba(0, 0, 0, 0.7) 35%, transparent 60%);
+}
+
+[data-theme="light"] .hero-text h3 {
+  color: #7dd3fc;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+}
+
+[data-theme="light"] .hero-text p {
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
 /* --- Registro de docente --- */
 .alt-action { margin-top: 22px; font-size: 13px; color: var(--text-muted); }
 .link-registro { color: var(--accent-cyan); font-weight: 600; cursor: pointer; text-decoration: none; }
