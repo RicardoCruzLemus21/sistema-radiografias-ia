@@ -150,19 +150,6 @@
           <h3>OPINIÓN DEL MODELO IA</h3>
           <p class="helper-text">El modelo no es perfecto, es tu compañero de estudio: una segunda opinión falible, no un diagnóstico.</p>
 
-          <!-- El modelo se abstiene: esto es una fortaleza del diseño, no una falla -->
-          <div *ngIf="resultadoFase3?.abstiene" class="alert-box" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255,255,255,0.15); color: var(--text-muted); padding: 15px; margin-top: 15px;">
-            <strong style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-main);">
-              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              El modelo se abstiene de opinar en este caso.
-            </strong>
-            <p class="helper-text" style="margin-top: 8px;">
-              No es un error: el sistema solo emite juicio cuando su confianza supera un umbral calibrado para esa patología.
-              Prefiere guardar silencio antes que dar una opinión poco fiable que pueda desorientarte. Esto también enseña algo:
-              existen radiografías genuinamente ambiguas incluso para una herramienta automática.
-            </p>
-          </div>
-
           <!-- El modelo sí opina: una o más patologías ordenadas por probabilidad -->
           <div *ngIf="!resultadoFase3?.abstiene" style="margin-top: 15px;">
             <div class="accuracy-section" *ngFor="let op of resultadoFase3?.opiniones; let first = first" [style.margin-top.px]="first ? 0 : 15">
