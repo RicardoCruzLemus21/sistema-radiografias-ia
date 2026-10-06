@@ -64,7 +64,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let ev of datosRendimiento.historial">
+            <tr *ngFor="let ev of historialPagina">
               <td>{{ ev.fecha_evaluacion | date:'dd/MM/yyyy HH:mm' }}</td>
               <td>{{ ev.titulo_caso }}</td>
               <td><span class="badge badge-{{ev.nivel_dificultad.toLowerCase()}}">{{ ev.nivel_dificultad }}</span></td>
@@ -83,6 +83,17 @@
             </tr>
           </tbody>
         </table>
+
+        <div class="paginacion" *ngIf="totalPaginasHistorial > 1">
+          <span class="paginacion-info">
+            Mostrando {{ (paginaHistorial - 1) * TAMANO_PAGINA + 1 }}–{{ finPaginaHistorial }} de {{ datosRendimiento.historial.length }}
+          </span>
+          <div class="paginacion-controles">
+            <button type="button" (click)="irAPaginaHistorial(paginaHistorial - 1)" [disabled]="paginaHistorial === 1">Anterior</button>
+            <span>Página {{ paginaHistorial }} de {{ totalPaginasHistorial }}</span>
+            <button type="button" (click)="irAPaginaHistorial(paginaHistorial + 1)" [disabled]="paginaHistorial === totalPaginasHistorial">Siguiente</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>

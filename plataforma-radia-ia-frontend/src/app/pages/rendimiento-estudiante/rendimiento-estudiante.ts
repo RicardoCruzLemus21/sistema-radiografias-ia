@@ -15,6 +15,27 @@ export class RendimientoEstudiante implements OnInit {
   datosRendimiento: any = null;
   cargando: boolean = true;
 
+  // Historial paginado de 10 en 10
+  readonly TAMANO_PAGINA = 10;
+  paginaHistorial: number = 1;
+
+  get totalPaginasHistorial(): number {
+    return Math.max(1, Math.ceil((this.datosRendimiento?.historial?.length || 0) / this.TAMANO_PAGINA));
+  }
+
+  get historialPagina(): any[] {
+    const inicio = (this.paginaHistorial - 1) * this.TAMANO_PAGINA;
+    return (this.datosRendimiento?.historial || []).slice(inicio, inicio + this.TAMANO_PAGINA);
+  }
+
+  get finPaginaHistorial(): number {
+    return Math.min(this.paginaHistorial * this.TAMANO_PAGINA, this.datosRendimiento?.historial?.length || 0);
+  }
+
+  irAPaginaHistorial(pagina: number): void {
+    this.paginaHistorial = Math.min(Math.max(1, pagina), this.totalPaginasHistorial);
+  }
+
   constructor(
     private academicService: AcademicService,
     private router: Router,
