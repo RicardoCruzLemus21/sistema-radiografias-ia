@@ -242,8 +242,11 @@ textarea:focus { border-color: var(--accent-cyan); box-shadow: 0 0 10px rgba(0, 
   width: auto;
   max-width: 100%;
   object-fit: contain;
-  filter: grayscale(100%) contrast(1.2);
+  filter: grayscale(100%) contrast(1.2) var(--hi-filter, brightness(1));
 }
+
+/* Las herramientas de imagen llenan la tarjeta ampliada: barra arriba y la imagen ocupa el resto */
+.fullscreen-card app-herramientas-imagen { height: 100%; width: 100%; }
 
 .fullscreen-close {
   position: absolute;
