@@ -245,7 +245,7 @@ export class GestionCasosCatedratico implements OnInit {
     this.carpetas = this.carpetas.filter(f =>
       f.oculto === this.verOcultos &&
       (!q || (f.nombre || '').toLowerCase().includes(q)) &&
-      (this.filtroEstado === 'TODOS' || f.estado_progreso === this.filtroEstado)
+      (this.filtroEstado === 'TODOS' || f.estado_progreso === this.filtroEstado.toLowerCase())
     );
 
     // Los casos sueltos (sin ejercicio) se buscan por título o paciente
