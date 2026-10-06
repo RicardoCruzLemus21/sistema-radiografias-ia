@@ -29,7 +29,7 @@
     
     <!-- COLUMNA IZQUIERDA: Visor de Radiografía -->
     <section class="xray-viewer">
-      <app-herramientas-imagen [(marcas)]="marcasEstudiante" [soloLectura]="faseActual !== 1" [unicaMarca]="true">
+      <app-herramientas-imagen [(marcas)]="marcasEstudiante" [soloLectura]="faseActual !== 1" [unicaMarca]="true" [lateral]="true">
         <img *ngIf="imagenUrl" [src]="imagenUrl" alt="Radiografía de Tórax" class="xray-image imagen-base" (load)="alCargarImagen()">
 
         <!-- Grad-CAM (Fase 3 y 4): capa de calor con transparencia, alineada exactamente sobre la radiografía -->

@@ -21,6 +21,7 @@ export class HerramientasImagen {
   @Input() soloLectura = false;
   @Input() unicaMarca = false;
   @Input() ampliable = true;
+  @Input() lateral = false;
 
   ampliado = false;
   invertir = false;
@@ -38,6 +39,11 @@ export class HerramientasImagen {
   @HostBinding('class.hi-ampliado')
   get esAmpliado(): boolean {
     return this.ampliado;
+  }
+
+  @HostBinding('class.hi-lateral')
+  get esLateral(): boolean {
+    return this.lateral || this.ampliado;
   }
 
   // Las variables CSS llegan a la imagen, que las usa en su filtro
