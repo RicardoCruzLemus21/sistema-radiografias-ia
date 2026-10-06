@@ -287,7 +287,7 @@
   <div class="modal-backdrop fullscreen-modal" *ngIf="fullscreenAbierto" (click)="cerrarFullscreen()">
     <div class="modal-card fullscreen-card" (click)="$event.stopPropagation()">
       <button class="btn-close fullscreen-close" (click)="cerrarFullscreen()">×</button>
-      <app-herramientas-imagen (click)="$event.stopPropagation()">
+      <app-herramientas-imagen class="hi-lateral" (click)="$event.stopPropagation()">
         <img [src]="imagenUrl" alt="Radiografía Ampliada" class="fullscreen-image imagen-base" (load)="alCargarImagenFullscreen()">
 
         <!-- Grad-CAM también en el visor ampliado -->
