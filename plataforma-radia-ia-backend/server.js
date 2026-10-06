@@ -48,6 +48,7 @@ app.use('/api/admin', adminRoutes);         // Panel de Administración: KPIs gl
 
 const iaService = require('./src/services/iaService');
 const { cargarDistractores } = require('./src/config/distractores');
+const { cargarLecciones } = require('./src/config/catalogoLecciones');
 const { iniciarLimpiezaProgramada } = require('./src/jobs/purgaAuditoria');
 
 const PORT = process.env.PORT || 3000;
@@ -62,6 +63,13 @@ app.listen(PORT, async () => {
         await iaService.cargarModeloIA();
     } catch (error) {
         console.error("❌ Error al pre-cargar el modelo de IA:", error.message);
+    }
+
+    // Catálogo de lecciones y patologías (tabla aprendizaje_lecciones) en memoria
+    try {
+        await cargarLecciones();
+    } catch (error) {
+        console.error("❌ Error al cargar las lecciones desde la base:", error.message);
     }
 
     // Distractores por patología (tabla distractores) en memoria

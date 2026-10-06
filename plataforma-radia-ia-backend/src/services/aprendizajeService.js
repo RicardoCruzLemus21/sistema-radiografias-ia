@@ -1,6 +1,6 @@
 const pool = require('../config/database');
 const { fsrs, createEmptyCard, generatorParameters, Rating } = require('ts-fsrs');
-const { LECCIONES, CLASES } = require('../data/leccionesBase');
+const { obtenerLecciones, obtenerClases } = require('../config/catalogoLecciones');
 const { obtenerDistractores } = require('../config/distractores');
 
 // Error causado por datos del usuario (el controlador responde 400)
@@ -15,13 +15,15 @@ const UMBRAL_DOMINIO = 0.7;
 const algoritmo = fsrs(generatorParameters({ enable_fuzz: true, enable_short_term: false, learning_steps: [], relearning_steps: [] }));
 
 const quitarTildes = (t) => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '');
-const CATALOGO_A_CLASE = Object.fromEntries(CLASES.map(c => [quitarTildes(LECCIONES[c].nombre).toLowerCase(), c]));
 // Nombre del catálogo (con tilde) o del banco -> categoría canónica del banco. null si no es una de las 8.
-const claseDe = (nombre) => CATALOGO_A_CLASE[quitarTildes(nombre || '').toLowerCase()] || null;
+const claseDe = (nombre) => {
+  const catalogo = Object.fromEntries(obtenerClases().map(c => [quitarTildes(obtenerLecciones()[c].nombre).toLowerCase(), c]));
+  return catalogo[quitarTildes(nombre || '').toLowerCase()] || null;
+};
 const NOMBRE_CATALOGO = { Infiltracion: 'Infiltración', Neumonia: 'Neumonía', Neumotorax: 'Neumotórax', Nodulos: 'Nódulos' };
 
 const validarClase = (clase) => {
-    if (!CLASES.includes(clase)) throw new ErrorAprendizaje('Categoría no válida.');
+    if (!obtenerClases().includes(clase)) throw new ErrorAprendizaje('Categoría no válida.');
     return clase;
 };
 
@@ -102,7 +104,7 @@ const obtenerResumen = async (idEst) => {
     const intentos = Object.fromEntries(res[1].map(i => [i.clase, i]));
     const t = res[2][0] || {};
 
-    const clases = CLASES.map(clase => {
+    const clases = obtenerClases().map(clase => {
         const p = progreso[clase] || {};
         const i = intentos[clase] || {};
         const n = Number(i.intentos) || 0, ok = Number(i.aciertos) || 0;
@@ -111,7 +113,7 @@ const obtenerResumen = async (idEst) => {
         const activa = !!p.leccion_vista || !!p.comparador_visto || n > 0;
         return {
             clase,
-            nombre: LECCIONES[clase].nombre,
+            nombre: obtenerLecciones()[clase].nombre,
             leccion_vista: !!p.leccion_vista,
             comparador_visto: !!p.comparador_visto,
             intentos_guiados: n,
@@ -168,7 +170,7 @@ const ejemploComparador = async (idEst, clase, excluir = null) => {
     const bbox = Array.isArray(h.bbox) ? h.bbox.filter(b => b && b.patologia === clase) : [];
     return {
         clase,
-        nombre: LECCIONES[clase].nombre,
+        nombre: obtenerLecciones()[clase].nombre,
         id_caso: c.id_caso,
         imagen: c.ruta_imagen,
         gradcam: urlGradcam((h.gradcam || {})[clase]),
@@ -184,7 +186,7 @@ const obtenerComparador = async (idEst, clase, contra) => {
     if (!a || !b) throw new ErrorAprendizaje('No hay ejemplos suficientes de esas categorías.');
     return {
         a, b,
-        claves: { [clase]: LECCIONES[clase].que_buscar.slice(0, 3), [contra]: LECCIONES[contra].que_buscar.slice(0, 3) },
+        claves: { [clase]: obtenerLecciones()[clase].que_buscar.slice(0, 3), [contra]: obtenerLecciones()[contra].que_buscar.slice(0, 3) },
         explicacion: await explicacionDelPar(clase, contra)
     };
 };
@@ -203,11 +205,11 @@ const obtenerSesionGuiada = async (idEst, clase) => {
 
     // Mezcla: la mayoría de la categoría elegida, más casos con los que se suele confundir y casos normales
     const confundibles = clase === 'Normal'
-        ? barajar(CLASES.filter(c => c !== 'Normal')).slice(0, 3)
+        ? barajar(obtenerClases().filter(c => c !== 'Normal')).slice(0, 3)
         : (obtenerDistractores()[clase] || []).map(d => claseDe(d)).filter(c => c && c !== 'Normal' && c !== clase);
     const plan = clase === 'Normal'
         ? [['Normal', 3], ...confundibles.map(c => [c, 1])]
-        : [[clase, 4], ['Normal', 1], [elegir(confundibles.length ? confundibles : CLASES.filter(c => c !== clase && c !== 'Normal')), 1]];
+        : [[clase, 4], ['Normal', 1], [elegir(confundibles.length ? confundibles : obtenerClases().filter(c => c !== clase && c !== 'Normal')), 1]];
 
     const casos = [];
     for (const [c, n] of plan) {
@@ -218,9 +220,9 @@ const obtenerSesionGuiada = async (idEst, clase) => {
 
     return {
         clase,
-        nombre: LECCIONES[clase].nombre,
+        nombre: obtenerLecciones()[clase].nombre,
         casos: barajar(casos).slice(0, TAMANO_SESION),
-        pistas: LECCIONES[clase].que_buscar.slice(0, 2)
+        pistas: obtenerLecciones()[clase].que_buscar.slice(0, 2)
     };
 };
 
@@ -229,7 +231,7 @@ const responder = async (idEst, { id_caso, marcadas, origen, clase_objetivo, uso
     if (!['guiado', 'repaso'].includes(origen)) throw new ErrorAprendizaje('Origen no válido.');
     const idCaso = Number(id_caso);
     if (!Number.isInteger(idCaso) || idCaso <= 0) throw new ErrorAprendizaje('Caso no válido.');
-    if (!Array.isArray(marcadas) || marcadas.length === 0 || marcadas.length > CLASES.length || marcadas.some(m => !CLASES.includes(m))) {
+    if (!Array.isArray(marcadas) || marcadas.length === 0 || marcadas.length > obtenerClases().length || marcadas.some(m => !obtenerClases().includes(m))) {
         throw new ErrorAprendizaje('Marca al menos una categoría.');
     }
     const marcadasUnicas = [...new Set(marcadas)];
@@ -256,7 +258,7 @@ const responder = async (idEst, { id_caso, marcadas, origen, clase_objetivo, uso
     // Explicaciones: una por cada hallazgo que se le escapó o confundió; si acertó, se refuerza con el dato clave
     const explicaciones = [];
     for (const par of paresDeError(marcadasUnicas, reales)) {
-        explicaciones.push({ ...par, nombre_real: LECCIONES[par.real].nombre, nombre_marcada: LECCIONES[par.marcada].nombre, ...(await explicacionDelPar(par.real, par.marcada)) });
+        explicaciones.push({ ...par, nombre_real: obtenerLecciones()[par.real].nombre, nombre_marcada: obtenerLecciones()[par.marcada].nombre, ...(await explicacionDelPar(par.real, par.marcada)) });
     }
 
     return {
@@ -264,8 +266,8 @@ const responder = async (idEst, { id_caso, marcadas, origen, clase_objetivo, uso
         marcadas: marcadasUnicas,
         etiquetas_reales: reales,
         explicaciones,
-        refuerzo: resultado === 'acierto' ? reales.map(r => ({ clase: r, nombre: LECCIONES[r].nombre, dato_clave: LECCIONES[r].dato_clave })) : [],
-        gradcam: reales.filter(r => (h.gradcam || {})[r]).map(r => ({ clase: r, nombre: LECCIONES[r].nombre, url: urlGradcam(h.gradcam[r]) })),
+        refuerzo: resultado === 'acierto' ? reales.map(r => ({ clase: r, nombre: obtenerLecciones()[r].nombre, dato_clave: obtenerLecciones()[r].dato_clave })) : [],
+        gradcam: reales.filter(r => (h.gradcam || {})[r]).map(r => ({ clase: r, nombre: obtenerLecciones()[r].nombre, url: urlGradcam(h.gradcam[r]) })),
         bbox: Array.isArray(h.bbox) ? h.bbox : [],
         proxima_revision: proxima
     };
@@ -303,8 +305,8 @@ const obtenerMisErrores = async (idEst) => {
     }
 
     // Matriz: filas = lo que era, columnas = lo que marcó (la diagonal son los aciertos)
-    const matriz = Object.fromEntries(CLASES.map(r => [r, Object.fromEntries(CLASES.map(m => [m, 0]))]));
-    const porClase = Object.fromEntries(CLASES.map(c => [c, { apariciones: 0, detectadas: 0, falsas_alarmas: 0 }]));
+    const matriz = Object.fromEntries(obtenerClases().map(r => [r, Object.fromEntries(obtenerClases().map(m => [m, 0]))]));
+    const porClase = Object.fromEntries(obtenerClases().map(c => [c, { apariciones: 0, detectadas: 0, falsas_alarmas: 0 }]));
     for (const e of eventos) {
         for (const r of e.reales) {
             if (!porClase[r]) continue;
@@ -315,15 +317,15 @@ const obtenerMisErrores = async (idEst) => {
         for (const m of e.marcadas) if (porClase[m] && !e.reales.includes(m)) porClase[m].falsas_alarmas++;
     }
 
-    const clases = CLASES.map(c => ({
+    const clases = obtenerClases().map(c => ({
         clase: c,
-        nombre: LECCIONES[c].nombre,
+        nombre: obtenerLecciones()[c].nombre,
         ...porClase[c],
         sensibilidad: porClase[c].apariciones > 0 ? Math.round((porClase[c].detectadas / porClase[c].apariciones) * 100) : null
     }));
 
     const confusiones = [];
-    for (const r of CLASES) for (const m of CLASES) if (r !== m && matriz[r][m] > 0) confusiones.push({ real: r, marcada: m, nombre_real: LECCIONES[r].nombre, nombre_marcada: LECCIONES[m].nombre, veces: matriz[r][m] });
+    for (const r of obtenerClases()) for (const m of obtenerClases()) if (r !== m && matriz[r][m] > 0) confusiones.push({ real: r, marcada: m, nombre_real: obtenerLecciones()[r].nombre, nombre_marcada: obtenerLecciones()[m].nombre, veces: matriz[r][m] });
     confusiones.sort((a, b) => b.veces - a.veces);
 
     // Confianza frente a resultado (solo ejercicios, donde el estudiante declara su confianza)
@@ -352,7 +354,7 @@ const obtenerMisErrores = async (idEst) => {
 
 module.exports = {
     ErrorAprendizaje,
-    CLASES,
+    obtenerClases,
     claseDe,
     obtenerResumen,
     obtenerLeccion,

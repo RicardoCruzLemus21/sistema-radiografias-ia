@@ -1,10 +1,10 @@
 const pool = require('../config/database');
-const { LECCIONES, CLASES } = require('../data/leccionesBase');
+const { obtenerLecciones, obtenerClases } = require('../config/catalogoLecciones');
 const { ErrorAprendizaje } = require('./aprendizajeService');
 
 const parseJson = (v, def) => { try { return typeof v === 'string' ? JSON.parse(v) : (v ?? def); } catch (e) { return def; } };
 
-const validarClase = (c) => { if (!CLASES.includes(c)) throw new ErrorAprendizaje('Categoría no válida.'); return c; };
+const validarClase = (c) => { if (!obtenerClases().includes(c)) throw new ErrorAprendizaje('Categoría no válida.'); return c; };
 const texto = (v, min, max, campo) => {
     const t = typeof v === 'string' ? v.trim().replace(/\s+/g, ' ') : '';
     if (t.length < min || t.length > max) throw new ErrorAprendizaje(`"${campo}" debe tener entre ${min} y ${max} caracteres.`);
@@ -31,7 +31,7 @@ const validarLeccion = (c, clase) => {
         if (!Array.isArray(v) || v.length < min || v.length > max) throw new ErrorAprendizaje(`"${campo}" debe tener entre ${min} y ${max} elementos.`);
         return v.map((x, i) => texto(x, 8, 400, `${campo} ${i + 1}`));
     };
-    const base = LECCIONES[clase];
+    const base = obtenerLecciones()[clase];
     const confusiones = Array.isArray(c.se_confunde_con) ? c.se_confunde_con : [];
     return {
         nombre: base.nombre,
@@ -50,7 +50,7 @@ const validarLeccion = (c, clase) => {
 // ===== Lecciones =====
 const listarLecciones = async () => {
     const [res] = await pool.query('CALL sp_apr_lecciones_admin()');
-    return res[0].map(l => ({ clase: l.clase, nombre: LECCIONES[l.clase]?.nombre || l.clase, contenido: parseJson(l.contenido, {}), estado: l.estado, revisado_por: l.revisado_por, fecha_revision: l.fecha_revision }));
+    return res[0].map(l => ({ clase: l.clase, nombre: obtenerLecciones()[l.clase]?.nombre || l.clase, contenido: parseJson(l.contenido, {}), estado: l.estado, revisado_por: l.revisado_por, fecha_revision: l.fecha_revision }));
 };
 
 const guardarLeccion = async (clase, contenido, estado, idDocente) => {
@@ -73,8 +73,8 @@ const listarExplicaciones = async (estado) => {
             .filter(e => e.origen !== 'ia')
             .map(e => ({
                 id_explicacion: e.id_explicacion,
-                clase_real: e.clase_real, nombre_real: LECCIONES[e.clase_real]?.nombre,
-                clase_marcada: e.clase_marcada, nombre_marcada: LECCIONES[e.clase_marcada]?.nombre,
+                clase_real: e.clase_real, nombre_real: obtenerLecciones()[e.clase_real]?.nombre,
+                clase_marcada: e.clase_marcada, nombre_marcada: obtenerLecciones()[e.clase_marcada]?.nombre,
                 contenido: parseJson(e.contenido, {}), estado: e.estado,
                 revisado_por: e.revisado_por, fecha_revision: e.fecha_revision
             }))
