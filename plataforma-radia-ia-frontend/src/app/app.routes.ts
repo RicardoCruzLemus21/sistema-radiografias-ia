@@ -43,7 +43,7 @@ export const routes: Routes = [
       { path: 'aprender/repaso', loadComponent: () => import('./pages/aprender/aprender-repaso/aprender-repaso').then(m => m.AprenderRepaso), canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
       { path: 'aprender/:clase', loadComponent: () => import('./pages/aprender/aprender-patologia/aprender-patologia').then(m => m.AprenderPatologia), canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
       // Revisión del contenido de aprendizaje (docente y administrador)
-      { path: 'contenido-aprendizaje', loadComponent: () => import('./pages/revision-contenido/revision-contenido').then(m => m.RevisionContenido), canActivate: [roleGuard], data: { expectedRoles: ['catedratico', 'admin'] } },
+      { path: 'contenido-aprendizaje', loadComponent: () => import('./pages/revision-contenido/revision-contenido').then(m => m.RevisionContenido), canActivate: [roleGuard], data: { expectedRoles: ['admin'] } },
       { path: 'mis-errores', loadComponent: () => import('./pages/aprender/mis-errores/mis-errores').then(m => m.MisErrores), canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
       // Ficha del modelo de IA (gráficas). Carga diferida para no engordar el paquete inicial con Chart.js
       { path: 'modelo', loadComponent: () => import('./pages/ficha-modelo/ficha-modelo').then(m => m.FichaModeloComponent), canActivate: [roleGuard], data: { expectedRoles: ['catedratico', 'admin'] } },
