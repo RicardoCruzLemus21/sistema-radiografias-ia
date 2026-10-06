@@ -20,7 +20,9 @@
 .btn-secundario:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
 .btn-mini { padding: 6px 12px; border-radius: 8px; cursor: pointer; background: transparent; border: 1px solid var(--border-color); color: var(--text-main); font-size: 12px; font-weight: 600; }
 .btn-mini:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
-.btn-link { background: none; border: none; padding: 0; cursor: pointer; color: var(--accent-cyan); font-size: 14px; font-weight: 600; text-decoration: underline; }
+.btn-link { background: none; border: none; padding: 4px 0; cursor: pointer; color: var(--text-muted); font-size: 14px; font-weight: 600; text-decoration: none; transition: color 0.15s ease; }
+.btn-link:hover { color: var(--accent-cyan); }
+.btn-link:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 3px; border-radius: 4px; }
 
 /* Chips */
 .chip-clase { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--color-clase, var(--border-color)); font-size: 12px; font-weight: 700; color: var(--text-main); }
