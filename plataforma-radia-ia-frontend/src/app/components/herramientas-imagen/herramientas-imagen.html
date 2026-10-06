@@ -27,9 +27,9 @@
   </button>
 </div>
 
-<div class="hi-marco">
-  <div class="hi-contenido" [style.transform]="'rotate(' + rotacion + 'deg) scale(' + zoom + ')'"
-       [class.dibujando]="senalizando"
+<div class="hi-marco" (wheel)="alRueda($event)">
+  <div class="hi-contenido" #lienzo [style.transform]="'translate(' + tx + 'px, ' + ty + 'px) rotate(' + rotacion + 'deg) scale(' + zoom + ')'"
+       [class.dibujando]="senalizando" [class.desplazable]="!senalizando && zoom > 1"
        (pointerdown)="iniciarTrazo($event)" (pointermove)="moverTrazo($event)"
        (pointerup)="terminarTrazo()" (pointercancel)="terminarTrazo()" (dragstart)="$event.preventDefault()">
     <ng-content></ng-content>

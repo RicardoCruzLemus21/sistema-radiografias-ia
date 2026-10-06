@@ -1,4 +1,4 @@
-import { Component, HostBinding } from '@angular/core';
+import { Component, ElementRef, HostBinding, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -24,7 +24,11 @@ export class HerramientasImagen {
   senalizando = false;
   marcas: Marca[] = [];  // en coordenadas de la imagen sin rotar
   trazo: Marca | null = null;
+  tx = 0;                // desplazamiento de la imagen en pantalla (px)
+  ty = 0;
   private inicio: { x: number; y: number } | null = null;
+  private arrastre: { x: number; y: number; tx: number; ty: number } | null = null;
+  @ViewChild('lienzo') private lienzo?: ElementRef<HTMLElement>;
 
   // Las variables CSS llegan a la imagen, que las usa en su filtro
   @HostBinding('style.--hi-filter')
@@ -33,11 +37,33 @@ export class HerramientasImagen {
   }
 
   cambiarZoom(delta: number): void {
-    this.zoom = Math.min(3, Math.max(0.5, Math.round((this.zoom + delta) * 100) / 100));
+    this.fijarZoom(this.zoom + delta);
   }
 
   restablecerZoom(): void {
     this.zoom = 1;
+    this.tx = 0;
+    this.ty = 0;
+  }
+
+  // Con el puntero como ancla, el punto de la imagen bajo el cursor se queda quieto al cambiar el zoom
+  private fijarZoom(nuevo: number, qx?: number, qy?: number): void {
+    const anterior = this.zoom;
+    const siguiente = Math.min(3, Math.max(0.5, Math.round(nuevo * 100) / 100));
+    if (siguiente === anterior) return;
+    const caja = this.lienzo?.nativeElement.getBoundingClientRect();
+    if (caja && qx !== undefined && qy !== undefined) {
+      const f = 1 - siguiente / anterior;
+      this.tx += (qx - (caja.left + caja.width / 2)) * f;
+      this.ty += (qy - (caja.top + caja.height / 2)) * f;
+    }
+    this.zoom = siguiente;
+  }
+
+  alRueda(evento: WheelEvent): void {
+    evento.preventDefault();
+    if (evento.deltaY === 0) return;
+    this.fijarZoom(evento.deltaY < 0 ? this.zoom * 1.1 : this.zoom / 1.1, evento.clientX, evento.clientY);
   }
 
   rotar(): void {
@@ -75,8 +101,12 @@ export class HerramientasImagen {
   }
 
   iniciarTrazo(evento: PointerEvent): void {
-    if (!this.senalizando) return;
     const contenedor = evento.currentTarget as HTMLElement;
+    if (!this.senalizando) {
+      this.arrastre = { x: evento.clientX, y: evento.clientY, tx: this.tx, ty: this.ty };
+      contenedor.setPointerCapture(evento.pointerId);
+      return;
+    }
     this.inicio = this.posicion(evento, contenedor);
     this.trazo = this.rectanguloLocal({ x: this.inicio.x, y: this.inicio.y, w: 0, h: 0 });
     contenedor.setPointerCapture(evento.pointerId);
@@ -84,6 +114,11 @@ export class HerramientasImagen {
   }
 
   moverTrazo(evento: PointerEvent): void {
+    if (this.arrastre) {
+      this.tx = this.arrastre.tx + evento.clientX - this.arrastre.x;
+      this.ty = this.arrastre.ty + evento.clientY - this.arrastre.y;
+      return;
+    }
     if (!this.inicio) return;
     const actual = this.posicion(evento, evento.currentTarget as HTMLElement);
     this.trazo = this.rectanguloLocal({
@@ -95,6 +130,7 @@ export class HerramientasImagen {
   }
 
   terminarTrazo(): void {
+    this.arrastre = null;
     if (this.trazo && this.trazo.w > 1 && this.trazo.h > 1) this.marcas.push(this.trazo);
     this.trazo = null;
     this.inicio = null;
