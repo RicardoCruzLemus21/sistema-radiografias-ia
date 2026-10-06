@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { AprendizajeService } from '../../services/aprendizaje';
 import { environment } from '../../../environments/environment';
 import { CLASES, nombreClase, colorClase } from '../../utils/clases';
+import { HerramientasImagen } from '../herramientas-imagen/herramientas-imagen';
 
 // Un caso para practicar: la radiografía, las opciones, la comprobación y la retroalimentación inmediata.
 // Lo usan la práctica guiada de cada patología y el repaso espaciado.
 @Component({
   selector: 'app-practica-caso',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HerramientasImagen],
   templateUrl: './practica-caso.html',
   styleUrls: ['../../pages/aprender/aprender-compartido.css', './practica-caso.css']
 })

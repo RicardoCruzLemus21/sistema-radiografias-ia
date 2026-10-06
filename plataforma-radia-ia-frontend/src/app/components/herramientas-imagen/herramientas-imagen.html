@@ -1,0 +1,38 @@
+<div class="hi-barra" (click)="$event.stopPropagation()">
+  <button type="button" class="hi-btn" [class.activo]="invertir" (click)="invertir = !invertir" title="Invertir colores">
+    Invertir
+  </button>
+
+  <label class="hi-control" title="Brillo de la imagen">
+    <span>Brillo</span>
+    <input type="range" min="50" max="150" step="5" [(ngModel)]="brillo" aria-label="Brillo">
+    <span class="hi-valor">{{ brillo }}%</span>
+  </label>
+
+  <div class="hi-zoom" role="group" aria-label="Zoom">
+    <button type="button" class="hi-btn hi-btn-icono" (click)="cambiarZoom(-0.25)" [disabled]="zoom <= 0.5" aria-label="Alejar">−</button>
+    <button type="button" class="hi-btn hi-btn-texto" (click)="restablecerZoom()" title="Restablecer zoom">{{ (zoom * 100) | number:'1.0-0' }}%</button>
+    <button type="button" class="hi-btn hi-btn-icono" (click)="cambiarZoom(0.25)" [disabled]="zoom >= 3" aria-label="Acercar">+</button>
+  </div>
+
+  <button type="button" class="hi-btn" [class.activo]="senalizando" (click)="senalizando = !senalizando" title="Dibuja un rectángulo sobre la zona">
+    Señalizar
+  </button>
+  <button type="button" class="hi-btn" (click)="borrarMarcas()" [disabled]="marcas.length === 0">
+    Borrar marcas
+  </button>
+</div>
+
+<div class="hi-marco">
+  <div class="hi-contenido" [style.transform]="'scale(' + zoom + ')'"
+       [class.dibujando]="senalizando"
+       (pointerdown)="iniciarTrazo($event)" (pointermove)="moverTrazo($event)"
+       (pointerup)="terminarTrazo()" (pointercancel)="terminarTrazo()">
+    <ng-content></ng-content>
+
+    <div class="hi-marca" *ngFor="let m of marcas"
+         [style.left.%]="m.x" [style.top.%]="m.y" [style.width.%]="m.w" [style.height.%]="m.h"></div>
+    <div class="hi-marca en-curso" *ngIf="trazo"
+         [style.left.%]="trazo.x" [style.top.%]="trazo.y" [style.width.%]="trazo.w" [style.height.%]="trazo.h"></div>
+  </div>
+</div>

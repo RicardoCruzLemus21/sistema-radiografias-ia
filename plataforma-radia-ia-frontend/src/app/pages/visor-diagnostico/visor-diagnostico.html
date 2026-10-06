@@ -287,20 +287,22 @@
   <div class="modal-backdrop fullscreen-modal" *ngIf="fullscreenAbierto" (click)="cerrarFullscreen()">
     <div class="modal-card fullscreen-card" (click)="$event.stopPropagation()">
       <button class="btn-close fullscreen-close" (click)="cerrarFullscreen()">×</button>
-      <img [src]="imagenUrl" alt="Radiografía Ampliada" class="fullscreen-image" (load)="alCargarImagenFullscreen()">
+      <app-herramientas-imagen (click)="$event.stopPropagation()">
+        <img [src]="imagenUrl" alt="Radiografía Ampliada" class="fullscreen-image imagen-base" (load)="alCargarImagenFullscreen()">
 
-      <!-- Grad-CAM también en el visor ampliado -->
-      <img *ngIf="faseActual >= 3 && mostrarGradcam && gradcamActual" [src]="gradcamActual.url" alt="Mapa de calor Grad-CAM" class="gradcam-overlay"
-           [ngStyle]="estiloCapaSobreImagen('.fullscreen-card .fullscreen-image', false)" draggable="false">
+        <!-- Grad-CAM también en el visor ampliado -->
+        <img *ngIf="faseActual >= 3 && mostrarGradcam && gradcamActual" [src]="gradcamActual.url" alt="Mapa de calor Grad-CAM" class="gradcam-overlay"
+             [ngStyle]="estiloCapaSobreImagen('.fullscreen-card .fullscreen-image', false)" draggable="false">
 
-      <!-- Marca de Verdad de Referencia (NIH) también en el visor ampliado -->
-      <ng-container *ngIf="faseActual >= 2 && resultadoFase2?.bbox">
-        <div *ngFor="let caja of resultadoFase2.bbox" class="nih-marker"
-             [ngStyle]="estiloCajaReal(caja, '.fullscreen-card .fullscreen-image')"
-             style="position: absolute; border: 2px solid #ff4757; background: rgba(255, 71, 87, 0.1); pointer-events: none; z-index: 9;">
-             <span style="position: absolute; top: -20px; left: 0; background: #ff4757; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px; white-space: nowrap;">Radiólogo (NIH)</span>
-        </div>
-      </ng-container>
+        <!-- Marca de Verdad de Referencia (NIH) también en el visor ampliado -->
+        <ng-container *ngIf="faseActual >= 2 && resultadoFase2?.bbox">
+          <div *ngFor="let caja of resultadoFase2.bbox" class="nih-marker"
+               [ngStyle]="estiloCajaReal(caja, '.fullscreen-card .fullscreen-image')"
+               style="position: absolute; border: 2px solid #ff4757; background: rgba(255, 71, 87, 0.1); pointer-events: none; z-index: 9;">
+               <span style="position: absolute; top: -20px; left: 0; background: #ff4757; color: #fff; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 2px; white-space: nowrap;">Radiólogo (NIH)</span>
+          </div>
+        </ng-container>
+      </app-herramientas-imagen>
     </div>
   </div>
 </div>

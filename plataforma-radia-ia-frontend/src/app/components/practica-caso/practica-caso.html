@@ -90,5 +90,7 @@
 <!-- Imagen ampliada -->
 <div class="visor-ampliado" *ngIf="ampliada" (click)="ampliada = false" role="dialog" aria-label="Radiografía ampliada">
   <button type="button" class="visor-cerrar" (click)="ampliada = false" aria-label="Cerrar">&times;</button>
-  <img [src]="urlImagen(caso.imagen)" alt="Radiografía ampliada" (click)="$event.stopPropagation()" draggable="false">
+  <app-herramientas-imagen (click)="$event.stopPropagation()">
+    <img class="imagen-base" [src]="urlImagen(caso.imagen)" alt="Radiografía ampliada" draggable="false">
+  </app-herramientas-imagen>
 </div>

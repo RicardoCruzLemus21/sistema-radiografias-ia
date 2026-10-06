@@ -1,6 +1,7 @@
 import { Component, OnInit, AfterViewInit, ChangeDetectorRef, OnDestroy, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HerramientasImagen } from '../../components/herramientas-imagen/herramientas-imagen';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DiagnosticoService } from '../../services/diagnostico';
 import { AuthService } from '../../services/auth';
@@ -11,7 +12,7 @@ import { environment } from '../../../environments/environment';
 @Component({
   selector: 'app-visor-diagnostico',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, HerramientasImagen],
   templateUrl: './visor-diagnostico.html',
   styleUrl: './visor-diagnostico.css'
 })
