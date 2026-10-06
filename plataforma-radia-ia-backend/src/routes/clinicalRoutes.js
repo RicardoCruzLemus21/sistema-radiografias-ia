@@ -42,7 +42,6 @@ router.post('/evaluaciones', verificarRol(['catedratico']), clinicalController.a
 
 // Endpoints CRUD adicionales (Editar y Eliminar)
 router.put('/caso/:id', clinicalController.editarCaso);
-router.delete('/ejercicio/:id', verificarRol(['catedratico']), clinicalController.eliminarEjercicio);
 router.delete('/caso/:id', clinicalController.eliminarCaso);
 
 module.exports = router;

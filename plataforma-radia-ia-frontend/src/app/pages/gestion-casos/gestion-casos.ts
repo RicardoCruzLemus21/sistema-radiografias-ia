@@ -22,7 +22,6 @@ export class GestionCasosCatedratico implements OnInit {
   carpetas: any[] = [];
   casosSueltos: any[] = [];      // casos creados a mano, sin ejercicio
   ejercicioAbierto: any = null;  // carpeta que se está viendo por dentro
-  eliminandoEjercicio: boolean = false;
   filtroTexto: string = '';
   // Filtro por estado de avance de los ejercicios: TODOS | COMPLETADO | PENDIENTE | SIN_INICIAR
   filtroEstado: string = 'TODOS';
@@ -385,28 +384,6 @@ export class GestionCasosCatedratico implements OnInit {
     return a.completado ? 'completado' : Number(a.casos_resueltos) > 0 ? 'en_curso' : 'sin_iniciar';
   }
 
-  async eliminarCarpeta(carpeta: any): Promise<void> {
-    const confirmado = await this.alertService.confirmDanger(
-      'Eliminar ejercicio',
-      `Se eliminará "${carpeta.nombre}" con sus ${carpeta.casos.length} casos y los intentos de estudiantes. Esta acción no se puede deshacer.`,
-      'Sí, eliminar'
-    );
-    if (!confirmado) return;
-
-    this.eliminandoEjercicio = true;
-    this.clinicalService.eliminarEjercicio(carpeta.id_ejercicio).subscribe({
-      next: () => {
-        this.eliminandoEjercicio = false;
-        this.ejercicioAbierto = null;
-        this.alertService.success('Ejercicio eliminado', `"${carpeta.nombre}" se eliminó correctamente.`);
-        this.cargarCasos();
-      },
-      error: (err: any) => {
-        this.eliminandoEjercicio = false;
-        this.alertService.error('Error al eliminar', err.error?.message || 'No se pudo eliminar el ejercicio.');
-      }
-    });
-  }
 
   setFiltroEstado(estado: string): void {
     this.filtroEstado = estado;

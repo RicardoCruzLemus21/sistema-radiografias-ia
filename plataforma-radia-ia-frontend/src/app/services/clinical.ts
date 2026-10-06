@@ -110,11 +110,6 @@ export class ClinicalService {
     });
   }
 
-  eliminarEjercicio(id_ejercicio: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/ejercicio/${id_ejercicio}`, {
-      headers: this.authService.getAuthHeaders()
-    });
-  }
 
   // Asignar casos seleccionados del banco a un curso
   asignarCasosBanco(id_curso: number, ids_casos: number[]): Observable<any> {
