@@ -114,7 +114,7 @@
 
   <!-- Vista interna de un ejercicio -->
   <section class="carpeta-cabecera glass-panel" *ngIf="ejercicioAbierto">
-    <button class="btn-cancel" (click)="cerrarCarpeta()">&larr; Volver</button>
+    <button class="btn-cancel btn-con-icono" (click)="cerrarCarpeta()"><svg class="icono-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Volver</button>
     <div class="carpeta-titulo">
       <h2>{{ ejercicioAbierto.nombre }}</h2>
       <span class="carpeta-curso">{{ ejercicioAbierto.nombre_curso }} · {{ ejercicioAbierto.casos.length }} casos</span>

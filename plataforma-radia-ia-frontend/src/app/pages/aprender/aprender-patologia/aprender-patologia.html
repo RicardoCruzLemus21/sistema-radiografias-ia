@@ -1,7 +1,7 @@
 <div class="aprender-pagina" [style.--color-clase]="colorClase(clase)">
 
   <header class="patologia-cabecera">
-    <button type="button" class="btn-link" (click)="volverALaRuta()">&larr; Ruta de aprendizaje</button>
+    <button type="button" class="btn-link btn-con-icono" (click)="volverALaRuta()"><svg class="icono-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg> Ruta de aprendizaje</button>
     <div class="cabecera-fila">
       <h1><span class="clase-punto" [style.background]="colorClase(clase)"></span>{{ nombreClase(clase) }}</h1>
       <button type="button" class="btn-restablecer" [disabled]="restableciendo" (click)="restablecer()">
@@ -66,7 +66,7 @@
         </div>
       </details>
 
-      <button type="button" class="btn-primario" (click)="irAPestana('comparador')">Siguiente: comparar &rarr;</button>
+      <button type="button" class="btn-primario btn-con-icono" (click)="irAPestana('comparador')">Siguiente: comparar <svg class="icono-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
     </section>
 
     <!-- ===== 2. COMPARADOR ===== -->
@@ -130,7 +130,7 @@
         </div>
       </ng-container>
 
-      <button type="button" class="btn-primario" (click)="irAPestana('practica')">Siguiente: practicar &rarr;</button>
+      <button type="button" class="btn-primario btn-con-icono" (click)="irAPestana('practica')">Siguiente: practicar <svg class="icono-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
     </section>
 
     <!-- ===== 3. CASOS GUIADOS ===== -->

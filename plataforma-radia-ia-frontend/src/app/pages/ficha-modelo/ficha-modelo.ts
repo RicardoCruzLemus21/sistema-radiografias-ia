@@ -474,7 +474,7 @@ export class FichaModeloComponent implements OnInit, OnDestroy {
       },
       options: {
         ...base, aspectRatio: 1,
-        plugins: { legend: leyenda, tooltip: { callbacks: { label: (x) => ` Modelo dijo ~${Math.round(x.parsed.x ?? 0)}% → ocurrió en ${Math.round(x.parsed.y ?? 0)}%` } } },
+        plugins: { legend: leyenda, tooltip: { callbacks: { label: (x) => ` Modelo dijo ~${Math.round(x.parsed.x ?? 0)}% · ocurrió en ${Math.round(x.parsed.y ?? 0)}%` } } },
         scales: {
           x: ejes({ min: 0, max: 100, ticks: { color: t.suave, callback: (v: any) => `${v}%` }, title: { display: true, text: 'Probabilidad que dijo el modelo', color: t.suave } }),
           y: ejes({ min: 0, max: 100, ticks: { color: t.suave, callback: (v: any) => `${v}%` }, title: { display: true, text: 'Qué % realmente la tenía', color: t.suave } })

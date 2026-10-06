@@ -401,3 +401,6 @@ select::-webkit-scrollbar-thumb {
   width: 100%;
   min-width: 0;
 }
+/* --- Botones con icono de flecha (en lugar de la flecha de texto) --- */
+.btn-con-icono { display: inline-flex; align-items: center; gap: 6px; }
+.icono-flecha { width: 16px; height: 16px; flex-shrink: 0; }
