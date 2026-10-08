@@ -23,7 +23,6 @@ export class RevisionContenido implements OnInit {
 
   // Explicaciones
   todas: any[] = [];
-  filtro: FiltroEstado = 'todas';
   editandoId: number | null = null;
   formulario = { resumen: '', pasos: '', pista: '', proxima_vez: '' };
   guardando = false;
@@ -64,10 +63,6 @@ export class RevisionContenido implements OnInit {
   // ===== Explicaciones =====
   contar(estado: FiltroEstado): number {
     return estado === 'todas' ? this.todas.length : this.todas.filter(e => e.estado === estado).length;
-  }
-
-  get visibles(): any[] {
-    return this.filtro === 'todas' ? this.todas : this.todas.filter(e => e.estado === this.filtro);
   }
 
   iniciarEdicion(e: any): void {

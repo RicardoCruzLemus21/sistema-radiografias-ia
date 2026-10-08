@@ -21,16 +21,9 @@
 
     <p class="nota-pequena">Cada explicación corresponde a un error posible: la radiografía tenía una condición y el estudiante marcó otra.</p>
 
-    <div class="filtros">
-      <button type="button" class="chip-boton" [class.activa]="filtro === 'todas'" (click)="filtro = 'todas'">Todas ({{ contar('todas') }})</button>
-      <button type="button" class="chip-boton" [class.activa]="filtro === 'pendiente'" (click)="filtro = 'pendiente'">Pendientes ({{ contar('pendiente') }})</button>
-      <button type="button" class="chip-boton" [class.activa]="filtro === 'aprobada'" (click)="filtro = 'aprobada'">Aprobadas ({{ contar('aprobada') }})</button>
-      <button type="button" class="chip-boton" [class.activa]="filtro === 'rechazada'" (click)="filtro = 'rechazada'">Rechazadas ({{ contar('rechazada') }})</button>
-    </div>
+    <div class="vacio-caja" *ngIf="todas.length === 0">No hay explicaciones todavía.</div>
 
-    <div class="vacio-caja" *ngIf="visibles.length === 0">No hay explicaciones en este estado.</div>
-
-    <article class="expl tarjeta glass-panel" *ngFor="let e of visibles" [class.editando]="editandoId === e.id_explicacion">
+    <article class="expl tarjeta glass-panel" *ngFor="let e of todas" [class.editando]="editandoId === e.id_explicacion">
       <header class="expl-cabecera">
         <h3>
           <span class="chip-clase" [style.--color-clase]="colorClase(e.clase_real)">{{ e.nombre_real }}</span>
