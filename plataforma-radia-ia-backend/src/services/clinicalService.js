@@ -550,6 +550,11 @@ const guardarRespuestaEstudiante = async (payload) => {
 
     } catch (error) {
         await conn.rollback();
+        // El chequeo de arriba no evita una carrera (dos pestañas, doble clic): la restricción UNIQUE
+        // de (id_caso, id_estudiante) es la que de verdad lo impide; aquí solo se traduce el error.
+        if (error.code === 'ER_DUP_ENTRY') {
+            throw new ErrorNegocio('Ya respondiste este caso. Puedes ver tu retroalimentación desde la worklist.');
+        }
         throw new Error(`Error al guardar evaluación: ${error.message}`);
     } finally {
         conn.release();
