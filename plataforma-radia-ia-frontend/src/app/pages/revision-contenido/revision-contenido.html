@@ -78,14 +78,15 @@
       <button type="button" class="btn-primario" [disabled]="generandoLecciones" (click)="generarLecciones()">
         {{ generandoLecciones ? 'Generando... (puede tardar un minuto)' : 'Generar lección con IA' }}
       </button>
-      <button type="button" class="btn-mini" (click)="toggleLotes()">{{ mostrarLotes ? 'Ocultar conjuntos generados' : 'Ver conjuntos generados' }}</button>
     </div>
-    <p class="nota-pequena">Cada generación crea un conjunto de hasta 8 lecciones (una por patología). No reemplazan lo publicado hasta que elijas publicar ese conjunto completo.</p>
 
-    <div class="lotes-ia" *ngIf="mostrarLotes">
+    <h3 class="subtitulo-lotes">Elige qué lección ven tus estudiantes</h3>
+    <p class="nota-pequena">Cada generación crea un conjunto de hasta 8 lecciones (una por patología). Al presionar "Mostrar esta lección a los estudiantes" en un conjunto, esa es la que verán tus alumnos en esas patologías.</p>
+
+    <div class="lotes-ia">
       <p class="nota-pequena" *ngIf="cargandoLotes">Cargando conjuntos...</p>
-      <p class="nota-pequena" *ngIf="!cargandoLotes && lotes.length === 0">Todavía no se ha generado ningún conjunto con IA.</p>
-      <article class="lote-item tarjeta glass-panel" *ngFor="let lo of lotes">
+      <p class="nota-pequena" *ngIf="!cargandoLotes && lotes.length === 0">Todavía no se ha generado ningún conjunto con IA. Presiona "Generar lección con IA" para crear el primero.</p>
+      <article class="lote-item tarjeta glass-panel" *ngFor="let lo of lotesPagina">
         <header class="expl-cabecera">
           <h3>{{ lo.fecha_generacion | date:'dd/MM/yyyy HH:mm' }}<span class="flecha" *ngIf="lo.generado_por"> — {{ lo.generado_por }}</span></h3>
           <span class="insignia">{{ lo.total_patologias }}/8 patologías</span>
@@ -93,7 +94,7 @@
         <div class="acciones-fila">
           <button type="button" class="btn-mini" (click)="verLote(lo)">{{ loteAbierto === lo.id_lote ? 'Ocultar contenido' : 'Ver contenido' }}</button>
           <button type="button" class="btn-aprobar" [disabled]="publicandoLote === lo.id_lote" (click)="publicarLote(lo)">
-            {{ publicandoLote === lo.id_lote ? 'Publicando...' : 'Publicar este conjunto' }}
+            {{ publicandoLote === lo.id_lote ? 'Mostrando...' : 'Mostrar esta lección a los estudiantes' }}
           </button>
         </div>
         <div class="lote-detalle" *ngIf="loteAbierto === lo.id_lote">
@@ -106,6 +107,17 @@
           </div>
         </div>
       </article>
+
+      <div class="paginacion" *ngIf="totalPaginasLotes > 1">
+        <span class="paginacion-info">
+          Mostrando {{ (paginaLotes - 1) * TAMANO_PAGINA + 1 }}–{{ finPaginaLotes }} de {{ lotes.length }}
+        </span>
+        <div class="paginacion-controles">
+          <button type="button" (click)="irAPaginaLotes(paginaLotes - 1)" [disabled]="paginaLotes === 1">Anterior</button>
+          <span>Página {{ paginaLotes }} de {{ totalPaginasLotes }}</span>
+          <button type="button" (click)="irAPaginaLotes(paginaLotes + 1)" [disabled]="paginaLotes === totalPaginasLotes">Siguiente</button>
+        </div>
+      </div>
     </div>
 
     <article class="expl tarjeta glass-panel" *ngFor="let l of leccionesPagina" [class.editando]="leccionEditando === l.clase">

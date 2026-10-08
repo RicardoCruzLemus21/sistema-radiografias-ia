@@ -37,9 +37,9 @@ export class RevisionContenido implements OnInit {
   leccionEditando: string | null = null;
   formLeccion: any = null;
   generandoLecciones = false;
-  mostrarLotes = false;
   cargandoLotes = false;
   lotes: any[] = [];
+  paginaLotes = 1;
   loteAbierto: number | null = null;
   versionesLote: Record<number, any[]> = {};
   publicandoLote: number | null = null;
@@ -56,10 +56,15 @@ export class RevisionContenido implements OnInit {
   cargar(): void {
     this.cargando = true;
     this.error = '';
-    forkJoin({ e: this.aprendizajeService.listarExplicaciones(), l: this.aprendizajeService.listarLecciones() }).subscribe({
-      next: ({ e, l }) => {
+    forkJoin({
+      e: this.aprendizajeService.listarExplicaciones(),
+      l: this.aprendizajeService.listarLecciones(),
+      lo: this.aprendizajeService.listarLotesLeccion()
+    }).subscribe({
+      next: ({ e, l, lo }) => {
         this.todas = e.data.explicaciones;
         this.lecciones = l.data;
+        this.lotes = lo.data;
         this.cargando = false;
         this.cdr.detectChanges();
       },
@@ -181,6 +186,24 @@ export class RevisionContenido implements OnInit {
     this.paginaLecciones = Math.min(Math.max(1, pagina), this.totalPaginasLecciones);
   }
 
+  // ===== Conjuntos generados con IA (elegir cuál ven los estudiantes) =====
+  get totalPaginasLotes(): number {
+    return Math.max(1, Math.ceil(this.lotes.length / this.TAMANO_PAGINA));
+  }
+
+  get lotesPagina(): any[] {
+    const inicio = (this.paginaLotes - 1) * this.TAMANO_PAGINA;
+    return this.lotes.slice(inicio, inicio + this.TAMANO_PAGINA);
+  }
+
+  get finPaginaLotes(): number {
+    return Math.min(this.paginaLotes * this.TAMANO_PAGINA, this.lotes.length);
+  }
+
+  irAPaginaLotes(pagina: number): void {
+    this.paginaLotes = Math.min(Math.max(1, pagina), this.totalPaginasLotes);
+  }
+
   iniciarEdicionLeccion(l: any): void {
     this.leccionEditando = l.clase;
     const c = l.contenido;
@@ -212,7 +235,7 @@ export class RevisionContenido implements OnInit {
     this.aprendizajeService.guardarLeccion(l.clase, contenido, estado).subscribe({
       next: (resp) => {
         this.guardando = false;
-        this.lecciones = this.lecciones.map(x => (x.clase === l.clase ? { ...x, contenido: resp.data.contenido, estado } : x));
+        this.lecciones = this.lecciones.map(x => (x.clase === l.clase ? { ...x, contenido: resp.data.contenido, estado, id_version_activa: null } : x));
         this.cancelarEdicionLeccion();
         this.alertService.success('Lección guardada', estado === 'aprobado' ? 'Los estudiantes ya ven la versión actualizada.' : 'Quedó como borrador: los estudiantes no la ven hasta que la apruebes.');
         this.cdr.detectChanges();
@@ -238,7 +261,7 @@ export class RevisionContenido implements OnInit {
         if (errores.length > 0) {
           this.alertService.warning('Algunas patologías fallaron', errores.map((e: any) => `${e.nombre}: ${e.mensaje}`).join(' | '));
         }
-        this.mostrarLotes = true;
+        this.paginaLotes = 1;
         this.cargarLotes();
       },
       error: (err) => {
@@ -263,11 +286,6 @@ export class RevisionContenido implements OnInit {
         this.cdr.detectChanges();
       }
     });
-  }
-
-  toggleLotes(): void {
-    this.mostrarLotes = !this.mostrarLotes;
-    if (this.mostrarLotes && this.lotes.length === 0) this.cargarLotes();
   }
 
   // Indica si esta versión generada es, ahora mismo, la que efectivamente ven los estudiantes
@@ -299,20 +317,28 @@ export class RevisionContenido implements OnInit {
 
   async publicarLote(lote: any): Promise<void> {
     const confirmado = await this.alertService.confirm(
-      'Publicar este conjunto',
+      'Mostrar esta lección a los estudiantes',
       `Esto reemplaza lo que ven los estudiantes en las ${lote.total_patologias} patologías de este conjunto (generado el ${new Date(lote.fecha_generacion).toLocaleString('es-GT')}). ¿Continuar?`,
-      'Sí, publicar'
+      'Sí, mostrar a los estudiantes'
     );
     if (!confirmado) return;
 
     this.publicandoLote = lote.id_lote;
     this.aprendizajeService.publicarLoteLeccion(lote.id_lote).subscribe({
-      next: (resp) => {
-        this.publicandoLote = null;
-        const porClase = new Map(resp.data.publicadas.map((p: any) => [p.clase, p]));
-        this.lecciones = this.lecciones.map(x => (porClase.has(x.clase) ? { ...x, contenido: (porClase.get(x.clase) as any).contenido, estado: 'aprobado' } : x));
-        this.alertService.success('Conjunto publicado', 'Los estudiantes ya ven estas lecciones.');
-        this.cdr.detectChanges();
+      next: () => {
+        // Recarga desde el servidor para que id_version_activa quede correcto en cada patología
+        this.aprendizajeService.listarLecciones().subscribe({
+          next: (resp) => {
+            this.publicandoLote = null;
+            this.lecciones = resp.data;
+            this.alertService.success('Lección mostrada', 'Los estudiantes ya ven esta lección.');
+            this.cdr.detectChanges();
+          },
+          error: () => {
+            this.publicandoLote = null;
+            this.cdr.detectChanges();
+          }
+        });
       },
       error: (err) => {
         this.publicandoLote = null;

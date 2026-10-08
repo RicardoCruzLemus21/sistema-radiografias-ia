@@ -9,6 +9,7 @@
 .tarjeta h2 { margin: 0 0 8px; font-size: 18px; color: var(--text-main); }
 .tarjeta p { margin: 0 0 8px; font-size: 14px; line-height: 1.55; color: var(--text-muted); }
 .nota-pequena { font-size: 12px !important; color: var(--text-muted); }
+.subtitulo-lotes { margin: 4px 0 -6px; font-size: 16px; color: var(--text-main); }
 
 .paginacion { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border-color); }
 .paginacion-info { font-size: 13px; color: var(--text-muted); }
