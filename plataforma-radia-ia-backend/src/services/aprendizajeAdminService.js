@@ -97,7 +97,12 @@ Responde SOLO con un JSON (sin texto adicional) con estos campos:
 No repitas "${clase}" en se_confunde_con.`;
 };
 
+// Cada click en "Generar lección" crea un LOTE: hasta 8 candidatas (una por patología), agrupadas.
+// El docente/admin publica el lote completo (no patología por patología) desde publicarLoteLeccion.
 const generarLecciones = async (idDocente) => {
+    const [loteRes] = await pool.query('CALL sp_apr_crear_lote_leccion(?)', [idDocente]);
+    const idLote = loteRes[0][0].id_lote;
+
     const clases = obtenerClases();
     const generadas = [];
     const errores = [];
@@ -106,34 +111,35 @@ const generarLecciones = async (idDocente) => {
         try {
             const crudo = await geminiService.generarJSON({ prompt: promptLeccion(clase, nombre), schema: esquemaLeccionIA });
             const limpio = validarLeccion(crudo, clase);
-            const [res] = await pool.query('CALL sp_apr_crear_version_leccion(?, ?, ?)', [clase, JSON.stringify(limpio), idDocente]);
+            const [res] = await pool.query('CALL sp_apr_crear_version_leccion(?, ?, ?)', [idLote, clase, JSON.stringify(limpio)]);
             generadas.push({ id_version: res[0][0].id_version, clase, nombre, contenido: limpio });
         } catch (error) {
             errores.push({ clase, nombre, mensaje: error.message });
         }
     }
-    return { generadas, errores };
+    return { id_lote: idLote, generadas, errores };
 };
 
-const listarVersionesLeccion = async (clase) => {
-    validarClase(clase);
-    const [res] = await pool.query('CALL sp_apr_listar_versiones_leccion(?)', [clase]);
-    return res[0].map(v => ({
-        id_version: v.id_version,
-        clase: v.clase,
-        contenido: parseJson(v.contenido, {}),
-        fecha_generacion: v.fecha_generacion,
-        generado_por: v.generado_por
-    }));
+const listarLotesLeccion = async () => {
+    const [res] = await pool.query('CALL sp_apr_listar_lotes_leccion()');
+    return res[0];
 };
 
-const publicarVersionLeccion = async (idVersion, idDocente) => {
-    const id = Number(idVersion);
-    if (!Number.isInteger(id) || id <= 0) throw new ErrorAprendizaje('Versión no válida.');
-    const [res] = await pool.query('CALL sp_apr_obtener_version_leccion(?)', [id]);
-    const version = res[0][0];
-    if (!version) throw new ErrorAprendizaje('Esa versión ya no existe.');
-    return guardarLeccion(version.clase, parseJson(version.contenido, {}), 'aprobado', idDocente);
+const listarVersionesLote = async (idLote) => {
+    const id = Number(idLote);
+    if (!Number.isInteger(id) || id <= 0) throw new ErrorAprendizaje('Conjunto no válido.');
+    const [res] = await pool.query('CALL sp_apr_listar_versiones_lote(?)', [id]);
+    return res[0].map(v => ({ id_version: v.id_version, clase: v.clase, nombre: obtenerLecciones()[v.clase]?.nombre || v.clase, contenido: parseJson(v.contenido, {}) }));
+};
+
+const publicarLoteLeccion = async (idLote, idDocente) => {
+    const versiones = await listarVersionesLote(idLote);
+    if (versiones.length === 0) throw new ErrorAprendizaje('Ese conjunto no tiene lecciones generadas.');
+    const publicadas = [];
+    for (const v of versiones) {
+        publicadas.push(await guardarLeccion(v.clase, v.contenido, 'aprobado', idDocente));
+    }
+    return { publicadas };
 };
 
 // ===== Explicaciones =====
@@ -167,5 +173,5 @@ const revisarExplicacion = async (id, contenido, estado, idDocente) => {
 
 module.exports = {
     listarLecciones, guardarLeccion, listarExplicaciones, revisarExplicacion, validarExplicacion,
-    generarLecciones, listarVersionesLeccion, publicarVersionLeccion
+    generarLecciones, listarLotesLeccion, listarVersionesLote, publicarLoteLeccion
 };

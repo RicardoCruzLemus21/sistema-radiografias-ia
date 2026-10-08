@@ -78,8 +78,34 @@
       <button type="button" class="btn-primario" [disabled]="generandoLecciones" (click)="generarLecciones()">
         {{ generandoLecciones ? 'Generando... (puede tardar un minuto)' : 'Generar lección con IA' }}
       </button>
+      <button type="button" class="btn-mini" (click)="toggleLotes()">{{ mostrarLotes ? 'Ocultar conjuntos generados' : 'Ver conjuntos generados' }}</button>
     </div>
-    <p class="nota-pequena">Genera 8 candidatas nuevas (una por patología). No reemplazan lo publicado hasta que elijas cuál usar en "Ver versiones generadas".</p>
+    <p class="nota-pequena">Cada generación crea un conjunto de hasta 8 lecciones (una por patología). No reemplazan lo publicado hasta que elijas publicar ese conjunto completo.</p>
+
+    <div class="lotes-ia" *ngIf="mostrarLotes">
+      <p class="nota-pequena" *ngIf="cargandoLotes">Cargando conjuntos...</p>
+      <p class="nota-pequena" *ngIf="!cargandoLotes && lotes.length === 0">Todavía no se ha generado ningún conjunto con IA.</p>
+      <article class="lote-item tarjeta glass-panel" *ngFor="let lo of lotes">
+        <header class="expl-cabecera">
+          <h3>{{ lo.fecha_generacion | date:'dd/MM/yyyy HH:mm' }}<span class="flecha" *ngIf="lo.generado_por"> — {{ lo.generado_por }}</span></h3>
+          <span class="insignia">{{ lo.total_patologias }}/8 patologías</span>
+        </header>
+        <div class="acciones-fila">
+          <button type="button" class="btn-mini" (click)="verLote(lo)">{{ loteAbierto === lo.id_lote ? 'Ocultar contenido' : 'Ver contenido' }}</button>
+          <button type="button" class="btn-aprobar" [disabled]="publicandoLote === lo.id_lote" (click)="publicarLote(lo)">
+            {{ publicandoLote === lo.id_lote ? 'Publicando...' : 'Publicar este conjunto' }}
+          </button>
+        </div>
+        <div class="lote-detalle" *ngIf="loteAbierto === lo.id_lote">
+          <div class="version-item" *ngFor="let v of versionesLote[lo.id_lote]">
+            <div class="version-info">
+              <span class="version-fecha">{{ v.nombre }}</span>
+              <p class="expl-resumen">{{ v.contenido.resumen }}</p>
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
 
     <article class="expl tarjeta glass-panel" *ngFor="let l of leccionesPagina" [class.editando]="leccionEditando === l.clase">
       <header class="expl-cabecera">
@@ -93,21 +119,6 @@
         <p class="expl-linea"><strong>Dato clave:</strong> {{ l.contenido.dato_clave }}</p>
         <div class="acciones-fila">
           <button type="button" class="btn-mini" (click)="iniciarEdicionLeccion(l)">Editar lección</button>
-          <button type="button" class="btn-mini" (click)="toggleVersiones(l.clase)">{{ claseVersionesAbierta === l.clase ? 'Ocultar versiones generadas' : 'Ver versiones generadas' }}</button>
-        </div>
-
-        <div class="versiones-ia" *ngIf="claseVersionesAbierta === l.clase">
-          <p class="nota-pequena" *ngIf="cargandoVersiones">Cargando versiones...</p>
-          <p class="nota-pequena" *ngIf="!cargandoVersiones && (versionesClase[l.clase]?.length || 0) === 0">Todavía no se ha generado ninguna versión con IA para esta patología.</p>
-          <div class="version-item" *ngFor="let v of versionesClase[l.clase]">
-            <div class="version-info">
-              <span class="version-fecha">{{ v.fecha_generacion | date:'dd/MM/yyyy HH:mm' }}</span>
-              <p class="expl-resumen">{{ v.contenido.resumen }}</p>
-            </div>
-            <button type="button" class="btn-mini" [disabled]="publicandoVersion === v.id_version" (click)="publicarVersion(v)">
-              {{ publicandoVersion === v.id_version ? 'Publicando...' : 'Usar esta versión' }}
-            </button>
-          </div>
         </div>
       </ng-container>
 

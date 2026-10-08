@@ -64,17 +64,22 @@ export class AprendizajeService {
     return this.http.put<any>(`${this.api}/admin/lecciones/${encodeURIComponent(clase)}`, { contenido, estado }, this.opciones());
   }
 
-  // Genera 8 lecciones candidatas con IA (una por patología); no se publican hasta que el docente elija cuál usar
+  // Genera un lote de hasta 8 lecciones candidatas con IA (una por patología); no se publican hasta
+  // que el docente elija qué conjunto completo usar
   generarLecciones(): Observable<any> {
     return this.http.post<any>(`${this.api}/admin/lecciones/generar`, {}, this.opciones());
   }
 
-  listarVersionesLeccion(clase: string): Observable<any> {
-    return this.http.get<any>(`${this.api}/admin/lecciones/${encodeURIComponent(clase)}/versiones`, this.opciones());
+  listarLotesLeccion(): Observable<any> {
+    return this.http.get<any>(`${this.api}/admin/lecciones/lotes`, this.opciones());
   }
 
-  publicarVersionLeccion(idVersion: number): Observable<any> {
-    return this.http.post<any>(`${this.api}/admin/lecciones/versiones/${idVersion}/publicar`, {}, this.opciones());
+  listarVersionesLote(idLote: number): Observable<any> {
+    return this.http.get<any>(`${this.api}/admin/lecciones/lotes/${idLote}/versiones`, this.opciones());
+  }
+
+  publicarLoteLeccion(idLote: number): Observable<any> {
+    return this.http.post<any>(`${this.api}/admin/lecciones/lotes/${idLote}/publicar`, {}, this.opciones());
   }
 
   listarExplicaciones(): Observable<any> {

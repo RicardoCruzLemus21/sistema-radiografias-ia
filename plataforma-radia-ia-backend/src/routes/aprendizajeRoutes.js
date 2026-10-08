@@ -21,8 +21,9 @@ const revisores = verificarRol(['catedratico', 'admin']);
 router.get('/admin/lecciones', revisores, c.listarLecciones);
 router.put('/admin/lecciones/:clase', revisores, c.guardarLeccion);
 router.post('/admin/lecciones/generar', revisores, c.generarLecciones);
-router.get('/admin/lecciones/:clase/versiones', revisores, c.listarVersionesLeccion);
-router.post('/admin/lecciones/versiones/:id/publicar', revisores, c.publicarVersionLeccion);
+router.get('/admin/lecciones/lotes', revisores, c.listarLotesLeccion);
+router.get('/admin/lecciones/lotes/:id/versiones', revisores, c.listarVersionesLote);
+router.post('/admin/lecciones/lotes/:id/publicar', revisores, c.publicarLoteLeccion);
 router.get('/admin/explicaciones', revisores, c.listarExplicaciones);
 router.put('/admin/explicaciones/:id', revisores, c.revisarExplicacion);
 

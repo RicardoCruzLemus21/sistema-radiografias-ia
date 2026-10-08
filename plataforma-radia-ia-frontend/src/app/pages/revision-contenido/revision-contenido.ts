@@ -21,7 +21,7 @@ export class RevisionContenido implements OnInit {
   cargando = true;
   error = '';
 
-  readonly TAMANO_PAGINA = 7;
+  readonly TAMANO_PAGINA = 8;
 
   // Explicaciones
   todas: any[] = [];
@@ -37,10 +37,12 @@ export class RevisionContenido implements OnInit {
   leccionEditando: string | null = null;
   formLeccion: any = null;
   generandoLecciones = false;
-  claseVersionesAbierta: string | null = null;
-  versionesClase: Record<string, any[]> = {};
-  cargandoVersiones = false;
-  publicandoVersion: number | null = null;
+  mostrarLotes = false;
+  cargandoLotes = false;
+  lotes: any[] = [];
+  loteAbierto: number | null = null;
+  versionesLote: Record<number, any[]> = {};
+  publicandoLote: number | null = null;
 
   readonly nombreClase = nombreClase;
   readonly colorClase = colorClase;
@@ -223,7 +225,7 @@ export class RevisionContenido implements OnInit {
     });
   }
 
-  // ===== Generar lecciones con IA =====
+  // ===== Generar lecciones con IA (por lotes de 8, uno por patología) =====
   generarLecciones(): void {
     this.generandoLecciones = true;
     this.aprendizajeService.generarLecciones().subscribe({
@@ -231,14 +233,13 @@ export class RevisionContenido implements OnInit {
         this.generandoLecciones = false;
         const { generadas, errores } = resp.data;
         if (generadas.length > 0) {
-          this.alertService.success('Lecciones generadas', `Se generaron ${generadas.length} de 8 candidatas. Ábrelas con "Ver versiones generadas" en cada lección y elige cuál publicar.`);
+          this.alertService.success('Conjunto generado', `Se generaron ${generadas.length} de 8 patologías. Ábrelo en "Ver conjuntos generados" para revisarlo y publicarlo.`);
         }
         if (errores.length > 0) {
-          this.alertService.warning('Algunas fallaron', errores.map((e: any) => `${e.nombre}: ${e.mensaje}`).join(' | '));
+          this.alertService.warning('Algunas patologías fallaron', errores.map((e: any) => `${e.nombre}: ${e.mensaje}`).join(' | '));
         }
-        // Si el panel de versiones de alguna clase ya estaba abierto, lo refresca para que aparezcan las nuevas
-        if (this.claseVersionesAbierta) this.cargarVersiones(this.claseVersionesAbierta);
-        this.cdr.detectChanges();
+        this.mostrarLotes = true;
+        this.cargarLotes();
       },
       error: (err) => {
         this.generandoLecciones = false;
@@ -248,42 +249,66 @@ export class RevisionContenido implements OnInit {
     });
   }
 
-  private cargarVersiones(clase: string): void {
-    this.cargandoVersiones = true;
-    this.aprendizajeService.listarVersionesLeccion(clase).subscribe({
+  private cargarLotes(): void {
+    this.cargandoLotes = true;
+    this.aprendizajeService.listarLotesLeccion().subscribe({
       next: (resp) => {
-        this.versionesClase[clase] = resp.data;
-        this.cargandoVersiones = false;
+        this.lotes = resp.data;
+        this.cargandoLotes = false;
         this.cdr.detectChanges();
       },
       error: () => {
-        this.cargandoVersiones = false;
-        this.alertService.error('No se pudieron cargar las versiones', 'Intenta de nuevo.');
+        this.cargandoLotes = false;
+        this.alertService.error('No se pudieron cargar los conjuntos', 'Intenta de nuevo.');
         this.cdr.detectChanges();
       }
     });
   }
 
-  toggleVersiones(clase: string): void {
-    if (this.claseVersionesAbierta === clase) {
-      this.claseVersionesAbierta = null;
-      return;
-    }
-    this.claseVersionesAbierta = clase;
-    if (!this.versionesClase[clase]) this.cargarVersiones(clase);
+  toggleLotes(): void {
+    this.mostrarLotes = !this.mostrarLotes;
+    if (this.mostrarLotes && this.lotes.length === 0) this.cargarLotes();
   }
 
-  publicarVersion(version: any): void {
-    this.publicandoVersion = version.id_version;
-    this.aprendizajeService.publicarVersionLeccion(version.id_version).subscribe({
+  verLote(lote: any): void {
+    if (this.loteAbierto === lote.id_lote) {
+      this.loteAbierto = null;
+      return;
+    }
+    this.loteAbierto = lote.id_lote;
+    if (!this.versionesLote[lote.id_lote]) {
+      this.aprendizajeService.listarVersionesLote(lote.id_lote).subscribe({
+        next: (resp) => {
+          this.versionesLote[lote.id_lote] = resp.data;
+          this.cdr.detectChanges();
+        },
+        error: () => {
+          this.alertService.error('No se pudo cargar el conjunto', 'Intenta de nuevo.');
+          this.cdr.detectChanges();
+        }
+      });
+    }
+  }
+
+  async publicarLote(lote: any): Promise<void> {
+    const confirmado = await this.alertService.confirm(
+      'Publicar este conjunto',
+      `Esto reemplaza lo que ven los estudiantes en las ${lote.total_patologias} patologías de este conjunto (generado el ${new Date(lote.fecha_generacion).toLocaleString('es-GT')}). ¿Continuar?`,
+      'Sí, publicar'
+    );
+    if (!confirmado) return;
+
+    this.publicandoLote = lote.id_lote;
+    this.aprendizajeService.publicarLoteLeccion(lote.id_lote).subscribe({
       next: (resp) => {
-        this.publicandoVersion = null;
-        this.lecciones = this.lecciones.map(x => (x.clase === version.clase ? { ...x, contenido: resp.data.contenido, estado: 'aprobado' } : x));
-        this.alertService.success('Lección publicada', 'Los estudiantes ya ven esta versión.');
+        this.publicandoLote = null;
+        const porClase = new Map(resp.data.publicadas.map((p: any) => [p.clase, p]));
+        this.lecciones = this.lecciones.map(x => (porClase.has(x.clase) ? { ...x, contenido: (porClase.get(x.clase) as any).contenido, estado: 'aprobado' } : x));
+        this.alertService.success('Conjunto publicado', 'Los estudiantes ya ven estas lecciones.');
         this.cdr.detectChanges();
       },
       error: (err) => {
-        this.publicandoVersion = null;
+        this.publicandoLote = null;
         this.alertService.error('No se pudo publicar', err.error?.message || 'Intenta de nuevo.');
         this.cdr.detectChanges();
       }
