@@ -102,6 +102,7 @@
               <span class="version-fecha">{{ v.nombre }}</span>
               <p class="expl-resumen">{{ v.contenido.resumen }}</p>
             </div>
+            <span class="insignia estado aprobada" *ngIf="esVersionActiva(v)">La ven los estudiantes</span>
           </div>
         </div>
       </article>

@@ -51,14 +51,16 @@ const validarLeccion = (c, clase) => {
 // ===== Lecciones =====
 const listarLecciones = async () => {
     const [res] = await pool.query('CALL sp_apr_lecciones_admin()');
-    return res[0].map(l => ({ clase: l.clase, nombre: obtenerLecciones()[l.clase]?.nombre || l.clase, contenido: parseJson(l.contenido, {}), estado: l.estado, revisado_por: l.revisado_por, fecha_revision: l.fecha_revision }));
+    return res[0].map(l => ({ clase: l.clase, nombre: obtenerLecciones()[l.clase]?.nombre || l.clase, contenido: parseJson(l.contenido, {}), estado: l.estado, id_version_activa: l.id_version_activa, revisado_por: l.revisado_por, fecha_revision: l.fecha_revision }));
 };
 
-const guardarLeccion = async (clase, contenido, estado, idDocente) => {
+// idVersion: si la lección viene de publicar un conjunto generado con IA, el id de esa versión
+// (así queda marcada como "la que ven los estudiantes" dentro de ese conjunto). Null si se edita a mano.
+const guardarLeccion = async (clase, contenido, estado, idDocente, idVersion = null) => {
     validarClase(clase);
     if (!['borrador', 'aprobado'].includes(estado)) throw new ErrorAprendizaje('Estado no válido.');
     const limpio = validarLeccion(contenido, clase);
-    const [res] = await pool.query('CALL sp_apr_guardar_leccion(?, ?, ?, ?)', [clase, JSON.stringify(limpio), estado, idDocente]);
+    const [res] = await pool.query('CALL sp_apr_guardar_leccion(?, ?, ?, ?, ?)', [clase, JSON.stringify(limpio), estado, idDocente, idVersion]);
     if (!res[0][0].filas) throw new ErrorAprendizaje('Lección no encontrada.');
     return { clase, estado, contenido: limpio };
 };
@@ -137,7 +139,7 @@ const publicarLoteLeccion = async (idLote, idDocente) => {
     if (versiones.length === 0) throw new ErrorAprendizaje('Ese conjunto no tiene lecciones generadas.');
     const publicadas = [];
     for (const v of versiones) {
-        publicadas.push(await guardarLeccion(v.clase, v.contenido, 'aprobado', idDocente));
+        publicadas.push(await guardarLeccion(v.clase, v.contenido, 'aprobado', idDocente, v.id_version));
     }
     return { publicadas };
 };

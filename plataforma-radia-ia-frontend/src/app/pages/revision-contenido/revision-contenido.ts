@@ -270,6 +270,13 @@ export class RevisionContenido implements OnInit {
     if (this.mostrarLotes && this.lotes.length === 0) this.cargarLotes();
   }
 
+  // Indica si esta versión generada es, ahora mismo, la que efectivamente ven los estudiantes
+  // (si la lección se editó a mano después de publicarla, deja de coincidir con ninguna versión)
+  esVersionActiva(version: any): boolean {
+    const leccion = this.lecciones.find(l => l.clase === version.clase);
+    return !!leccion && leccion.id_version_activa === version.id_version;
+  }
+
   verLote(lote: any): void {
     if (this.loteAbierto === lote.id_lote) {
       this.loteAbierto = null;
