@@ -36,6 +36,11 @@ export class RevisionContenido implements OnInit {
   paginaLecciones = 1;
   leccionEditando: string | null = null;
   formLeccion: any = null;
+  generandoLecciones = false;
+  claseVersionesAbierta: string | null = null;
+  versionesClase: Record<string, any[]> = {};
+  cargandoVersiones = false;
+  publicandoVersion: number | null = null;
 
   readonly nombreClase = nombreClase;
   readonly colorClase = colorClase;
@@ -213,6 +218,73 @@ export class RevisionContenido implements OnInit {
       error: (err) => {
         this.guardando = false;
         this.alertService.warning('Revisa el texto', err.error?.message || 'No se pudo guardar.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ===== Generar lecciones con IA =====
+  generarLecciones(): void {
+    this.generandoLecciones = true;
+    this.aprendizajeService.generarLecciones().subscribe({
+      next: (resp) => {
+        this.generandoLecciones = false;
+        const { generadas, errores } = resp.data;
+        if (generadas.length > 0) {
+          this.alertService.success('Lecciones generadas', `Se generaron ${generadas.length} de 8 candidatas. Ábrelas con "Ver versiones generadas" en cada lección y elige cuál publicar.`);
+        }
+        if (errores.length > 0) {
+          this.alertService.warning('Algunas fallaron', errores.map((e: any) => `${e.nombre}: ${e.mensaje}`).join(' | '));
+        }
+        // Si el panel de versiones de alguna clase ya estaba abierto, lo refresca para que aparezcan las nuevas
+        if (this.claseVersionesAbierta) this.cargarVersiones(this.claseVersionesAbierta);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.generandoLecciones = false;
+        this.alertService.error('No se pudo generar', err.error?.message || 'Intenta de nuevo en unos segundos.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private cargarVersiones(clase: string): void {
+    this.cargandoVersiones = true;
+    this.aprendizajeService.listarVersionesLeccion(clase).subscribe({
+      next: (resp) => {
+        this.versionesClase[clase] = resp.data;
+        this.cargandoVersiones = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoVersiones = false;
+        this.alertService.error('No se pudieron cargar las versiones', 'Intenta de nuevo.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  toggleVersiones(clase: string): void {
+    if (this.claseVersionesAbierta === clase) {
+      this.claseVersionesAbierta = null;
+      return;
+    }
+    this.claseVersionesAbierta = clase;
+    if (!this.versionesClase[clase]) this.cargarVersiones(clase);
+  }
+
+  publicarVersion(version: any): void {
+    this.publicandoVersion = version.id_version;
+    this.aprendizajeService.publicarVersionLeccion(version.id_version).subscribe({
+      next: (resp) => {
+        this.publicandoVersion = null;
+        this.lecciones = this.lecciones.map(x => (x.clase === version.clase ? { ...x, contenido: resp.data.contenido, estado: 'aprobado' } : x));
+        this.alertService.success('Lección publicada', 'Los estudiantes ya ven esta versión.');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.publicandoVersion = null;
+        this.alertService.error('No se pudo publicar', err.error?.message || 'Intenta de nuevo.');
         this.cdr.detectChanges();
       }
     });

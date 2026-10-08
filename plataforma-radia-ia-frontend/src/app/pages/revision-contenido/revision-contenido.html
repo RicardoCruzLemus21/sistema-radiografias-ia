@@ -74,6 +74,13 @@
   <section *ngIf="!cargando && !error && pestana === 'lecciones'" class="bloque">
     <p class="nota-pequena">Material de apoyo de cada categoría. Revísalo y ajústalo a tu criterio: lo que edites se conserva. Una lección en borrador no se muestra a los estudiantes.</p>
 
+    <div class="acciones-fila">
+      <button type="button" class="btn-primario" [disabled]="generandoLecciones" (click)="generarLecciones()">
+        {{ generandoLecciones ? 'Generando... (puede tardar un minuto)' : 'Generar lección con IA' }}
+      </button>
+    </div>
+    <p class="nota-pequena">Genera 8 candidatas nuevas (una por patología). No reemplazan lo publicado hasta que elijas cuál usar en "Ver versiones generadas".</p>
+
     <article class="expl tarjeta glass-panel" *ngFor="let l of leccionesPagina" [class.editando]="leccionEditando === l.clase">
       <header class="expl-cabecera">
         <h3><span class="chip-clase" [style.--color-clase]="colorClase(l.clase)">{{ l.nombre }}</span></h3>
@@ -84,7 +91,24 @@
       <ng-container *ngIf="leccionEditando !== l.clase">
         <p class="expl-resumen">{{ l.contenido.resumen }}</p>
         <p class="expl-linea"><strong>Dato clave:</strong> {{ l.contenido.dato_clave }}</p>
-        <div class="acciones-fila"><button type="button" class="btn-mini" (click)="iniciarEdicionLeccion(l)">Editar lección</button></div>
+        <div class="acciones-fila">
+          <button type="button" class="btn-mini" (click)="iniciarEdicionLeccion(l)">Editar lección</button>
+          <button type="button" class="btn-mini" (click)="toggleVersiones(l.clase)">{{ claseVersionesAbierta === l.clase ? 'Ocultar versiones generadas' : 'Ver versiones generadas' }}</button>
+        </div>
+
+        <div class="versiones-ia" *ngIf="claseVersionesAbierta === l.clase">
+          <p class="nota-pequena" *ngIf="cargandoVersiones">Cargando versiones...</p>
+          <p class="nota-pequena" *ngIf="!cargandoVersiones && (versionesClase[l.clase]?.length || 0) === 0">Todavía no se ha generado ninguna versión con IA para esta patología.</p>
+          <div class="version-item" *ngFor="let v of versionesClase[l.clase]">
+            <div class="version-info">
+              <span class="version-fecha">{{ v.fecha_generacion | date:'dd/MM/yyyy HH:mm' }}</span>
+              <p class="expl-resumen">{{ v.contenido.resumen }}</p>
+            </div>
+            <button type="button" class="btn-mini" [disabled]="publicandoVersion === v.id_version" (click)="publicarVersion(v)">
+              {{ publicandoVersion === v.id_version ? 'Publicando...' : 'Usar esta versión' }}
+            </button>
+          </div>
+        </div>
       </ng-container>
 
       <form *ngIf="leccionEditando === l.clase && formLeccion" class="formulario" (ngSubmit)="guardarLeccion(l, 'aprobado')">

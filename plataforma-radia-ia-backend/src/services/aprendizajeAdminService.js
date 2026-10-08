@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const { obtenerLecciones, obtenerClases } = require('../config/catalogoLecciones');
 const { ErrorAprendizaje } = require('./aprendizajeService');
+const geminiService = require('./geminiService');
 
 const parseJson = (v, def) => { try { return typeof v === 'string' ? JSON.parse(v) : (v ?? def); } catch (e) { return def; } };
 
@@ -62,6 +63,79 @@ const guardarLeccion = async (clase, contenido, estado, idDocente) => {
     return { clase, estado, contenido: limpio };
 };
 
+// ===== Generación de lecciones con IA =====
+// El docente presiona un botón y se generan 8 candidatas (una por patología), sin publicarlas todavía.
+const esquemaLeccionIA = {
+    type: 'OBJECT',
+    properties: {
+        resumen: { type: 'STRING' },
+        que_buscar: { type: 'ARRAY', items: { type: 'STRING' } },
+        errores_tipicos: { type: 'ARRAY', items: { type: 'STRING' } },
+        dato_clave: { type: 'STRING' },
+        se_confunde_con: {
+            type: 'ARRAY',
+            items: {
+                type: 'OBJECT',
+                properties: { clase: { type: 'STRING' }, clave: { type: 'STRING' } },
+                required: ['clase', 'clave']
+            }
+        }
+    },
+    required: ['resumen', 'que_buscar', 'errores_tipicos', 'dato_clave', 'se_confunde_con']
+};
+
+const promptLeccion = (clase, nombre) => {
+    const otras = obtenerClases().filter(c => c !== clase);
+    const listaOtras = otras.map(c => `${c} (${obtenerLecciones()[c]?.nombre || c})`).join(', ');
+    return `Eres un radiólogo que escribe material educativo en español para estudiantes de medicina sobre cómo reconocer "${nombre}" en una radiografía de tórax.
+Responde SOLO con un JSON (sin texto adicional) con estos campos:
+- resumen: 1 a 3 frases (10 a 600 caracteres) de cómo se reconoce ${nombre} en la radiografía.
+- que_buscar: entre 2 y 8 señales radiológicas concretas (cada una de 8 a 400 caracteres).
+- errores_tipicos: entre 1 y 6 errores comunes que cometen los estudiantes al diagnosticar esto (cada uno de 8 a 400 caracteres).
+- dato_clave: un dato breve y memorable (5 a 300 caracteres).
+- se_confunde_con: 2 o 3 objetos {clase, clave}. "clase" debe ser EXACTAMENTE uno de estos valores (tal cual, sin acentos ni cambios): ${otras.join(', ')}. "clave" (10 a 500 caracteres) explica cómo distinguir ${nombre} de esa otra condición. Las otras categorías del sistema son: ${listaOtras}.
+No repitas "${clase}" en se_confunde_con.`;
+};
+
+const generarLecciones = async (idDocente) => {
+    const clases = obtenerClases();
+    const generadas = [];
+    const errores = [];
+    for (const clase of clases) {
+        const nombre = obtenerLecciones()[clase]?.nombre || clase;
+        try {
+            const crudo = await geminiService.generarJSON({ prompt: promptLeccion(clase, nombre), schema: esquemaLeccionIA });
+            const limpio = validarLeccion(crudo, clase);
+            const [res] = await pool.query('CALL sp_apr_crear_version_leccion(?, ?, ?)', [clase, JSON.stringify(limpio), idDocente]);
+            generadas.push({ id_version: res[0][0].id_version, clase, nombre, contenido: limpio });
+        } catch (error) {
+            errores.push({ clase, nombre, mensaje: error.message });
+        }
+    }
+    return { generadas, errores };
+};
+
+const listarVersionesLeccion = async (clase) => {
+    validarClase(clase);
+    const [res] = await pool.query('CALL sp_apr_listar_versiones_leccion(?)', [clase]);
+    return res[0].map(v => ({
+        id_version: v.id_version,
+        clase: v.clase,
+        contenido: parseJson(v.contenido, {}),
+        fecha_generacion: v.fecha_generacion,
+        generado_por: v.generado_por
+    }));
+};
+
+const publicarVersionLeccion = async (idVersion, idDocente) => {
+    const id = Number(idVersion);
+    if (!Number.isInteger(id) || id <= 0) throw new ErrorAprendizaje('Versión no válida.');
+    const [res] = await pool.query('CALL sp_apr_obtener_version_leccion(?)', [id]);
+    const version = res[0][0];
+    if (!version) throw new ErrorAprendizaje('Esa versión ya no existe.');
+    return guardarLeccion(version.clase, parseJson(version.contenido, {}), 'aprobado', idDocente);
+};
+
 // ===== Explicaciones =====
 // Solo se listan las explicaciones base (origen 'plantilla'). Las antiguas generadas con IA quedan
 // en la base de datos, desactivadas, pero ya no se muestran ni se pueden editar desde aquí.
@@ -91,4 +165,7 @@ const revisarExplicacion = async (id, contenido, estado, idDocente) => {
     return { id_explicacion: idExp, estado, contenido: limpio };
 };
 
-module.exports = { listarLecciones, guardarLeccion, listarExplicaciones, revisarExplicacion, validarExplicacion };
+module.exports = {
+    listarLecciones, guardarLeccion, listarExplicaciones, revisarExplicacion, validarExplicacion,
+    generarLecciones, listarVersionesLeccion, publicarVersionLeccion
+};

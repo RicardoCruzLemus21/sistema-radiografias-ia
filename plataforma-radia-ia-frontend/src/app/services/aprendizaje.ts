@@ -64,6 +64,19 @@ export class AprendizajeService {
     return this.http.put<any>(`${this.api}/admin/lecciones/${encodeURIComponent(clase)}`, { contenido, estado }, this.opciones());
   }
 
+  // Genera 8 lecciones candidatas con IA (una por patología); no se publican hasta que el docente elija cuál usar
+  generarLecciones(): Observable<any> {
+    return this.http.post<any>(`${this.api}/admin/lecciones/generar`, {}, this.opciones());
+  }
+
+  listarVersionesLeccion(clase: string): Observable<any> {
+    return this.http.get<any>(`${this.api}/admin/lecciones/${encodeURIComponent(clase)}/versiones`, this.opciones());
+  }
+
+  publicarVersionLeccion(idVersion: number): Observable<any> {
+    return this.http.post<any>(`${this.api}/admin/lecciones/versiones/${idVersion}/publicar`, {}, this.opciones());
+  }
+
   listarExplicaciones(): Observable<any> {
     return this.http.get<any>(`${this.api}/admin/explicaciones`, this.opciones());
   }
