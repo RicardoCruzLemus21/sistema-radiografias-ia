@@ -21,8 +21,11 @@ export class RevisionContenido implements OnInit {
   cargando = true;
   error = '';
 
+  readonly TAMANO_PAGINA = 7;
+
   // Explicaciones
   todas: any[] = [];
+  paginaExplicaciones = 1;
   editandoId: number | null = null;
   formulario = { resumen: '', pasos: '', pista: '', proxima_vez: '' };
   guardando = false;
@@ -30,6 +33,7 @@ export class RevisionContenido implements OnInit {
 
   // Lecciones
   lecciones: any[] = [];
+  paginaLecciones = 1;
   leccionEditando: string | null = null;
   formLeccion: any = null;
 
@@ -63,6 +67,23 @@ export class RevisionContenido implements OnInit {
   // ===== Explicaciones =====
   contar(estado: FiltroEstado): number {
     return estado === 'todas' ? this.todas.length : this.todas.filter(e => e.estado === estado).length;
+  }
+
+  get totalPaginasExplicaciones(): number {
+    return Math.max(1, Math.ceil(this.todas.length / this.TAMANO_PAGINA));
+  }
+
+  get explicacionesPagina(): any[] {
+    const inicio = (this.paginaExplicaciones - 1) * this.TAMANO_PAGINA;
+    return this.todas.slice(inicio, inicio + this.TAMANO_PAGINA);
+  }
+
+  get finPaginaExplicaciones(): number {
+    return Math.min(this.paginaExplicaciones * this.TAMANO_PAGINA, this.todas.length);
+  }
+
+  irAPaginaExplicaciones(pagina: number): void {
+    this.paginaExplicaciones = Math.min(Math.max(1, pagina), this.totalPaginasExplicaciones);
   }
 
   iniciarEdicion(e: any): void {
@@ -136,6 +157,23 @@ export class RevisionContenido implements OnInit {
   }
 
   // ===== Lecciones =====
+  get totalPaginasLecciones(): number {
+    return Math.max(1, Math.ceil(this.lecciones.length / this.TAMANO_PAGINA));
+  }
+
+  get leccionesPagina(): any[] {
+    const inicio = (this.paginaLecciones - 1) * this.TAMANO_PAGINA;
+    return this.lecciones.slice(inicio, inicio + this.TAMANO_PAGINA);
+  }
+
+  get finPaginaLecciones(): number {
+    return Math.min(this.paginaLecciones * this.TAMANO_PAGINA, this.lecciones.length);
+  }
+
+  irAPaginaLecciones(pagina: number): void {
+    this.paginaLecciones = Math.min(Math.max(1, pagina), this.totalPaginasLecciones);
+  }
+
   iniciarEdicionLeccion(l: any): void {
     this.leccionEditando = l.clase;
     const c = l.contenido;

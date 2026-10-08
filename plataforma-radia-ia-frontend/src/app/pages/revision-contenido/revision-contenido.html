@@ -23,7 +23,7 @@
 
     <div class="vacio-caja" *ngIf="todas.length === 0">No hay explicaciones todavía.</div>
 
-    <article class="expl tarjeta glass-panel" *ngFor="let e of todas" [class.editando]="editandoId === e.id_explicacion">
+    <article class="expl tarjeta glass-panel" *ngFor="let e of explicacionesPagina" [class.editando]="editandoId === e.id_explicacion">
       <header class="expl-cabecera">
         <h3>
           <span class="chip-clase" [style.--color-clase]="colorClase(e.clase_real)">{{ e.nombre_real }}</span>
@@ -57,13 +57,24 @@
         </div>
       </form>
     </article>
+
+    <div class="paginacion" *ngIf="totalPaginasExplicaciones > 1">
+      <span class="paginacion-info">
+        Mostrando {{ (paginaExplicaciones - 1) * TAMANO_PAGINA + 1 }}–{{ finPaginaExplicaciones }} de {{ todas.length }}
+      </span>
+      <div class="paginacion-controles">
+        <button type="button" (click)="irAPaginaExplicaciones(paginaExplicaciones - 1)" [disabled]="paginaExplicaciones === 1">Anterior</button>
+        <span>Página {{ paginaExplicaciones }} de {{ totalPaginasExplicaciones }}</span>
+        <button type="button" (click)="irAPaginaExplicaciones(paginaExplicaciones + 1)" [disabled]="paginaExplicaciones === totalPaginasExplicaciones">Siguiente</button>
+      </div>
+    </div>
   </section>
 
   <!-- ===== LECCIONES ===== -->
   <section *ngIf="!cargando && !error && pestana === 'lecciones'" class="bloque">
     <p class="nota-pequena">Material de apoyo de cada categoría. Revísalo y ajústalo a tu criterio: lo que edites se conserva. Una lección en borrador no se muestra a los estudiantes.</p>
 
-    <article class="expl tarjeta glass-panel" *ngFor="let l of lecciones" [class.editando]="leccionEditando === l.clase">
+    <article class="expl tarjeta glass-panel" *ngFor="let l of leccionesPagina" [class.editando]="leccionEditando === l.clase">
       <header class="expl-cabecera">
         <h3><span class="chip-clase" [style.--color-clase]="colorClase(l.clase)">{{ l.nombre }}</span></h3>
         <span class="insignia estado" [ngClass]="l.estado === 'aprobado' ? 'aprobada' : 'pendiente'">{{ l.estado === 'aprobado' ? 'Publicada' : 'Borrador' }}</span>
@@ -94,5 +105,16 @@
         </div>
       </form>
     </article>
+
+    <div class="paginacion" *ngIf="totalPaginasLecciones > 1">
+      <span class="paginacion-info">
+        Mostrando {{ (paginaLecciones - 1) * TAMANO_PAGINA + 1 }}–{{ finPaginaLecciones }} de {{ lecciones.length }}
+      </span>
+      <div class="paginacion-controles">
+        <button type="button" (click)="irAPaginaLecciones(paginaLecciones - 1)" [disabled]="paginaLecciones === 1">Anterior</button>
+        <span>Página {{ paginaLecciones }} de {{ totalPaginasLecciones }}</span>
+        <button type="button" (click)="irAPaginaLecciones(paginaLecciones + 1)" [disabled]="paginaLecciones === totalPaginasLecciones">Siguiente</button>
+      </div>
+    </div>
   </section>
 </div>
