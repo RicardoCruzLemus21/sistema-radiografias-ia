@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { asignarCodigoNuevo, normalizarCodigo, esCodigoValido } = require('./codigoDocenteService');
+const { asignarCodigoNuevo, normalizarCodigo, esCodigoValido, obtenerCodigo } = require('./codigoDocenteService');
 
 const registrarUsuario = async (datosUsuario) => {
     const { id_rol, nombre_completo, correo_electronico, contrasena, carnet, nombre_curso_asignar } = datosUsuario;
@@ -115,6 +115,17 @@ const registrarDocente = async (datos) => {
     });
 
     await pool.query('CALL sp_marcar_clave_definitiva(?)', [nuevo.id_usuario]);
+
+    try {
+        const codigo = await obtenerCodigo(nuevo.id_usuario);
+        require('./emailService').enviarCorreoRegistroDocente(
+            persona.correo, persona.nombre, curso, codigo,
+            `${process.env.FRONTEND_URL || 'http://localhost:4200'}/login`
+        );
+    } catch (mailError) {
+        console.error('Error al intentar disparar el correo de registro de docente:', mailError);
+    }
+
     return nuevo;
 };
 
@@ -185,6 +196,16 @@ const registrarEstudiante = async (datos) => {
 
         await conn.commit();
         require('./notificationService').notificarNuevoEstudiante(curso.id_curso, persona.nombre);
+
+        try {
+            require('./emailService').enviarCorreoRegistroEstudiante(
+                persona.correo, persona.nombre, docente.nombre_docente, curso.nombre_curso,
+                `${process.env.FRONTEND_URL || 'http://localhost:4200'}/login`
+            );
+        } catch (mailError) {
+            console.error('Error al intentar disparar el correo de registro de estudiante:', mailError);
+        }
+
         return {
             id_usuario,
             nombre_completo: persona.nombre,
