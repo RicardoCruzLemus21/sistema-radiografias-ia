@@ -34,9 +34,6 @@ router.post('/paciente', clinicalController.registrarPaciente);
 router.post('/caso', clinicalController.armarCaso);
 router.post('/radiografia', upload.single('imagen'), clinicalController.subirImagenRad);
 
-// Endpoint POST Maestro: Crear Paciente + Caso + Subir Rx en un solo paso
-router.post('/crear-completo', upload.single('imagen_rx'), clinicalController.crearCasoCompleto);
-
 // Endpoint POST: Asignar casos del Banco NIH a un curso
 router.post('/evaluaciones', verificarRol(['catedratico']), clinicalController.asignarCasosBanco);
 

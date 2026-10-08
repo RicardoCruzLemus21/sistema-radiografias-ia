@@ -46,65 +46,6 @@ const guardarRadiografia = async (id_caso, tipo_proyeccion, ruta_imagen) => {
     return { id_radiografia: resultado[0][0].id_radiografia, id_caso, tipo_proyeccion, ruta_imagen };
 };
 
-// 4. Crear Caso Completo (Paciente + Caso + Radiografía) en una sola transacción
-const crearCasoCompleto = async (datos) => {
-    const {
-        codigo_paciente,
-        edad,
-        genero,
-        antecedentes_medicos,
-        id_curso,
-        id_catedratico,
-        titulo_caso,
-        motivo_consulta,
-        nivel_dificultad,
-        tipo_proyeccion,
-        ruta_imagen,
-        hallazgos_docente // Array de patologías enviadas por el docente
-    } = datos;
-
-    try {
-        const [resultado] = await pool.query('CALL sp_crear_caso_completo(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
-            codigo_paciente, edad, genero, antecedentes_medicos,
-            id_curso, id_catedratico, titulo_caso, motivo_consulta, nivel_dificultad,
-            tipo_proyeccion, ruta_imagen
-        ]);
-
-        const ids = resultado[0][0];
-
-        // Modificación RADIA-EDU: Actualizar el caso para que sea 'pendiente' y origen 'docente'
-        let hallazgosJSON = null;
-        if (hallazgos_docente) {
-            try {
-                // Puede venir como array o como string JSON desde FormData
-                const arr = typeof hallazgos_docente === 'string' ? JSON.parse(hallazgos_docente) : hallazgos_docente;
-                if (Array.isArray(arr)) hallazgosJSON = JSON.stringify(arr);
-            } catch(e) {
-                console.error("Error parseando hallazgos_docente:", e);
-            }
-        }
-
-        await pool.query(
-            "UPDATE Casos_Clinicos SET origen = 'docente', estado = 'pendiente', hallazgos_docente = ? WHERE id_caso = ?",
-            [hallazgosJSON, ids.id_caso]
-        );
-
-        return {
-            id_caso: ids.id_caso,
-            id_paciente: ids.id_paciente,
-            id_curso: ids.id_curso,
-            id_radiografia: ids.id_radiografia,
-            codigo_paciente,
-            titulo_caso,
-            tipo_proyeccion,
-            ruta_imagen,
-            mensaje: "El caso ha sido propuesto y añadido a la Cola de Procesamiento IA."
-        };
-    } catch (error) {
-        throw error;
-    }
-};
-
 // 5. Obtener todos los casos con información completa para gestión del catedrático
 const obtenerCasosDetallados = async (id_catedratico) => {
     const [casos] = await pool.query('CALL sp_obtener_casos_detallados(?)', [id_catedratico]);
@@ -194,34 +135,6 @@ const generarInfoPatologia = async (patologia) => {
 
     const indiceAleatorio = Math.floor(Math.random() * variantes.length);
     return variantes[indiceAleatorio];
-};
-
-// Elimina un ejercicio completo con sus casos (solo si es de un curso del docente).
-// Devuelve también id_curso/nombre (capturados ANTES de borrar) para poder avisarle a los
-// estudiantes del curso; el propio SP los borra como parte de la limpieza.
-const eliminarEjercicio = async (id_ejercicio, id_docente) => {
-    const id = normalizarIdCurso(id_ejercicio);
-    if (!id) throw new ErrorNegocio('Ejercicio no válido.');
-    const conn = await pool.getConnection();
-    try {
-        await conn.beginTransaction();
-        const [filasEjercicio] = await conn.query('SELECT id_curso, nombre FROM Ejercicios WHERE id_ejercicio = ?', [id]);
-        const infoEjercicio = filasEjercicio[0] || null;
-        const [res] = await conn.query('CALL sp_eliminar_ejercicio(?, ?)', [id, id_docente]);
-        await conn.commit();
-        const eliminados = res[0][0].casos_eliminados;
-        if (!eliminados) throw new ErrorNegocio('Ese ejercicio no existe o no te pertenece.');
-        return {
-            casos_eliminados: eliminados,
-            id_curso: infoEjercicio?.id_curso || null,
-            nombre: infoEjercicio?.nombre || 'un ejercicio'
-        };
-    } catch (error) {
-        await conn.rollback();
-        throw error;
-    } finally {
-        conn.release();
-    }
 };
 
 const asignarCasosBanco = async (id_curso, ids_casos) => {
@@ -636,7 +549,6 @@ module.exports = {
     crearPaciente,
     crearCaso,
     guardarRadiografia,
-    crearCasoCompleto,
     obtenerCasosDetallados,
     obtenerDetalleCaso,
     obtenerSiguienteCodigoPaciente,
@@ -644,7 +556,6 @@ module.exports = {
     eliminarCaso,
     generarInfoPatologia,
     asignarCasosBanco,
-    eliminarEjercicio,
     obtenerDisponibilidadBanco,
     verificarCursoDelDocente,
     componerEjercicio,

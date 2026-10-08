@@ -78,13 +78,6 @@ export class ClinicalService {
     });
   }
 
-  // Crear caso completo con paciente y radiografía (multipart/form-data)
-  crearCasoCompleto(formData: FormData): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/crear-completo`, formData, {
-      headers: this.authService.getAuthHeaders()
-    });
-  }
-
   getNextPacienteCode(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/next-paciente`, {
       headers: this.authService.getAuthHeaders()

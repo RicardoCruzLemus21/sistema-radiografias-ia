@@ -1,5 +1,4 @@
 const pool = require('../config/database');
-const dict = require('../config/dbDictionary');
 
 const guardarEvaluacionEstudiante = async (bodyData) => {
     const { 
@@ -89,11 +88,6 @@ const obtenerCatalogos = async () => {
 };
 
 const obtenerEvaluacionesPorCurso = async (id_curso) => {
-    // Aseguramos que la columna exista
-    try {
-        await pool.query(`ALTER TABLE ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} ADD COLUMN feedback_profesor TEXT;`);
-    } catch(e) {} // Ya existe
-
     const [evaluacionesArray] = await pool.query('CALL sp_obtener_evaluaciones_curso(?)', [id_curso]);
     return evaluacionesArray[0];
 };
@@ -113,11 +107,6 @@ const invalidarEvaluacion = async (id_evaluacion) => {
 };
 
 const obtenerTodasLasEvaluaciones = async () => {
-    // Aseguramos que la columna exista
-    try {
-        await pool.query(`ALTER TABLE ${dict.TABLAS.EVALUACIONES_ESTUDIANTES} ADD COLUMN feedback_profesor TEXT;`);
-    } catch(e) {} // Ya existe
-
     const [evaluacionesArray] = await pool.query('CALL sp_obtener_todas_evaluaciones()');
     return evaluacionesArray[0];
 };
