@@ -18,6 +18,11 @@ const normalizarIdCurso = (id) => {
     return Number.isInteger(n) && n > 0 ? n : null;
 };
 
+// El NIH no trae sexo del paciente: se simula uno estable por caso (mismo id -> mismo resultado
+// siempre) solo para mostrarlo en la tarjeta del docente. Se reutiliza aquí para que la historia
+// de usuario asignada nunca contradiga esa letra (ver asignarCasosBanco).
+const seededRandomGender = (id) => (id % 2 === 0) ? 'M' : 'F';
+
 // Un docente solo puede componer/asignar ejercicios en sus propios cursos
 const verificarCursoDelDocente = async (id_docente, id_curso) => {
     const idCurso = normalizarIdCurso(id_curso);
@@ -163,8 +168,9 @@ const asignarCasosBanco = async (id_curso, ids_casos) => {
             if (!nuevoIdCaso) {
                 throw new ErrorNegocio(`El caso ${id} ya no está disponible en el banco o el curso ya tiene esa radiografía. Vuelve a componer el ejercicio.`);
             }
-            // Le asigna al azar una historia de usuario de su misma patología (pista opcional en Fase 1)
-            await conn.query('CALL sp_asignar_historia_aleatoria(?)', [nuevoIdCaso]);
+            // Le asigna al azar una historia de usuario de su misma patología y del mismo sexo que
+            // el docente ya vio en "Revisa los casos" (pista opcional en Fase 1)
+            await conn.query('CALL sp_asignar_historia_aleatoria(?, ?)', [nuevoIdCaso, seededRandomGender(id)]);
             idsInsertados.push(nuevoIdCaso);
         }
 
@@ -244,7 +250,6 @@ const componerEjercicio = async (criterios) => {
     };
 
     const seededRandomAge = (id) => Math.floor(Math.abs(Math.sin(id) * 60)) + 20;
-    const seededRandomGender = (id) => (id % 2 === 0) ? 'M' : 'F';
 
     const formatear = (rows, tipo) => rows.map(r => {
         const docInfo = typeof r.hallazgos_docente === 'string' ? JSON.parse(r.hallazgos_docente) : r.hallazgos_docente;
