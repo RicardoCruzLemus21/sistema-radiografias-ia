@@ -56,6 +56,13 @@
       </div>
 
       <div *ngIf="faseActual === 1 && !comprobandoRevision" class="fase-container">
+        <div class="panel-section" *ngIf="casoDetalle?.historia_usuario">
+          <button type="button" class="btn-secondary" style="width: 100%;" (click)="mostrarHistoria = !mostrarHistoria">
+            {{ mostrarHistoria ? 'Ocultar historia de usuario' : 'Ver historia de usuario (pista)' }}
+          </button>
+          <p class="helper-text" style="margin-top: 10px; font-style: italic;" *ngIf="mostrarHistoria">{{ casoDetalle.historia_usuario }}</p>
+        </div>
+
         <div class="panel-section">
           <h3>1. SELECCIÓN DE HALLAZGOS PATOLÓGICOS</h3>
           <p class="helper-text">Selecciona las anomalías que observas. Haz clic en la radiografía para marcar la zona exacta (arrastra para dibujar un rectángulo).</p>

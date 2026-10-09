@@ -40,6 +40,7 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
 
   // Variables de datos clínicos
   casoDetalle: any = null;
+  mostrarHistoria = false;
 
   // Variables para calcular el tiempo dinámicamente
   horaInicioAnalisis: number = 0;

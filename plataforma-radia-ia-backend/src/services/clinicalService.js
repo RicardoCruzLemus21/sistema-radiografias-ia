@@ -163,6 +163,8 @@ const asignarCasosBanco = async (id_curso, ids_casos) => {
             if (!nuevoIdCaso) {
                 throw new ErrorNegocio(`El caso ${id} ya no está disponible en el banco o el curso ya tiene esa radiografía. Vuelve a componer el ejercicio.`);
             }
+            // Le asigna al azar una historia de usuario de su misma patología (pista opcional en Fase 1)
+            await conn.query('CALL sp_asignar_historia_aleatoria(?)', [nuevoIdCaso]);
             idsInsertados.push(nuevoIdCaso);
         }
 
@@ -356,6 +358,7 @@ const obtenerCasoEstudianteSeguro = async (id_caso) => {
         motivo_consulta: caso.motivo_consulta,
         nivel_dificultad: caso.nivel_dificultad,
         ruta_imagen: caso.ruta_imagen,
+        historia_usuario: caso.historia_usuario || null,
         metadata_segura: metadataSegura
     };
 };
