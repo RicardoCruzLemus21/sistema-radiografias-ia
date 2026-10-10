@@ -129,6 +129,7 @@
 }
 
 .course-badge {
+  display: inline-block;
   background: var(--input-bg);
   color: var(--text-main);
   border: 1px solid var(--border-color);
@@ -136,6 +137,7 @@
   border-radius: 12px;
   font-size: 12px;
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .btn-delete {
