@@ -89,63 +89,9 @@ const eliminarPatologia = async (req, res) => {
     }
 };
 
-const obtenerEvaluacionesPorCurso = async (req, res) => {
-    try {
-        const { id_curso } = req.params;
-        const evaluaciones = await diagnosticoService.obtenerEvaluacionesPorCurso(id_curso);
-        res.status(200).json({ status: 'success', data: evaluaciones });
-    } catch (error) {
-        console.error("Error al obtener evaluaciones:", error);
-        res.status(500).json({ status: 'error', message: 'Error al obtener evaluaciones' });
-    }
-};
-
-const obtenerTodasLasEvaluaciones = async (req, res) => {
-    try {
-        const evaluaciones = await diagnosticoService.obtenerTodasLasEvaluaciones();
-        res.status(200).json({ status: 'success', data: evaluaciones });
-    } catch (error) {
-        console.error("Error al obtener evaluaciones globales:", error);
-        res.status(500).json({ status: 'error', message: 'Error al obtener evaluaciones globales' });
-    }
-};
-
-const agregarFeedback = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { feedback } = req.body;
-        await diagnosticoService.agregarFeedback(id, feedback);
-
-        const id_admin = req.usuario?.id_usuario || 1;
-        await auditService.registrarAccion(id_admin, 'EVALUAR_DIAGNOSTICO', `Se agregó retroalimentación manual a la evaluación ID: ${id}`);
-
-        res.status(200).json({ status: 'success', message: 'Feedback agregado correctamente' });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Error al agregar feedback' });
-    }
-};
-
-const invalidarEvaluacion = async (req, res) => {
-    try {
-        const { id } = req.params;
-        await diagnosticoService.invalidarEvaluacion(id);
-
-        const id_admin = req.usuario?.id_usuario || 1;
-        await auditService.registrarAccion(id_admin, 'ELIMINAR_EVALUACION', `Se invalidó la evaluación ID: ${id}`);
-
-        res.status(200).json({ status: 'success', message: 'Evaluación invalidada' });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
-    }
-};
-
 module.exports = {
     registrarEvaluacion,
     listarCatalogos,
     editarPatologia,
-    eliminarPatologia,
-    obtenerEvaluacionesPorCurso,
-    obtenerTodasLasEvaluaciones,
-    agregarFeedback,
-    invalidarEvaluacion
+    eliminarPatologia
 };

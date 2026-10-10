@@ -85,16 +85,6 @@ import { AuditService } from '../../services/audit.service';
           </div>
         </div>
 
-        <div class="metric-card glass-panel" routerLink="/sistema/revision-evaluaciones">
-          <div class="metric-icon warning">
-            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
-          </div>
-          <div class="metric-info">
-            <h3>Auditoría Evaluaciones</h3>
-            <p>Supervisar feedback global</p>
-          </div>
-        </div>
-
         <div class="metric-card glass-panel" routerLink="/sistema/auditoria">
           <div class="metric-icon success">
             <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none"><path d="M2 12h4l2-9 5 18 3-9h6"></path></svg>
