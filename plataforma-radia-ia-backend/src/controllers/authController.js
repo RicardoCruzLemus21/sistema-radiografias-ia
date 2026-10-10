@@ -50,6 +50,15 @@ const login = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    try {
+        await auditService.registrarAccion(req.usuario.id_usuario, 'CIERRE_SESION', `${req.usuario.correo_electronico || 'Usuario'} cerró sesión`);
+        res.status(200).json({ status: 'success', message: 'Sesión cerrada' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'No se pudo registrar el cierre de sesión' });
+    }
+};
+
 const listarRoles = async (req, res) => {
     try {
         const roles = await authService.obtenerRoles();
@@ -134,6 +143,7 @@ module.exports = {
     consultarDocentePorCodigo,
     listarCursosDisponibles,
     login,
+    logout,
     listarRoles,
     listarUsuarios,
     listarAuditoria,

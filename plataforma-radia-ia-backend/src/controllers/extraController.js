@@ -5,7 +5,7 @@ const commentService = require('../services/commentService');
 // --- AUDITORÍA ---
 const obtenerLogsAuditoria = async (req, res) => {
     try {
-        const logs = await auditService.obtenerLogs();
+        const logs = await auditService.obtenerLogs(200);
         res.status(200).json({ status: 'success', data: logs });
     } catch (error) {
         console.error("Error al obtener auditoría:", error);
@@ -60,6 +60,7 @@ const agregarComentario = async (req, res) => {
         const id_catedratico = req.usuario.id_usuario;
         const resultado = await commentService.agregarComentario(id_evaluacion, id_catedratico, comentario);
         notificationService.notificarComentarioDelDocente(id_evaluacion);
+        auditService.registrarAccion(id_catedratico, 'COMENTAR_EVALUACION', `El docente respondió a la evaluación ID: ${id_evaluacion}`);
         res.status(201).json({ status: 'success', data: resultado, message: "Comentario registrado." });
     } catch (error) {
         console.error("Error al agregar comentario:", error);

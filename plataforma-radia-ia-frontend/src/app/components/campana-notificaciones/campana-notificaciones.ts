@@ -71,8 +71,12 @@ export class CampanaNotificaciones implements OnInit, OnDestroy {
     return this.notificaciones.filter(n => !n.leida);
   }
 
+  // El panel solo muestra las 5 leídas más recientes para que no crezca sin fin;
+  // el resto sigue guardado en la base (nunca se borran, ver notificationService.js)
+  private static readonly MAX_LEIDAS_VISIBLES = 5;
+
   get leidas(): any[] {
-    return this.notificaciones.filter(n => n.leida);
+    return this.notificaciones.filter(n => n.leida).slice(0, CampanaNotificaciones.MAX_LEIDAS_VISIBLES);
   }
 
   // Marcar como leída: la notificación se queda guardada en la base y en la lista

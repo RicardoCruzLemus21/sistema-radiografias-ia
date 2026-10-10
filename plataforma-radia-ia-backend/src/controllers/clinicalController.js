@@ -1,4 +1,5 @@
 const clinicalService = require('../services/clinicalService');
+const auditService = require('../services/auditService');
 const db = require('../config/database'); // <-- Ahora sí coincide con tu database.js
 
 const registrarPaciente = async (req, res) => {
@@ -129,6 +130,7 @@ const editarCaso = async (req, res) => {
     try {
         const { id } = req.params;
         await clinicalService.editarCaso(id, req.body);
+        auditService.registrarAccion(req.usuario.id_usuario, 'EDITAR_CASO', `Se editó el caso clínico ID: ${id}`);
         res.status(200).json({ status: 'success', message: 'Caso clínico actualizado correctamente' });
     } catch (error) {
         res.status(400).json({ status: 'error', message: error.message });
@@ -139,6 +141,7 @@ const eliminarCaso = async (req, res) => {
     try {
         const { id } = req.params;
         await clinicalService.eliminarCaso(id);
+        auditService.registrarAccion(req.usuario.id_usuario, 'ELIMINAR_CASO', `Se eliminó el caso clínico ID: ${id}`);
         res.status(200).json({ status: 'success', message: 'Caso clínico eliminado correctamente' });
     } catch (error) {
         res.status(400).json({ status: 'error', message: error.message });

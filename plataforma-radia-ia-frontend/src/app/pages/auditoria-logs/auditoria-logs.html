@@ -16,7 +16,7 @@
   <div class="spinner" *ngIf="cargando">Cargando logs de seguridad...</div>
 
   <div class="timeline-container glass-panel" *ngIf="!cargando && logs.length > 0">
-    <div class="timeline-item" *ngFor="let log of logs">
+    <div class="timeline-item" *ngFor="let log of logsPagina">
       <div class="timeline-icon" [ngClass]="getIconClass(log.accion)">
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
       </div>
@@ -27,6 +27,15 @@
           <span class="timeline-time">{{ log.fecha_accion | date:'d MMM, h:mm a' }}</span>
         </div>
         <p class="timeline-detail">{{ log.detalle }}</p>
+      </div>
+    </div>
+
+    <div class="paginacion" *ngIf="totalPaginas > 1">
+      <span class="paginacion-info">Mostrando {{ (paginaActual - 1) * TAMANO_PAGINA + 1 }}–{{ finPagina }} de {{ logs.length }}</span>
+      <div class="paginacion-controles">
+        <button type="button" (click)="irAPagina(paginaActual - 1)" [disabled]="paginaActual === 1">Anterior</button>
+        <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+        <button type="button" (click)="irAPagina(paginaActual + 1)" [disabled]="paginaActual === totalPaginas">Siguiente</button>
       </div>
     </div>
   </div>

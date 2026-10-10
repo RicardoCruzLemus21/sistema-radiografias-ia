@@ -13,6 +13,26 @@ export class AuditoriaLogsComponent implements OnInit {
   logs: any[] = [];
   cargando: boolean = false;
 
+  readonly TAMANO_PAGINA = 10;
+  paginaActual: number = 1;
+
+  get totalPaginas(): number {
+    return Math.max(1, Math.ceil(this.logs.length / this.TAMANO_PAGINA));
+  }
+
+  get logsPagina(): any[] {
+    const inicio = (this.paginaActual - 1) * this.TAMANO_PAGINA;
+    return this.logs.slice(inicio, inicio + this.TAMANO_PAGINA);
+  }
+
+  get finPagina(): number {
+    return Math.min(this.paginaActual * this.TAMANO_PAGINA, this.logs.length);
+  }
+
+  irAPagina(pagina: number): void {
+    this.paginaActual = Math.min(Math.max(1, pagina), this.totalPaginas);
+  }
+
   constructor(private auditService: AuditService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
@@ -24,6 +44,7 @@ export class AuditoriaLogsComponent implements OnInit {
     this.auditService.getLogs().subscribe({
       next: (resp) => {
         this.logs = resp.data || [];
+        this.paginaActual = 1;
         this.cargando = false;
         this.cdr.markForCheck();
       },

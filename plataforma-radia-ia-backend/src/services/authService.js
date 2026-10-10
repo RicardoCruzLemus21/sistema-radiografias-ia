@@ -268,6 +268,8 @@ const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) =>
     // 5. Registrar la actividad en la tabla Auditoria_Accesos
     const direccion_ip_segura = ip_address || 'Desconocida';
     await pool.query('CALL sp_registrar_auditoria_acceso(?, ?)', [usuario.id_usuario, direccion_ip_segura]);
+    // También queda en la auditoría de actividad para que se vea en Seguridad y Logs
+    await require('./auditService').registrarAccion(usuario.id_usuario, 'INICIO_SESION', `${usuario.nombre_completo} inició sesión desde ${direccion_ip_segura}`);
 
     return {
         token,

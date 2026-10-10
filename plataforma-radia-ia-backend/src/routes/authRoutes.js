@@ -25,5 +25,6 @@ router.get('/roles', authController.listarRoles);
 router.get('/usuarios', verificarToken, authController.listarUsuarios);
 router.get('/auditoria', verificarToken, authController.listarAuditoria);
 router.post('/cambiar-clave-inicial', verificarToken, authController.cambiarClaveInicial);
+router.post('/logout', verificarToken, authController.logout);
 
 module.exports = router;

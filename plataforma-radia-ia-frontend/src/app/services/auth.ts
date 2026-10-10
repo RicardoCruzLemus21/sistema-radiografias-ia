@@ -166,6 +166,11 @@ export class AuthService {
   }
 
   logout(): void {
+    // Aviso al backend para que quede en el log de auditoría; si falla (token ya vencido, sin red)
+    // la sesión local se limpia igual, no debe bloquear el cierre de sesión.
+    if (this.getToken()) {
+      this.http.post(`${this.apiUrl}/api/auth/logout`, {}, { headers: this.getAuthHeaders() }).subscribe({ next: () => {}, error: () => {} });
+    }
     sessionStorage.removeItem('token');
     sessionStorage.removeItem('usuario');
     sessionStorage.removeItem('token_temporal');
