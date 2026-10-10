@@ -31,6 +31,27 @@ export class GestionCasosCatedratico implements OnInit {
   progresoPorEjercicio = new Map<number, any>();
   // Por defecto el panel muestra solo los ejercicios visibles; "verOcultos" muestra los ocultos
   verOcultos: boolean = false;
+
+  // Carpetas de ejercicios paginadas de 6 en 6, las más recientes primero
+  readonly TAMANO_PAGINA_CARPETAS = 6;
+  paginaCarpetas: number = 1;
+
+  get totalPaginasCarpetas(): number {
+    return Math.max(1, Math.ceil(this.carpetas.length / this.TAMANO_PAGINA_CARPETAS));
+  }
+
+  get carpetasPagina(): any[] {
+    const inicio = (this.paginaCarpetas - 1) * this.TAMANO_PAGINA_CARPETAS;
+    return this.carpetas.slice(inicio, inicio + this.TAMANO_PAGINA_CARPETAS);
+  }
+
+  get finPaginaCarpetas(): number {
+    return Math.min(this.paginaCarpetas * this.TAMANO_PAGINA_CARPETAS, this.carpetas.length);
+  }
+
+  irAPaginaCarpetas(pagina: number): void {
+    this.paginaCarpetas = Math.min(Math.max(1, pagina), this.totalPaginasCarpetas);
+  }
   bitacora: any[] = [];
   cargandoBitacora: boolean = false;
 
@@ -246,6 +267,7 @@ export class GestionCasosCatedratico implements OnInit {
       (!q || (f.nombre || '').toLowerCase().includes(q)) &&
       (this.filtroEstado === 'TODOS' || f.estado_progreso === this.filtroEstado.toLowerCase())
     );
+    this.paginaCarpetas = 1;
 
     // Los casos sueltos (sin ejercicio) se buscan por título o paciente
     this.casosSueltos = this.casosSueltos.filter(c =>
@@ -334,8 +356,8 @@ export class GestionCasosCatedratico implements OnInit {
       carpeta.casos.push(c);
       carpeta.intentos += Number(c.total_evaluaciones) || 0;
     }
-    // Primero el curso, y dentro de cada curso Ejercicio 1, 2, 3...
-    this.carpetas = [...porEjercicio.values()].sort((a, b) => a.id_curso - b.id_curso || a.numero - b.numero);
+    // El ejercicio publicado más recientemente primero (id_ejercicio es autoincremental)
+    this.carpetas = [...porEjercicio.values()].sort((a, b) => b.id_ejercicio - a.id_ejercicio);
     this.casosSueltos = sueltos;
 
     // Si la carpeta abierta ya no existe (se eliminó o el filtro la vació), se vuelve a la vista general

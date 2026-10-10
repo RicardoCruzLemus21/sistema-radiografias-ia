@@ -77,7 +77,7 @@
   <section class="ejercicios-seccion" *ngIf="!ejercicioAbierto && carpetas.length > 0">
     <h2 class="seccion-titulo">Ejercicios publicados</h2>
     <div class="carpetas-grid">
-      <div class="carpeta-card glass-panel" *ngFor="let f of carpetas" role="button" tabindex="0"
+      <div class="carpeta-card glass-panel" *ngFor="let f of carpetasPagina" role="button" tabindex="0"
            (click)="abrirCarpeta(f)" (keydown.enter)="abrirCarpeta(f)">
         <div class="carpeta-cabeza">
           <div class="carpeta-icono">
@@ -102,6 +102,15 @@
         <div class="carpeta-pie">
           <button type="button" class="btn-visibilidad" (click)="toggleVisibilidad(f, $event)">{{ f.oculto ? 'Mostrar en el panel' : 'Ocultar' }}</button>
         </div>
+      </div>
+    </div>
+
+    <div class="paginacion" *ngIf="totalPaginasCarpetas > 1">
+      <span class="paginacion-info">Mostrando {{ (paginaCarpetas - 1) * TAMANO_PAGINA_CARPETAS + 1 }}–{{ finPaginaCarpetas }} de {{ carpetas.length }}</span>
+      <div class="paginacion-controles">
+        <button type="button" (click)="irAPaginaCarpetas(paginaCarpetas - 1)" [disabled]="paginaCarpetas === 1">Anterior</button>
+        <span>Página {{ paginaCarpetas }} de {{ totalPaginasCarpetas }}</span>
+        <button type="button" (click)="irAPaginaCarpetas(paginaCarpetas + 1)" [disabled]="paginaCarpetas === totalPaginasCarpetas">Siguiente</button>
       </div>
     </div>
   </section>
