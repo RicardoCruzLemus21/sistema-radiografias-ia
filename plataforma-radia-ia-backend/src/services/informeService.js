@@ -148,13 +148,44 @@ const generarInformePdf = async ({ id_docente, nombre_docente, id_curso, ids_eje
     ];
     const anchoTarjeta = (ancho - 3 * 10) / 4;
     const yTarjetas = doc.y;
+    const colorValorTarjeta = [COLOR.titulo, COLOR.titulo, COLOR.titulo, colorEstado(estadoDe(promGeneral, resueltosTotal))];
     tarjetas.forEach(([titulo, valor], i) => {
         const x = izq + i * (anchoTarjeta + 10);
         doc.roundedRect(x, yTarjetas, anchoTarjeta, 52, 6).lineWidth(0.8).strokeColor(COLOR.linea).stroke();
+        doc.rect(x, yTarjetas, 3, 52).fill(colorValorTarjeta[i]);
         doc.font('Helvetica').fontSize(8).fillColor(COLOR.suave).text(titulo, x + 8, yTarjetas + 8, { width: anchoTarjeta - 16 });
-        doc.font('Helvetica-Bold').fontSize(15).fillColor(COLOR.titulo).text(valor, x + 8, yTarjetas + 26, { width: anchoTarjeta - 16 });
+        doc.font('Helvetica-Bold').fontSize(15).fillColor(colorValorTarjeta[i]).text(valor, x + 8, yTarjetas + 26, { width: anchoTarjeta - 16 });
     });
     doc.y = yTarjetas + 52 + 18;
+
+    // ---- Gráfica: puntaje de diagnóstico por estudiante (barras horizontales, ordenadas de mayor a menor) ----
+    const paraGrafica = [...consolidado].sort((a, b) => (b.prom ?? -1) - (a.prom ?? -1));
+    if (paraGrafica.length > 0) {
+        asegurarEspacio(26 + paraGrafica.length * 18);
+        doc.font('Helvetica-Bold').fontSize(13).fillColor(COLOR.acento).text('Puntaje de diagnóstico por estudiante', izq, doc.y);
+        doc.y += 18;
+
+        const anchoNombre = 140;
+        const anchoPct = 42;
+        const anchoBarra = ancho - anchoNombre - anchoPct;
+        const altoBarra = 10;
+        for (const e of paraGrafica) {
+            const y = doc.y;
+            doc.font('Helvetica').fontSize(8.5).fillColor(COLOR.texto)
+                .text(e.nombre, izq, y + 2, { width: anchoNombre - 8, lineBreak: false, ellipsis: true });
+
+            const xBarra = izq + anchoNombre;
+            doc.rect(xBarra, y, anchoBarra, altoBarra).fill(COLOR.fondoAlt);
+            if (e.prom !== null) {
+                const w = Math.max(2, (e.prom / 100) * anchoBarra);
+                doc.rect(xBarra, y, w, altoBarra).fill(colorEstado(e.estado));
+            }
+            doc.font('Helvetica-Bold').fontSize(8.5).fillColor(COLOR.suave)
+                .text(e.prom !== null ? pct(e.prom) : 'Sin datos', xBarra + anchoBarra + 6, y + 1, { width: anchoPct - 6, lineBreak: false });
+            doc.y = y + 18;
+        }
+        doc.y += 6;
+    }
 
     // ---- Tabla genérica con encabezado repetido en cada página ----
     const tabla = (columnas, registros) => {
