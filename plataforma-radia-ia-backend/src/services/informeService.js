@@ -229,13 +229,13 @@ const generarInformePdf = async ({ id_docente, nombre_docente, id_curso, ids_eje
         doc.y += 8;
 
         tabla([
-            { titulo: 'Carnet', ancho: 78, valor: r => r.carnet || '—' },
-            { titulo: 'Estudiante', ancho: 145, negrita: true, valor: r => r.estudiante },
-            { titulo: 'Resueltos', ancho: 55, align: 'center', valor: r => `${r.casos_resueltos}/${r.total_casos}` },
-            { titulo: 'Diagnóstico', ancho: 62, align: 'center', valor: r => pct(r.prom_diagnostico) },
-            { titulo: 'Localización', ancho: 62, align: 'center', valor: r => pct(r.prom_localizacion) },
-            { titulo: 'Calibración', ancho: 58, align: 'center', valor: r => pct(r.prom_calibracion) },
-            { titulo: 'Tiempo prom.', ancho: ancho - 78 - 145 - 55 - 62 - 62 - 58, align: 'center', valor: r => tiempo(r.tiempo_promedio_seg) }
+            { titulo: 'Carnet', ancho: 72, valor: r => r.carnet || '—' },
+            { titulo: 'Estudiante', ancho: 135, negrita: true, valor: r => r.estudiante },
+            { titulo: 'Resueltos', ancho: 50, align: 'center', valor: r => `${r.casos_resueltos}/${r.total_casos}` },
+            { titulo: 'Diagnóstico', ancho: 60, align: 'center', valor: r => pct(r.prom_diagnostico) },
+            { titulo: 'Localización', ancho: 60, align: 'center', valor: r => pct(r.prom_localizacion) },
+            { titulo: 'Calibración', ancho: 56, align: 'center', valor: r => pct(r.prom_calibracion) },
+            { titulo: 'Tiempo prom.', ancho: ancho - 72 - 135 - 50 - 60 - 60 - 56, align: 'center', valor: r => tiempo(r.tiempo_promedio_seg) }
         ], ej.filas);
     }
 
