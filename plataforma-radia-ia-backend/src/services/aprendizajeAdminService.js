@@ -1,5 +1,5 @@
 const pool = require('../config/database');
-const { obtenerLecciones, obtenerClases } = require('../config/catalogoLecciones');
+const { obtenerLecciones, obtenerClases, cargarLecciones } = require('../config/catalogoLecciones');
 const { ErrorAprendizaje } = require('./aprendizajeService');
 const geminiService = require('./geminiService');
 
@@ -63,6 +63,10 @@ const guardarLeccion = async (clase, contenido, estado, idDocente, idVersion = n
     const limpio = validarLeccion(contenido, clase);
     const [res] = await pool.query('CALL sp_apr_guardar_leccion(?, ?, ?, ?, ?)', [clase, JSON.stringify(limpio), estado, idDocente, idVersion]);
     if (!res[0][0].filas) throw new ErrorAprendizaje('Lección no encontrada.');
+    // El modulo del estudiante lee las lecciones de una cache en memoria (se carga una vez al
+    // arrancar el servidor): sin refrescarla aqui, lo publicado nunca llega a los estudiantes
+    // hasta que el servidor se reinicia solo.
+    if (estado === 'aprobado') await cargarLecciones();
     return { clase, estado, contenido: limpio };
 };
 
