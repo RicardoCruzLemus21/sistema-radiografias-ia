@@ -148,6 +148,8 @@
       <article class="lote-item tarjeta glass-panel" *ngFor="let lo of lotesPagina">
         <header class="expl-cabecera">
           <h3>{{ lo.fecha_generacion | date:'dd/MM/yyyy HH:mm' }}<span class="flecha" *ngIf="lo.generado_por"> — {{ lo.generado_por }}</span></h3>
+          <span class="insignia estado aprobada" *ngIf="+lo.activas === +lo.total_patologias && lo.total_patologias > 0">✓ Activa ahora</span>
+          <span class="insignia estado pendiente" *ngIf="+lo.activas > 0 && +lo.activas < +lo.total_patologias">Parcialmente activa ({{ lo.activas }}/{{ lo.total_patologias }})</span>
           <span class="insignia">{{ lo.total_patologias }}/8 patologías</span>
         </header>
         <div class="acciones-fila">
