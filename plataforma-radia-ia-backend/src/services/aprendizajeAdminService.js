@@ -100,18 +100,13 @@ Responde SOLO con un JSON (sin texto adicional) con estos campos:
 No repitas "${clase}" en se_confunde_con.`;
 };
 
-// Cada click en "Generar lección" crea un LOTE: hasta 8 candidatas (una por patología), agrupadas.
-// El docente/admin publica el lote completo (no patología por patología) desde publicarLoteLeccion.
-const generarLecciones = async (idDocente) => {
-    const [loteRes] = await pool.query('CALL sp_apr_crear_lote_leccion(?)', [idDocente]);
-    const idLote = loteRes[0][0].id_lote;
-
-    const clases = obtenerClases();
+// Genera candidatas con IA para una lista de clases y las inserta en el lote indicado.
+// Pausa entre patologías (no antes de la primera) para no disparar las peticiones de golpe y
+// chocar con el límite de peticiones por minuto de la cuenta gratuita.
+const generarCandidatasEnLote = async (idLote, clases) => {
     const generadas = [];
     const errores = [];
     for (const clase of clases) {
-        // Pausa entre patologías (no antes de la primera) para no disparar las 8 peticiones
-        // de golpe y chocar con el límite de peticiones por minuto de la cuenta gratuita.
         if (generadas.length + errores.length > 0) await esperar(1500);
         const nombre = obtenerLecciones()[clase]?.nombre || clase;
         try {
@@ -123,7 +118,30 @@ const generarLecciones = async (idDocente) => {
             errores.push({ clase, nombre, mensaje: error.message });
         }
     }
+    return { generadas, errores };
+};
+
+// Cada click en "Generar lección" crea un LOTE: hasta 8 candidatas (una por patología), agrupadas.
+// El docente/admin publica el lote completo (no patología por patología) desde publicarLoteLeccion.
+const generarLecciones = async (idDocente) => {
+    const [loteRes] = await pool.query('CALL sp_apr_crear_lote_leccion(?)', [idDocente]);
+    const idLote = loteRes[0][0].id_lote;
+    const { generadas, errores } = await generarCandidatasEnLote(idLote, obtenerClases());
     return { id_lote: idLote, generadas, errores };
+};
+
+// Completa un lote que quedó incompleto (algunas patologías fallaron, ej. "2/8"): genera solo
+// las que faltan y las agrega al MISMO lote, sin crear uno nuevo.
+const completarLoteLeccion = async (idLote, idDocente) => {
+    const id = Number(idLote);
+    if (!Number.isInteger(id) || id <= 0) throw new ErrorAprendizaje('Conjunto no válido.');
+    const existentes = await listarVersionesLote(id);
+    if (existentes.length === 0) throw new ErrorAprendizaje('Esa ficha ya no existe.');
+    const clasesExistentes = new Set(existentes.map(v => v.clase));
+    const faltantes = obtenerClases().filter(c => !clasesExistentes.has(c));
+    if (faltantes.length === 0) throw new ErrorAprendizaje('Esa ficha ya tiene las 8 patologías.');
+    const { generadas, errores } = await generarCandidatasEnLote(id, faltantes);
+    return { id_lote: id, generadas, errores };
 };
 
 const listarLotesLeccion = async () => {
@@ -191,5 +209,5 @@ const revisarExplicacion = async (id, contenido, estado, idDocente) => {
 
 module.exports = {
     listarLecciones, guardarLeccion, listarExplicaciones, revisarExplicacion, validarExplicacion,
-    generarLecciones, listarLotesLeccion, listarVersionesLote, publicarLoteLeccion, eliminarLoteLeccion
+    generarLecciones, completarLoteLeccion, listarLotesLeccion, listarVersionesLote, publicarLoteLeccion, eliminarLoteLeccion
 };

@@ -47,6 +47,7 @@ export class RevisionContenido implements OnInit {
   versionesLote: Record<number, any[]> = {};
   publicandoLote: number | null = null;
   eliminandoLote: number | null = null;
+  completandoLote: number | null = null;
 
   readonly nombreClase = nombreClase;
   readonly colorClase = colorClase;
@@ -375,6 +376,36 @@ export class RevisionContenido implements OnInit {
       error: (err) => {
         this.eliminandoLote = null;
         this.alertService.error('No se pudo eliminar', err.error?.message || 'Intenta de nuevo.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // Genera con IA solo las patologías que le faltan a un conjunto incompleto (ej. "2/8") y las
+  // agrega a ese mismo lote, sin crear uno nuevo.
+  completarLote(lote: any): void {
+    this.completandoLote = lote.id_lote;
+    this.aprendizajeService.completarLoteLeccion(lote.id_lote).subscribe({
+      next: (resp) => {
+        this.completandoLote = null;
+        const { generadas, errores } = resp.data;
+        if (generadas.length > 0) {
+          this.alertService.success('Conjunto completado', `Se generaron ${generadas.length} patologías más.`);
+        }
+        if (errores.length > 0) {
+          this.alertService.warning('Algunas patologías fallaron', errores.map((e: any) => `${e.nombre}: ${e.mensaje}`).join(' | '));
+        }
+        delete this.versionesLote[lote.id_lote];
+        if (this.loteAbierto === lote.id_lote) {
+          this.aprendizajeService.listarVersionesLote(lote.id_lote).subscribe({
+            next: (r) => { this.versionesLote[lote.id_lote] = r.data; this.cdr.detectChanges(); }
+          });
+        }
+        this.cargarLotes();
+      },
+      error: (err) => {
+        this.completandoLote = null;
+        this.alertService.error('No se pudo completar', err.error?.message || 'Intenta de nuevo en unos segundos.');
         this.cdr.detectChanges();
       }
     });

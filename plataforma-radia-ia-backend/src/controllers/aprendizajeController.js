@@ -29,6 +29,7 @@ module.exports = {
     listarLecciones: manejar(() => adminService.listarLecciones(), 'lecciones'),
     guardarLeccion: manejar((req) => adminService.guardarLeccion(req.params.clase, req.body?.contenido, req.body?.estado, req.usuario.id_usuario), 'guardar lección'),
     generarLecciones: manejar((req) => adminService.generarLecciones(req.usuario.id_usuario), 'generar lecciones'),
+    completarLoteLeccion: manejar((req) => adminService.completarLoteLeccion(req.params.id, req.usuario.id_usuario), 'completar lote'),
     listarLotesLeccion: manejar(() => adminService.listarLotesLeccion(), 'lotes de lección'),
     listarVersionesLote: manejar((req) => adminService.listarVersionesLote(req.params.id), 'versiones del lote'),
     publicarLoteLeccion: manejar((req) => adminService.publicarLoteLeccion(req.params.id, req.usuario.id_usuario), 'publicar lote'),
