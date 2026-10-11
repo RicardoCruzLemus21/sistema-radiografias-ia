@@ -86,6 +86,65 @@
     <div class="lotes-ia">
       <p class="nota-pequena" *ngIf="cargandoLotes">Cargando conjuntos...</p>
       <p class="nota-pequena" *ngIf="!cargandoLotes && lotes.length === 0">Todavía no se ha generado ningún conjunto con IA. Presiona "Generar lección con IA" para crear el primero.</p>
+
+      <!-- Ficha del contenido activo: lo que ven los estudiantes ahora mismo, patología por patología -->
+      <article class="lote-item tarjeta glass-panel">
+        <header class="expl-cabecera">
+          <h3>Contenido actual<span class="flecha"> — lo que ven tus estudiantes ahora</span></h3>
+          <span class="insignia">{{ lecciones.length }}/8 patologías</span>
+        </header>
+        <div class="acciones-fila">
+          <button type="button" class="btn-mini" (click)="activoAbierto = !activoAbierto">{{ activoAbierto ? 'Ocultar contenido' : 'Ver contenido' }}</button>
+        </div>
+
+        <div class="lote-detalle" *ngIf="activoAbierto">
+          <article class="expl tarjeta glass-panel" *ngFor="let l of leccionesPagina" [class.editando]="leccionEditando === l.clase">
+            <header class="expl-cabecera">
+              <h3><span class="chip-clase" [style.--color-clase]="colorClase(l.clase)">{{ l.nombre }}</span></h3>
+              <span class="insignia estado" [ngClass]="l.estado === 'aprobado' ? 'aprobada' : 'pendiente'">{{ l.estado === 'aprobado' ? 'Publicada' : 'Borrador' }}</span>
+              <span class="insignia" *ngIf="l.revisado_por">Editada por un docente</span>
+            </header>
+
+            <ng-container *ngIf="leccionEditando !== l.clase">
+              <p class="expl-resumen">{{ l.contenido.resumen }}</p>
+              <p class="expl-linea"><strong>Dato clave:</strong> {{ l.contenido.dato_clave }}</p>
+              <div class="acciones-fila">
+                <button type="button" class="btn-mini" (click)="iniciarEdicionLeccion(l)">Editar lección</button>
+              </div>
+            </ng-container>
+
+            <form *ngIf="leccionEditando === l.clase && formLeccion" class="formulario" (ngSubmit)="guardarLeccion(l, 'aprobado')">
+              <label>Resumen<textarea name="lresumen" rows="3" [(ngModel)]="formLeccion.resumen"></textarea></label>
+              <label>Qué buscar (uno por línea)<textarea name="lbuscar" rows="6" [(ngModel)]="formLeccion.que_buscar"></textarea></label>
+              <label>Errores típicos (uno por línea)<textarea name="lerrores" rows="4" [(ngModel)]="formLeccion.errores_tipicos"></textarea></label>
+              <label>Dato clave<input name="ldato" type="text" [(ngModel)]="formLeccion.dato_clave"></label>
+              <div class="confusiones-edicion" *ngIf="formLeccion.confusiones.length">
+                <span class="etiqueta-fija">Se confunde con</span>
+                <label *ngFor="let c of formLeccion.confusiones; let i = index">{{ nombreClase(c.clase) }}
+                  <textarea [name]="'lconf' + i" rows="2" [(ngModel)]="c.clave"></textarea>
+                </label>
+              </div>
+              <div class="acciones-fila">
+                <button type="submit" class="btn-primario" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar y publicar' }}</button>
+                <button type="button" class="btn-secundario" [disabled]="guardando" (click)="guardarLeccion(l, 'borrador')">Guardar como borrador</button>
+                <button type="button" class="btn-secundario" (click)="cancelarEdicionLeccion()">Cancelar</button>
+              </div>
+            </form>
+          </article>
+
+          <div class="paginacion" *ngIf="totalPaginasLecciones > 1">
+            <span class="paginacion-info">
+              Mostrando {{ (paginaLecciones - 1) * TAMANO_PAGINA_ACTIVO + 1 }}–{{ finPaginaLecciones }} de {{ lecciones.length }}
+            </span>
+            <div class="paginacion-controles">
+              <button type="button" (click)="irAPaginaLecciones(paginaLecciones - 1)" [disabled]="paginaLecciones === 1">Anterior</button>
+              <span>Página {{ paginaLecciones }} de {{ totalPaginasLecciones }}</span>
+              <button type="button" (click)="irAPaginaLecciones(paginaLecciones + 1)" [disabled]="paginaLecciones === totalPaginasLecciones">Siguiente</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
       <article class="lote-item tarjeta glass-panel" *ngFor="let lo of lotesPagina">
         <header class="expl-cabecera">
           <h3>{{ lo.fecha_generacion | date:'dd/MM/yyyy HH:mm' }}<span class="flecha" *ngIf="lo.generado_por"> — {{ lo.generado_por }}</span></h3>
@@ -117,51 +176,6 @@
           <span>Página {{ paginaLotes }} de {{ totalPaginasLotes }}</span>
           <button type="button" (click)="irAPaginaLotes(paginaLotes + 1)" [disabled]="paginaLotes === totalPaginasLotes">Siguiente</button>
         </div>
-      </div>
-    </div>
-
-    <article class="expl tarjeta glass-panel" *ngFor="let l of leccionesPagina" [class.editando]="leccionEditando === l.clase">
-      <header class="expl-cabecera">
-        <h3><span class="chip-clase" [style.--color-clase]="colorClase(l.clase)">{{ l.nombre }}</span></h3>
-        <span class="insignia estado" [ngClass]="l.estado === 'aprobado' ? 'aprobada' : 'pendiente'">{{ l.estado === 'aprobado' ? 'Publicada' : 'Borrador' }}</span>
-        <span class="insignia" *ngIf="l.revisado_por">Editada por un docente</span>
-      </header>
-
-      <ng-container *ngIf="leccionEditando !== l.clase">
-        <p class="expl-resumen">{{ l.contenido.resumen }}</p>
-        <p class="expl-linea"><strong>Dato clave:</strong> {{ l.contenido.dato_clave }}</p>
-        <div class="acciones-fila">
-          <button type="button" class="btn-mini" (click)="iniciarEdicionLeccion(l)">Editar lección</button>
-        </div>
-      </ng-container>
-
-      <form *ngIf="leccionEditando === l.clase && formLeccion" class="formulario" (ngSubmit)="guardarLeccion(l, 'aprobado')">
-        <label>Resumen<textarea name="lresumen" rows="3" [(ngModel)]="formLeccion.resumen"></textarea></label>
-        <label>Qué buscar (uno por línea)<textarea name="lbuscar" rows="6" [(ngModel)]="formLeccion.que_buscar"></textarea></label>
-        <label>Errores típicos (uno por línea)<textarea name="lerrores" rows="4" [(ngModel)]="formLeccion.errores_tipicos"></textarea></label>
-        <label>Dato clave<input name="ldato" type="text" [(ngModel)]="formLeccion.dato_clave"></label>
-        <div class="confusiones-edicion" *ngIf="formLeccion.confusiones.length">
-          <span class="etiqueta-fija">Se confunde con</span>
-          <label *ngFor="let c of formLeccion.confusiones; let i = index">{{ nombreClase(c.clase) }}
-            <textarea [name]="'lconf' + i" rows="2" [(ngModel)]="c.clave"></textarea>
-          </label>
-        </div>
-        <div class="acciones-fila">
-          <button type="submit" class="btn-primario" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar y publicar' }}</button>
-          <button type="button" class="btn-secundario" [disabled]="guardando" (click)="guardarLeccion(l, 'borrador')">Guardar como borrador</button>
-          <button type="button" class="btn-secundario" (click)="cancelarEdicionLeccion()">Cancelar</button>
-        </div>
-      </form>
-    </article>
-
-    <div class="paginacion" *ngIf="totalPaginasLecciones > 1">
-      <span class="paginacion-info">
-        Mostrando {{ (paginaLecciones - 1) * TAMANO_PAGINA + 1 }}–{{ finPaginaLecciones }} de {{ lecciones.length }}
-      </span>
-      <div class="paginacion-controles">
-        <button type="button" (click)="irAPaginaLecciones(paginaLecciones - 1)" [disabled]="paginaLecciones === 1">Anterior</button>
-        <span>Página {{ paginaLecciones }} de {{ totalPaginasLecciones }}</span>
-        <button type="button" (click)="irAPaginaLecciones(paginaLecciones + 1)" [disabled]="paginaLecciones === totalPaginasLecciones">Siguiente</button>
       </div>
     </div>
   </section>

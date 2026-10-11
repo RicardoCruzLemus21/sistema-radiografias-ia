@@ -32,8 +32,10 @@ export class RevisionContenido implements OnInit {
   procesandoId: number | null = null;
 
   // Lecciones
+  readonly TAMANO_PAGINA_ACTIVO = 10;
   lecciones: any[] = [];
   paginaLecciones = 1;
+  activoAbierto = false;
   leccionEditando: string | null = null;
   formLeccion: any = null;
   generandoLecciones = false;
@@ -170,16 +172,16 @@ export class RevisionContenido implements OnInit {
 
   // ===== Lecciones =====
   get totalPaginasLecciones(): number {
-    return Math.max(1, Math.ceil(this.lecciones.length / this.TAMANO_PAGINA));
+    return Math.max(1, Math.ceil(this.lecciones.length / this.TAMANO_PAGINA_ACTIVO));
   }
 
   get leccionesPagina(): any[] {
-    const inicio = (this.paginaLecciones - 1) * this.TAMANO_PAGINA;
-    return this.lecciones.slice(inicio, inicio + this.TAMANO_PAGINA);
+    const inicio = (this.paginaLecciones - 1) * this.TAMANO_PAGINA_ACTIVO;
+    return this.lecciones.slice(inicio, inicio + this.TAMANO_PAGINA_ACTIVO);
   }
 
   get finPaginaLecciones(): number {
-    return Math.min(this.paginaLecciones * this.TAMANO_PAGINA, this.lecciones.length);
+    return Math.min(this.paginaLecciones * this.TAMANO_PAGINA_ACTIVO, this.lecciones.length);
   }
 
   irAPaginaLecciones(pagina: number): void {
