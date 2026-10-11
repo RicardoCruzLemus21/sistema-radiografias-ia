@@ -4,6 +4,7 @@ const { ErrorAprendizaje } = require('./aprendizajeService');
 const geminiService = require('./geminiService');
 
 const parseJson = (v, def) => { try { return typeof v === 'string' ? JSON.parse(v) : (v ?? def); } catch (e) { return def; } };
+const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const validarClase = (c) => { if (!obtenerClases().includes(c)) throw new ErrorAprendizaje('Categoría no válida.'); return c; };
 const texto = (v, min, max, campo) => {
@@ -109,6 +110,9 @@ const generarLecciones = async (idDocente) => {
     const generadas = [];
     const errores = [];
     for (const clase of clases) {
+        // Pausa entre patologías (no antes de la primera) para no disparar las 8 peticiones
+        // de golpe y chocar con el límite de peticiones por minuto de la cuenta gratuita.
+        if (generadas.length + errores.length > 0) await esperar(1500);
         const nombre = obtenerLecciones()[clase]?.nombre || clase;
         try {
             const crudo = await geminiService.generarJSON({ prompt: promptLeccion(clase, nombre), schema: esquemaLeccionIA });
