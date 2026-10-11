@@ -148,6 +148,18 @@ const publicarLoteLeccion = async (idLote, idDocente) => {
     return { publicadas };
 };
 
+// No se puede borrar una ficha mientras alguna de sus versiones sea la que ven los estudiantes
+const eliminarLoteLeccion = async (idLote) => {
+    try {
+        const [res] = await pool.query('CALL sp_apr_eliminar_lote_leccion(?)', [idLote]);
+        if (!res[0][0].filas) throw new ErrorAprendizaje('Esa ficha ya no existe.');
+        return true;
+    } catch (error) {
+        if (error.sqlState === '45000') throw new ErrorAprendizaje(error.sqlMessage);
+        throw error;
+    }
+};
+
 // ===== Explicaciones =====
 // Solo se listan las explicaciones base (origen 'plantilla'). Las antiguas generadas con IA quedan
 // en la base de datos, desactivadas, pero ya no se muestran ni se pueden editar desde aquí.
@@ -179,5 +191,5 @@ const revisarExplicacion = async (id, contenido, estado, idDocente) => {
 
 module.exports = {
     listarLecciones, guardarLeccion, listarExplicaciones, revisarExplicacion, validarExplicacion,
-    generarLecciones, listarLotesLeccion, listarVersionesLote, publicarLoteLeccion
+    generarLecciones, listarLotesLeccion, listarVersionesLote, publicarLoteLeccion, eliminarLoteLeccion
 };

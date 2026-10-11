@@ -11,6 +11,10 @@
 .nota-pequena { font-size: 12px !important; color: var(--text-muted); }
 .subtitulo-lotes { margin: 4px 0 -6px; font-size: 16px; color: var(--text-main); }
 
+.btn-peligro { border-color: #ef4444 !important; color: #ef4444 !important; }
+.btn-peligro:hover:not(:disabled) { background: #ef4444 !important; color: #fff !important; }
+.btn-peligro:disabled { opacity: 0.6; cursor: not-allowed; }
+
 .paginacion { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border-color); }
 .paginacion-info { font-size: 13px; color: var(--text-muted); }
 .paginacion-controles { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--text-main); }

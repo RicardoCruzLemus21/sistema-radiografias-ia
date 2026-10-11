@@ -82,6 +82,10 @@ export class AprendizajeService {
     return this.http.post<any>(`${this.api}/admin/lecciones/lotes/${idLote}/publicar`, {}, this.opciones());
   }
 
+  eliminarLoteLeccion(idLote: number): Observable<any> {
+    return this.http.delete<any>(`${this.api}/admin/lecciones/lotes/${idLote}`, this.opciones());
+  }
+
   listarExplicaciones(): Observable<any> {
     return this.http.get<any>(`${this.api}/admin/explicaciones`, this.opciones());
   }

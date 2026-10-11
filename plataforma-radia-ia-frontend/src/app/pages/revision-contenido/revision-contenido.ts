@@ -40,11 +40,13 @@ export class RevisionContenido implements OnInit {
   formLeccion: any = null;
   generandoLecciones = false;
   cargandoLotes = false;
+  readonly TAMANO_PAGINA_LOTES = 10;
   lotes: any[] = [];
   paginaLotes = 1;
   loteAbierto: number | null = null;
   versionesLote: Record<number, any[]> = {};
   publicandoLote: number | null = null;
+  eliminandoLote: number | null = null;
 
   readonly nombreClase = nombreClase;
   readonly colorClase = colorClase;
@@ -190,16 +192,16 @@ export class RevisionContenido implements OnInit {
 
   // ===== Conjuntos generados con IA (elegir cuál ven los estudiantes) =====
   get totalPaginasLotes(): number {
-    return Math.max(1, Math.ceil(this.lotes.length / this.TAMANO_PAGINA));
+    return Math.max(1, Math.ceil(this.lotes.length / this.TAMANO_PAGINA_LOTES));
   }
 
   get lotesPagina(): any[] {
-    const inicio = (this.paginaLotes - 1) * this.TAMANO_PAGINA;
-    return this.lotes.slice(inicio, inicio + this.TAMANO_PAGINA);
+    const inicio = (this.paginaLotes - 1) * this.TAMANO_PAGINA_LOTES;
+    return this.lotes.slice(inicio, inicio + this.TAMANO_PAGINA_LOTES);
   }
 
   get finPaginaLotes(): number {
-    return Math.min(this.paginaLotes * this.TAMANO_PAGINA, this.lotes.length);
+    return Math.min(this.paginaLotes * this.TAMANO_PAGINA_LOTES, this.lotes.length);
   }
 
   irAPaginaLotes(pagina: number): void {
@@ -239,6 +241,8 @@ export class RevisionContenido implements OnInit {
         this.guardando = false;
         this.lecciones = this.lecciones.map(x => (x.clase === l.clase ? { ...x, contenido: resp.data.contenido, estado, id_version_activa: null } : x));
         this.cancelarEdicionLeccion();
+        // Cada edición manual crea su propia ficha nueva: se refresca la lista para que aparezca
+        this.cargarLotes();
         this.alertService.success('Lección guardada', estado === 'aprobado' ? 'Los estudiantes ya ven la versión actualizada.' : 'Quedó como borrador: los estudiantes no la ven hasta que la apruebes.');
         this.cdr.detectChanges();
       },
@@ -345,6 +349,32 @@ export class RevisionContenido implements OnInit {
       error: (err) => {
         this.publicandoLote = null;
         this.alertService.error('No se pudo publicar', err.error?.message || 'Intenta de nuevo.');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  async eliminarLote(lote: any): Promise<void> {
+    const confirmado = await this.alertService.confirmDanger(
+      'Eliminar ficha',
+      `¿Eliminar la ficha del ${new Date(lote.fecha_generacion).toLocaleString('es-GT')} (${lote.total_patologias} patologías)? Esta acción no se puede deshacer.`,
+      'Sí, eliminar'
+    );
+    if (!confirmado) return;
+
+    this.eliminandoLote = lote.id_lote;
+    this.aprendizajeService.eliminarLoteLeccion(lote.id_lote).subscribe({
+      next: () => {
+        this.eliminandoLote = null;
+        if (this.loteAbierto === lote.id_lote) this.loteAbierto = null;
+        delete this.versionesLote[lote.id_lote];
+        this.lotes = this.lotes.filter(l => l.id_lote !== lote.id_lote);
+        this.alertService.toast('Ficha eliminada', 'success');
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.eliminandoLote = null;
+        this.alertService.error('No se pudo eliminar', err.error?.message || 'Intenta de nuevo.');
         this.cdr.detectChanges();
       }
     });

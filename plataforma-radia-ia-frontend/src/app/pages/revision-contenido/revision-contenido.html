@@ -155,14 +155,38 @@
           <button type="button" class="btn-aprobar" [disabled]="publicandoLote === lo.id_lote" (click)="publicarLote(lo)">
             {{ publicandoLote === lo.id_lote ? 'Mostrando...' : 'Mostrar esta lección a los estudiantes' }}
           </button>
+          <button type="button" class="btn-mini btn-peligro" [disabled]="eliminandoLote === lo.id_lote" (click)="eliminarLote(lo)">
+            {{ eliminandoLote === lo.id_lote ? 'Eliminando...' : 'Eliminar' }}
+          </button>
         </div>
         <div class="lote-detalle" *ngIf="loteAbierto === lo.id_lote">
-          <div class="version-item" *ngFor="let v of versionesLote[lo.id_lote]">
-            <div class="version-info">
-              <span class="version-fecha">{{ v.nombre }}</span>
-              <p class="expl-resumen">{{ v.contenido.resumen }}</p>
-            </div>
-            <span class="insignia estado aprobada" *ngIf="esVersionActiva(v)">La ven los estudiantes</span>
+          <div class="version-item" *ngFor="let v of versionesLote[lo.id_lote]" [class.editando]="leccionEditando === v.clase">
+            <ng-container *ngIf="leccionEditando !== v.clase">
+              <div class="version-info">
+                <span class="version-fecha">{{ v.nombre }}</span>
+                <p class="expl-resumen">{{ v.contenido.resumen }}</p>
+              </div>
+              <span class="insignia estado aprobada" *ngIf="esVersionActiva(v)">La ven los estudiantes</span>
+              <button type="button" class="btn-mini" (click)="iniciarEdicionLeccion(v)">Editar</button>
+            </ng-container>
+
+            <form *ngIf="leccionEditando === v.clase && formLeccion" class="formulario" (ngSubmit)="guardarLeccion(v, 'aprobado')">
+              <label>Resumen<textarea name="lresumen" rows="3" [(ngModel)]="formLeccion.resumen"></textarea></label>
+              <label>Qué buscar (uno por línea)<textarea name="lbuscar" rows="6" [(ngModel)]="formLeccion.que_buscar"></textarea></label>
+              <label>Errores típicos (uno por línea)<textarea name="lerrores" rows="4" [(ngModel)]="formLeccion.errores_tipicos"></textarea></label>
+              <label>Dato clave<input name="ldato" type="text" [(ngModel)]="formLeccion.dato_clave"></label>
+              <div class="confusiones-edicion" *ngIf="formLeccion.confusiones.length">
+                <span class="etiqueta-fija">Se confunde con</span>
+                <label *ngFor="let c of formLeccion.confusiones; let i = index">{{ nombreClase(c.clase) }}
+                  <textarea [name]="'lconf' + i" rows="2" [(ngModel)]="c.clave"></textarea>
+                </label>
+              </div>
+              <div class="acciones-fila">
+                <button type="submit" class="btn-primario" [disabled]="guardando">{{ guardando ? 'Guardando...' : 'Guardar y publicar' }}</button>
+                <button type="button" class="btn-secundario" [disabled]="guardando" (click)="guardarLeccion(v, 'borrador')">Guardar como borrador</button>
+                <button type="button" class="btn-secundario" (click)="cancelarEdicionLeccion()">Cancelar</button>
+              </div>
+            </form>
           </div>
         </div>
       </article>

@@ -24,6 +24,7 @@ router.post('/admin/lecciones/generar', revisores, c.generarLecciones);
 router.get('/admin/lecciones/lotes', revisores, c.listarLotesLeccion);
 router.get('/admin/lecciones/lotes/:id/versiones', revisores, c.listarVersionesLote);
 router.post('/admin/lecciones/lotes/:id/publicar', revisores, c.publicarLoteLeccion);
+router.delete('/admin/lecciones/lotes/:id', revisores, c.eliminarLoteLeccion);
 router.get('/admin/explicaciones', revisores, c.listarExplicaciones);
 router.put('/admin/explicaciones/:id', revisores, c.revisarExplicacion);
 
