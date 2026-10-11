@@ -52,7 +52,7 @@ const validarLeccion = (c, clase) => {
 // ===== Lecciones =====
 const listarLecciones = async () => {
     const [res] = await pool.query('CALL sp_apr_lecciones_admin()');
-    return res[0].map(l => ({ clase: l.clase, nombre: obtenerLecciones()[l.clase]?.nombre || l.clase, contenido: parseJson(l.contenido, {}), estado: l.estado, id_version_activa: l.id_version_activa, revisado_por: l.revisado_por, fecha_revision: l.fecha_revision }));
+    return res[0].map(l => ({ clase: l.clase, nombre: obtenerLecciones()[l.clase]?.nombre || l.clase, contenido: parseJson(l.contenido, {}), estado: l.estado, id_version_activa: l.id_version_activa, revisado_por: l.revisado_por, fecha_generacion: l.fecha_generacion, fecha_revision: l.fecha_revision }));
 };
 
 // idVersion: si la lección viene de publicar un conjunto generado con IA, el id de esa versión

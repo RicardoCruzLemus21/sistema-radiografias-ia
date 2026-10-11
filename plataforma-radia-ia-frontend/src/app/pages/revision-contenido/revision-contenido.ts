@@ -174,6 +174,13 @@ export class RevisionContenido implements OnInit {
   }
 
   // ===== Lecciones =====
+  // Fecha más reciente entre las 8 patologías activas (pueden venir de fichas distintas)
+  get fechaContenidoActual(): string | null {
+    const fechas = this.lecciones.map(l => l.fecha_generacion).filter(Boolean);
+    if (fechas.length === 0) return null;
+    return fechas.reduce((max, f) => (f > max ? f : max), fechas[0]);
+  }
+
   get totalPaginasLecciones(): number {
     return Math.max(1, Math.ceil(this.lecciones.length / this.TAMANO_PAGINA_ACTIVO));
   }

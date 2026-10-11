@@ -90,7 +90,7 @@
       <!-- Ficha del contenido activo: lo que ven los estudiantes ahora mismo, patología por patología -->
       <article class="lote-item tarjeta glass-panel">
         <header class="expl-cabecera">
-          <h3>Contenido actual<span class="flecha"> — lo que ven tus estudiantes ahora</span></h3>
+          <h3>{{ fechaContenidoActual ? (fechaContenidoActual | date:'dd/MM/yyyy HH:mm') : 'Contenido actual' }}<span class="flecha"> — lo que ven tus estudiantes ahora</span></h3>
           <span class="insignia">{{ lecciones.length }}/8 patologías</span>
         </header>
         <div class="acciones-fila">
