@@ -260,7 +260,8 @@ const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) =>
         id_usuario: usuario.id_usuario,
         id_rol: usuario.id_rol,
         nombre_rol: usuario.nombre_rol,
-        correo_electronico: usuario.correo_electronico
+        correo_electronico: usuario.correo_electronico,
+        nombre_completo: usuario.nombre_completo
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
