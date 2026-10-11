@@ -1,7 +1,8 @@
 const pool = require('./database');
 
-// Catálogo de patologías y lecciones (tabla aprendizaje_lecciones). Se carga una vez al arrancar el
-// servidor y después se lee en memoria; así el texto vive en la base y no en el código.
+// Catálogo de patologías y lecciones (tabla aprendizaje_lecciones_versiones, solo las filas activas).
+// Se carga una vez al arrancar el servidor y después se lee en memoria; así el texto vive en la
+// base y no en el código.
 let lecciones = {};
 let clases = [];
 
