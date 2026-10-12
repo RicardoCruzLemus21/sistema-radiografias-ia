@@ -55,13 +55,13 @@
     <div class="section-header">
       <h2>WORKLIST DE PACIENTES</h2>
       <div class="filtro-ejercicios-barra">
-        <input type="text" class="buscador-ejercicios" [(ngModel)]="busquedaEjercicios"
+        <input type="text" class="buscador-ejercicios" [(ngModel)]="busquedaEjercicios" (ngModelChange)="alBuscarEjercicios()"
                placeholder="Buscar ejercicio por nombre..." aria-label="Buscar ejercicio por nombre">
         <div class="filtro-ejercicios" role="group" aria-label="Filtrar ejercicios">
-          <button type="button" [class.activo]="filtroEjercicios === 'TODOS'" (click)="filtroEjercicios = 'TODOS'">Todos ({{ contarEstado('TODOS') }})</button>
-          <button type="button" [class.activo]="filtroEjercicios === 'COMPLETADO'" (click)="filtroEjercicios = 'COMPLETADO'">Completados ({{ contarEstado('COMPLETADO') }})</button>
-          <button type="button" [class.activo]="filtroEjercicios === 'PENDIENTE'" (click)="filtroEjercicios = 'PENDIENTE'">Pendientes de completar ({{ contarEstado('PENDIENTE') }})</button>
-          <button type="button" [class.activo]="filtroEjercicios === 'SIN_INICIAR'" (click)="filtroEjercicios = 'SIN_INICIAR'">Sin iniciar ({{ contarEstado('SIN_INICIAR') }})</button>
+          <button type="button" [class.activo]="filtroEjercicios === 'TODOS'" (click)="setFiltroEjercicios('TODOS')">Todos ({{ contarEstado('TODOS') }})</button>
+          <button type="button" [class.activo]="filtroEjercicios === 'COMPLETADO'" (click)="setFiltroEjercicios('COMPLETADO')">Completados ({{ contarEstado('COMPLETADO') }})</button>
+          <button type="button" [class.activo]="filtroEjercicios === 'PENDIENTE'" (click)="setFiltroEjercicios('PENDIENTE')">Pendientes de completar ({{ contarEstado('PENDIENTE') }})</button>
+          <button type="button" [class.activo]="filtroEjercicios === 'SIN_INICIAR'" (click)="setFiltroEjercicios('SIN_INICIAR')">Sin iniciar ({{ contarEstado('SIN_INICIAR') }})</button>
         </div>
       </div>
     </div>
@@ -142,6 +142,17 @@
           </tr>
         </tbody>
       </table>
+      </div>
+
+      <div class="paginacion" *ngIf="totalPaginasEjercicios > 1">
+        <span class="paginacion-info">
+          Mostrando {{ (paginaEjercicios - 1) * TAMANO_PAGINA_EJERCICIOS + 1 }}–{{ finPaginaEjercicios }} de {{ gruposFiltrados.length }}
+        </span>
+        <div class="paginacion-controles">
+          <button type="button" (click)="irAPaginaEjercicios(paginaEjercicios - 1)" [disabled]="paginaEjercicios === 1">Anterior</button>
+          <span>Página {{ paginaEjercicios }} de {{ totalPaginasEjercicios }}</span>
+          <button type="button" (click)="irAPaginaEjercicios(paginaEjercicios + 1)" [disabled]="paginaEjercicios === totalPaginasEjercicios">Siguiente</button>
+        </div>
       </div>
     </div>
   </section>

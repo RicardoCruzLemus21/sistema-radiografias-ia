@@ -64,12 +64,42 @@ export class DashboardEstudiante implements OnInit {
     return g.pendientes === 0 ? 'completado' : 'pendiente';
   }
 
-  get grupos() {
+  get gruposFiltrados() {
     const q = this.busquedaEjercicios.toLowerCase().trim();
     return this.todosLosGrupos.filter(g =>
       (this.filtroEjercicios === 'TODOS' || this.estadoGrupo(g) === this.filtroEjercicios.toLowerCase()) &&
       (!q || (g.nombre || '').toLowerCase().includes(q))
     );
+  }
+
+  // Ejercicios paginados de 10 en 10
+  readonly TAMANO_PAGINA_EJERCICIOS = 10;
+  paginaEjercicios = 1;
+
+  get totalPaginasEjercicios(): number {
+    return Math.max(1, Math.ceil(this.gruposFiltrados.length / this.TAMANO_PAGINA_EJERCICIOS));
+  }
+
+  get grupos() {
+    const inicio = (this.paginaEjercicios - 1) * this.TAMANO_PAGINA_EJERCICIOS;
+    return this.gruposFiltrados.slice(inicio, inicio + this.TAMANO_PAGINA_EJERCICIOS);
+  }
+
+  get finPaginaEjercicios(): number {
+    return Math.min(this.paginaEjercicios * this.TAMANO_PAGINA_EJERCICIOS, this.gruposFiltrados.length);
+  }
+
+  irAPaginaEjercicios(pagina: number): void {
+    this.paginaEjercicios = Math.min(Math.max(1, pagina), this.totalPaginasEjercicios);
+  }
+
+  setFiltroEjercicios(valor: 'TODOS' | 'COMPLETADO' | 'PENDIENTE' | 'SIN_INICIAR'): void {
+    this.filtroEjercicios = valor;
+    this.paginaEjercicios = 1;
+  }
+
+  alBuscarEjercicios(): void {
+    this.paginaEjercicios = 1;
   }
 
   contarEstado(estado: 'TODOS' | 'COMPLETADO' | 'PENDIENTE' | 'SIN_INICIAR'): number {
