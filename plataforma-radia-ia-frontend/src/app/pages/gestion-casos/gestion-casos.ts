@@ -33,7 +33,7 @@ export class GestionCasosCatedratico implements OnInit {
   verOcultos: boolean = false;
 
   // Carpetas de ejercicios paginadas de 6 en 6, las más recientes primero
-  readonly TAMANO_PAGINA_CARPETAS = 6;
+  readonly TAMANO_PAGINA_CARPETAS = 8;
   paginaCarpetas: number = 1;
 
   get totalPaginasCarpetas(): number {
