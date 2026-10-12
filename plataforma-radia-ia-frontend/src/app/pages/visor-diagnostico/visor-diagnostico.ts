@@ -46,6 +46,9 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
   horaInicioAnalisis: number = 0;
   tiempoDisplay: string = '00:00:00';
   private timerInterval: any;
+  private autoguardadoTiempoInterval: any;
+  private timerIniciado = false;
+  private necesitaIniciarTimer = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -94,13 +97,36 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.detectChanges();
       },
       error: () => {
-        // 404 = todavía no lo ha respondido: empieza la evaluación normal (el reloj arranca ahora)
+        // 404 = todavía no lo ha respondido: empieza (o retoma) la evaluación
         this.comprobandoRevision = false;
-        this.horaInicioAnalisis = Date.now();
-        this.iniciarTemporizador();
+        this.necesitaIniciarTimer = true;
+        this.intentarIniciarTimer();
         this.cdr.detectChanges();
       }
     });
+  }
+
+  // Arranca el cronómetro solo cuando ya se sabe que el caso no está respondido Y ya llegó el
+  // tiempo acumulado de una visita anterior (las dos peticiones corren en paralelo, en cualquier orden).
+  private intentarIniciarTimer(): void {
+    if (this.timerIniciado || !this.necesitaIniciarTimer || !this.casoDetalle) return;
+    this.timerIniciado = true;
+    const acumulado = Number(this.casoDetalle.tiempo_acumulado) || 0;
+    this.horaInicioAnalisis = Date.now() - acumulado * 1000;
+    this.iniciarTemporizador();
+    this.iniciarAutoguardadoTiempo();
+  }
+
+  // Guarda el tiempo transcurrido cada cierto tiempo, para que si el estudiante sale del caso
+  // sin responder (cierra la pestaña, pierde conexión) el cronómetro retome desde ahí al volver.
+  private iniciarAutoguardadoTiempo(): void {
+    this.autoguardadoTiempoInterval = setInterval(() => this.guardarTiempoProgresoActual(), 15000);
+  }
+
+  private guardarTiempoProgresoActual(): void {
+    if (this.modoRevision || !this.horaInicioAnalisis) return;
+    const segundos = Math.floor((Date.now() - this.horaInicioAnalisis) / 1000);
+    this.clinicalService.guardarTiempoProgreso(this.idCasoActual, segundos).subscribe({ error: () => {} });
   }
 
   private entrarEnModoRevision(datos: any): void {
@@ -153,6 +179,7 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
       next: (res) => {
         if (res.data) {
           this.casoDetalle = res.data;
+          this.intentarIniciarTimer();
           // Construimos la URL completa para la imagen
           if (this.casoDetalle.ruta_imagen && !this.casoDetalle.ruta_imagen.startsWith('http')) {
             this.imagenUrl = `${environment.apiUrl}${this.casoDetalle.ruta_imagen}`;
@@ -173,6 +200,11 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     this.observadorTamano?.disconnect();
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
+    }
+    if (this.autoguardadoTiempoInterval) {
+      clearInterval(this.autoguardadoTiempoInterval);
+      // Último guardado al salir del caso sin responder, para no perder lo más reciente
+      this.guardarTiempoProgresoActual();
     }
   }
 
@@ -300,6 +332,7 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     };
 
     if (this.timerInterval) clearInterval(this.timerInterval);
+    if (this.autoguardadoTiempoInterval) clearInterval(this.autoguardadoTiempoInterval);
 
     this.enviandoDiagnostico = true;
 

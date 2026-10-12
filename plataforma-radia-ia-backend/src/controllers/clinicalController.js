@@ -84,10 +84,20 @@ const obtenerCasoPorId = async (req, res) => {
 const obtenerCasoEstudiante = async (req, res) => {
     try {
         const { id } = req.params;
-        const caso = await clinicalService.obtenerCasoEstudianteSeguro(id);
+        const caso = await clinicalService.obtenerCasoEstudianteSeguro(id, req.usuario?.id_usuario);
         res.status(200).json({ status: 'success', data: caso });
     } catch (error) {
         res.status(404).json({ status: 'error', message: error.message });
+    }
+};
+
+const guardarTiempoProgreso = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await clinicalService.guardarTiempoProgreso(req.usuario.id_usuario, id, req.body?.segundos);
+        res.status(200).json({ status: 'success' });
+    } catch (error) {
+        res.status(400).json({ status: 'error', message: error.message });
     }
 };
 
@@ -276,6 +286,7 @@ module.exports = {
     listarCasosCatedratico,
     obtenerCasoPorId,
     obtenerCasoEstudiante,
+    guardarTiempoProgreso,
     registrarRespuesta,
     obtenerRetroalimentacion,
     obtenerSiguienteCodigoPaciente,

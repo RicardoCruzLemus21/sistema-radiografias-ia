@@ -24,6 +24,7 @@ router.get('/estadisticas-estudiante', clinicalController.obtenerEstadisticasEst
 
 // Endpoints de Estudiante (Flujo Educativo Fase 1)
 router.get('/caso/:id/estudiante', clinicalController.obtenerCasoEstudiante);
+router.put('/caso/:id/tiempo', verificarRol(['estudiante']), clinicalController.guardarTiempoProgreso);
 router.get('/caso/:id/retroalimentacion', verificarRol(['estudiante']), clinicalController.obtenerRetroalimentacion);
 // Solo estudiantes responden casos, y siempre a su propio nombre (el id sale del token)
 router.post('/respuestas', verificarRol(['estudiante']), clinicalController.registrarRespuesta);

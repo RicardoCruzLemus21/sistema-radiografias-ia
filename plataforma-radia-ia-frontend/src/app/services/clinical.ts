@@ -71,6 +71,12 @@ export class ClinicalService {
     });
   }
 
+  guardarTiempoProgreso(id: string | number, segundos: number): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/caso/${id}/tiempo`, { segundos }, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   // Envía el diagnóstico (Fase 1) y recibe los datos protegidos (Fase 2, 3 y 4)
   enviarDiagnosticoFase1(payload: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/respuestas`, payload, {

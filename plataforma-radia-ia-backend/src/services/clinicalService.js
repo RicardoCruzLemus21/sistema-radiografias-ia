@@ -338,7 +338,7 @@ const obtenerEstadisticasEstudiante = async (id_estudiante) => {
 };
 
 // NUEVA FUNCIÓN: Obtener Caso Seguro para Estudiante (Oculta Fase 2 y 3)
-const obtenerCasoEstudianteSeguro = async (id_caso) => {
+const obtenerCasoEstudianteSeguro = async (id_caso, id_estudiante) => {
     const [resultado] = await pool.query('CALL sp_obtener_caso_estudiante_raw(?)', [id_caso]);
     const casos = resultado[0];
 
@@ -357,6 +357,14 @@ const obtenerCasoEstudianteSeguro = async (id_caso) => {
         if (docInfo[campo] !== undefined) metadataSegura[campo] = docInfo[campo];
     });
 
+    // Tiempo ya invertido en este caso en una visita anterior (si salió sin responder y volvió):
+    // el cronómetro retoma desde aquí en vez de reiniciar en 0.
+    let tiempo_acumulado = 0;
+    if (id_estudiante) {
+        const [progresoResult] = await pool.query('CALL sp_obtener_tiempo_progreso(?, ?)', [id_estudiante, id_caso]);
+        tiempo_acumulado = progresoResult[0]?.[0]?.segundos_acumulados || 0;
+    }
+
     return {
         id_caso: caso.id_caso,
         titulo_caso: `Caso #${caso.id_caso}`, // el título real puede revelar el diagnóstico
@@ -364,8 +372,17 @@ const obtenerCasoEstudianteSeguro = async (id_caso) => {
         nivel_dificultad: caso.nivel_dificultad,
         ruta_imagen: caso.ruta_imagen,
         historia_usuario: caso.historia_usuario || null,
-        metadata_segura: metadataSegura
+        metadata_segura: metadataSegura,
+        tiempo_acumulado
     };
+};
+
+// Guarda cuanto tiempo lleva el estudiante en un caso que todavia no responde, para que el
+// cronometro retome desde ahi si sale y vuelve a entrar.
+const guardarTiempoProgreso = async (id_estudiante, id_caso, segundos) => {
+    const s = Number(segundos);
+    if (!Number.isFinite(s) || s < 0) throw new Error('Tiempo no válido.');
+    await pool.query('CALL sp_guardar_tiempo_progreso(?, ?, ?)', [id_estudiante, id_caso, Math.floor(s)]);
 };
 
 // NUEVA FUNCIÓN: Guardar Respuesta Estudiante y Retornar Verdad
@@ -400,6 +417,9 @@ const guardarRespuestaEstudiante = async (payload) => {
         }
 
         await conn.commit();
+
+        // Ya se respondió: el tiempo acumulado que se llevaba guardado para reanudar ya no hace falta
+        pool.query('CALL sp_eliminar_tiempo_progreso(?, ?)', [id_estudiante, id_caso]).catch(e => console.error('Error limpiando tiempo en progreso:', e.message));
 
         // 3. Obtener la Verdad de Referencia completa para retornar al cliente y calcular puntajes
         const [verdadResult] = await pool.query('CALL sp_obtener_verdad_caso(?)', [id_caso]);
@@ -570,5 +590,6 @@ module.exports = {
     obtenerMetricasModelo,
     obtenerEstadisticasEstudiante,
     obtenerCasoEstudianteSeguro,
-    guardarRespuestaEstudiante
+    guardarRespuestaEstudiante,
+    guardarTiempoProgreso
 };
