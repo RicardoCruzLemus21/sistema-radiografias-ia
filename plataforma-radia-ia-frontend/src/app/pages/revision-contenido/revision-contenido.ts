@@ -313,17 +313,17 @@ export class RevisionContenido implements OnInit {
     this.publicandoLote = lote.id_lote;
     this.aprendizajeService.publicarLoteLeccion(lote.id_lote).subscribe({
       next: () => {
-        // Recarga desde el servidor para que id_version_activa quede correcto en cada patología
+        // Recarga lecciones (para id_version_activa) y la lista de fichas (para la insignia "Activa ahora")
         this.aprendizajeService.listarLecciones().subscribe({
           next: (resp) => {
             this.publicandoLote = null;
             this.lecciones = resp.data;
             this.alertService.success('Lección mostrada', 'Los estudiantes ya ven esta lección.');
-            this.cdr.detectChanges();
+            this.cargarLotes();
           },
           error: () => {
             this.publicandoLote = null;
-            this.cdr.detectChanges();
+            this.cargarLotes();
           }
         });
       },
