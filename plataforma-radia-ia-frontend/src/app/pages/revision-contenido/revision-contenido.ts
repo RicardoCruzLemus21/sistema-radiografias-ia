@@ -31,11 +31,8 @@ export class RevisionContenido implements OnInit {
   guardando = false;
   procesandoId: number | null = null;
 
-  // Lecciones
-  readonly TAMANO_PAGINA_ACTIVO = 10;
+  // Lecciones (solo se usa para saber cual version esta activa; ya no se muestra como lista aparte)
   lecciones: any[] = [];
-  paginaLecciones = 1;
-  activoAbierto = false;
   leccionEditando: string | null = null;
   formLeccion: any = null;
   generandoLecciones = false;
@@ -173,30 +170,6 @@ export class RevisionContenido implements OnInit {
     });
   }
 
-  // ===== Lecciones =====
-  // Fecha más reciente entre las 8 patologías activas (pueden venir de fichas distintas)
-  get fechaContenidoActual(): string | null {
-    const fechas = this.lecciones.map(l => l.fecha_generacion).filter(Boolean);
-    if (fechas.length === 0) return null;
-    return fechas.reduce((max, f) => (f > max ? f : max), fechas[0]);
-  }
-
-  get totalPaginasLecciones(): number {
-    return Math.max(1, Math.ceil(this.lecciones.length / this.TAMANO_PAGINA_ACTIVO));
-  }
-
-  get leccionesPagina(): any[] {
-    const inicio = (this.paginaLecciones - 1) * this.TAMANO_PAGINA_ACTIVO;
-    return this.lecciones.slice(inicio, inicio + this.TAMANO_PAGINA_ACTIVO);
-  }
-
-  get finPaginaLecciones(): number {
-    return Math.min(this.paginaLecciones * this.TAMANO_PAGINA_ACTIVO, this.lecciones.length);
-  }
-
-  irAPaginaLecciones(pagina: number): void {
-    this.paginaLecciones = Math.min(Math.max(1, pagina), this.totalPaginasLecciones);
-  }
 
   // ===== Conjuntos generados con IA (elegir cuál ven los estudiantes) =====
   get totalPaginasLotes(): number {
