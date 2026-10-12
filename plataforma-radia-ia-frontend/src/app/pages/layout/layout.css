@@ -91,6 +91,7 @@
   justify-content: center;
   border-radius: 6px;
   transition: all 0.2s ease;
+  position: relative;
 }
 .btn-toggle-sidebar:hover {
   background: var(--table-row-hover);
@@ -326,7 +327,8 @@
 }
 
 /* Tooltips Personalizados (solo se activan cuando el atributo existe) */
-.nav-item[data-tooltip]::after {
+.nav-item[data-tooltip]::after,
+.btn-toggle-sidebar[data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   left: calc(100% + 15px);
@@ -348,7 +350,8 @@
   z-index: 1000;
 }
 
-.nav-item[data-tooltip]::before {
+.nav-item[data-tooltip]::before,
+.btn-toggle-sidebar[data-tooltip]::before {
   content: '';
   position: absolute;
   left: calc(100% + 6px);
@@ -365,7 +368,9 @@
 }
 
 .nav-item[data-tooltip]:hover::after,
-.nav-item[data-tooltip]:hover::before {
+.nav-item[data-tooltip]:hover::before,
+.btn-toggle-sidebar[data-tooltip]:hover::after,
+.btn-toggle-sidebar[data-tooltip]:hover::before {
   opacity: 1;
   visibility: visible;
   transform: translateY(-50%) translateX(0);

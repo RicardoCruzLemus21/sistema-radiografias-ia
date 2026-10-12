@@ -11,7 +11,7 @@
           <span class="logo-tagline">Plataforma de Radiología</span>
         </div>
       </div>
-      <button class="btn-toggle-sidebar" (click)="toggleSidebar()" title="Alternar panel">
+      <button class="btn-toggle-sidebar" (click)="toggleSidebar()" [attr.data-tooltip]="isSidebarCollapsed ? 'Expandir panel' : null">
         <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="12" x2="21" y2="12"></line>
           <line x1="3" y1="6" x2="21" y2="6"></line>
