@@ -38,8 +38,8 @@ router.post('/radiografia', upload.single('imagen'), clinicalController.subirIma
 // Endpoint POST: Asignar casos del Banco NIH a un curso
 router.post('/evaluaciones', verificarRol(['catedratico']), clinicalController.asignarCasosBanco);
 
-// Endpoints CRUD adicionales (Editar y Eliminar)
-router.put('/caso/:id', clinicalController.editarCaso);
-router.delete('/caso/:id', clinicalController.eliminarCaso);
+// Endpoints CRUD adicionales (Editar y Eliminar) — solo catedrático y admin
+router.put('/caso/:id', verificarRol(['catedratico', 'admin']), clinicalController.editarCaso);
+router.delete('/caso/:id', verificarRol(['catedratico', 'admin']), clinicalController.eliminarCaso);
 
 module.exports = router;
