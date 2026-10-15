@@ -23,9 +23,7 @@ const authRoutes = require('./src/routes/authRoutes');
 const diagnosticoRoutes = require('./src/routes/diagnosticoRoutes');
 const academicRoutes = require('./src/routes/academicRoutes');
 const clinicalRoutes = require('./src/routes/clinicalRoutes');
-const radiografiaRoutes = require('./src/routes/radiografiaRoutes');
 const iaRoutes = require('./src/routes/iaRoutes');
-const metricsRoutes = require('./src/routes/metricsRoutes');
 const extraRoutes = require('./src/routes/extraRoutes');
 const auditRoutes = require('./src/routes/auditRoutes');
 const userRoutes = require('./src/routes/userRoutes');
@@ -38,13 +36,10 @@ const adminRoutes = require('./src/routes/adminRoutes');
 // ==========================================
 app.use('/api/auth', authRoutes);           // MÓDULO 1: Autenticación y Usuarios
 app.use('/api/academico', academicRoutes);  // MÓDULO 2: Gestión Académica y Rendimiento
-app.use('/api/academic', academicRoutes);   // MÓDULO 2: Alias adicional
 app.use('/api/clinical', clinicalRoutes);   // MÓDULO 3: Casos Clínicos y Pacientes
-app.use('/api/radiografias', radiografiaRoutes); // MÓDULO 3: Subida y Gestión de Radiografías
 app.use('/api/diagnostico', diagnosticoRoutes);  // MÓDULO 4: Diagnóstico y Catálogos
 app.use('/api/ia', iaRoutes);               // MÓDULO 5: Inferencia IA y Concordancia
-app.use('/api/metricas', metricsRoutes);     // MÓDULO 6 & 7: Rúbricas y Medición Científica (Likert)
-app.use('/api/extra', extraRoutes);         // MÓDULO EXTRA: Auditoría, Notificaciones, Comentarios
+app.use('/api/extra', extraRoutes);         // MÓDULO EXTRA: Notificaciones, Comentarios
 app.use('/api/audit', auditRoutes);         // Visor de Auditoría (Timeline)
 app.use('/api/modelo', modeloRoutes);       // Ficha del modelo de IA (estadísticas)
 app.use('/api/aprendizaje', aprendizajeRoutes); // Módulo de aprendizaje: ruta por patología, repaso y errores
@@ -86,10 +81,8 @@ app.listen(PORT, async () => {
     console.log(`🛡️  Módulo 1 (Auth API): EN LÍNEA`);
     console.log(`🛡️  Módulo 2 (Academic API): EN LÍNEA`);
     console.log(`🛡️  Módulo 3 (Clinical API): EN LÍNEA`);
-    console.log(`🛡️  Módulo 3 (Radiografías API): EN LÍNEA`);
     console.log(`🛡️  Módulo 4 (Diagnostic API): EN LÍNEA`);
     console.log(`🛡️  Módulo 5 (AI Engine API): EN LÍNEA`);
-    console.log(`🛡️  Módulo 6 (Metrics & Likert API): EN LÍNEA`);
     console.log(`=================================================\n`);
 
     iniciarLimpiezaProgramada(); // Auditoría: retiene solo los últimos 30 días

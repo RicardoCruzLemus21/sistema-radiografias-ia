@@ -1,43 +1,4 @@
-const diagnosticoService = require('../services/diagnosticoService');
 const db = require('../config/database'); // Importamos la conexión a la base de datos
-const { TABLAS, COLUMNAS } = require('../config/dbDictionary'); // Importamos tu Diccionario de Datos
-
-const auditService = require('../services/auditService');
-const notificationService = require('../services/notificationService');
-
-const registrarEvaluacion = async (req, res) => {
-    try {
-        // req.body ya vendrá parseado como JSON gracias a Express
-        const resultado = await diagnosticoService.guardarEvaluacionEstudiante({ ...req.body, id_estudiante: req.usuario.id_usuario });
-        
-        // EXTRA: Auditoría y Notificaciones
-        const id_estudiante = req.usuario.id_usuario;
-        await auditService.registrarAccion(id_estudiante, 'EVALUACION_COMPLETADA', `El estudiante completó la evaluación del caso ${req.body.id_caso}`);
-        
-        // Notificar a los catedráticos
-        try {
-            const [catedraticos] = await db.query(`SELECT ${COLUMNAS.ID_USUARIO} FROM ${TABLAS.USUARIOS} WHERE id_rol = 1`);
-            if (catedraticos.length > 0) {
-                const ids = catedraticos.map(c => c.id_usuario);
-                await notificationService.enviarNotificacionMasiva(ids, 'Nueva Evaluación', `Un estudiante ha completado el diagnóstico del caso ${req.body.id_caso}.`);
-            }
-        } catch (e) {
-            console.error("Error notificando catedráticos:", e);
-        }
-
-        // Respondemos con status 201 (Created)
-        res.status(201).json({
-            status: 'success',
-            data: resultado
-        });
-    } catch (error) {
-        console.error("Error al registrar diagnóstico:", error);
-        res.status(400).json({
-            status: 'error',
-            message: error.message || "Ocurrió un error al procesar el diagnóstico del estudiante."
-        });
-    }
-};
 
 // Agrega "seleccionada: false" para que los checkboxes en Angular nazcan desmarcados
 const listarCatalogos = async (req, res) => {
@@ -90,7 +51,6 @@ const eliminarPatologia = async (req, res) => {
 };
 
 module.exports = {
-    registrarEvaluacion,
     listarCatalogos,
     editarPatologia,
     eliminarPatologia

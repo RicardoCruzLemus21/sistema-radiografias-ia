@@ -1,5 +1,4 @@
 const pool = require('../config/database');
-const dict = require('../config/dbDictionary');
 const bcrypt = require('bcryptjs');
 
 const listarUsuarios = async () => {

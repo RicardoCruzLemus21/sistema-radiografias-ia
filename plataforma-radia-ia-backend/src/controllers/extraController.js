@@ -2,17 +2,6 @@ const auditService = require('../services/auditService');
 const notificationService = require('../services/notificationService');
 const commentService = require('../services/commentService');
 
-// --- AUDITORÍA ---
-const obtenerLogsAuditoria = async (req, res) => {
-    try {
-        const logs = await auditService.obtenerLogs(200);
-        res.status(200).json({ status: 'success', data: logs });
-    } catch (error) {
-        console.error("Error al obtener auditoría:", error);
-        res.status(500).json({ status: 'error', message: "Error al cargar la auditoría del sistema." });
-    }
-};
-
 // --- NOTIFICACIONES ---
 const obtenerNotificaciones = async (req, res) => {
     try {
@@ -80,7 +69,6 @@ const obtenerComentariosEvaluacion = async (req, res) => {
 };
 
 module.exports = {
-    obtenerLogsAuditoria,
     obtenerNotificaciones,
     marcarNotificacionLeida,
     marcarTodasLeidas,

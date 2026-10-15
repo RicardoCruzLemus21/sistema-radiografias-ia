@@ -1,5 +1,4 @@
 const pool = require('../config/database');
-const dict = require('../config/dbDictionary');
 
 // 1. Servicio para que un Catedrático cree un curso
 const crearCurso = async (datosCurso) => {

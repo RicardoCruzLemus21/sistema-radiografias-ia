@@ -1,5 +1,4 @@
 const pool = require('../config/database');
-const dict = require('../config/dbDictionary');
 const tf = require('@tensorflow/tfjs');
 const { Jimp } = require('jimp');
 const fs = require('fs');

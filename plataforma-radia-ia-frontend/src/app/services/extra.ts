@@ -17,11 +17,6 @@ export class ExtraService {
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
-  // --- Auditoría ---
-  getLogsAuditoria(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/auditoria/logs`, { headers: this.getHeaders() });
-  }
-
   // --- Notificaciones ---
   getNotificaciones(): Observable<any> {
     return this.http.get(`${this.apiUrl}/notificaciones`, { headers: this.getHeaders() });
