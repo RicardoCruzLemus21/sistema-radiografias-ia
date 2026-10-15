@@ -1,15 +1,9 @@
 const pool = require('../config/database');
-const dict = require('../config/dbDictionary');
 
 const crearNotificacion = async (id_usuario_destino, titulo, mensaje) => {
     try {
-        const query = `
-            INSERT INTO ${dict.TABLAS.NOTIFICACIONES} 
-            (${dict.COLUMNAS.ID_USUARIO_DESTINO}, ${dict.COLUMNAS.TITULO}, ${dict.COLUMNAS.MENSAJE}) 
-            VALUES (?, ?, ?)
-        `;
-        const [resultado] = await pool.query(query, [id_usuario_destino, titulo, mensaje]);
-        return { id_notificacion: resultado.insertId };
+        const [resultado] = await pool.query('CALL sp_notificacion_crear(?, ?, ?)', [id_usuario_destino, titulo, mensaje]);
+        return { id_notificacion: resultado[0][0].id_notificacion };
     } catch (error) {
         console.error('Error creando notificación:', error);
     }
@@ -18,13 +12,7 @@ const crearNotificacion = async (id_usuario_destino, titulo, mensaje) => {
 const enviarNotificacionMasiva = async (ids_usuarios, titulo, mensaje) => {
     if (!ids_usuarios || ids_usuarios.length === 0) return;
     try {
-        const valores = ids_usuarios.map(id => [id, titulo, mensaje]);
-        const query = `
-            INSERT INTO ${dict.TABLAS.NOTIFICACIONES} 
-            (${dict.COLUMNAS.ID_USUARIO_DESTINO}, ${dict.COLUMNAS.TITULO}, ${dict.COLUMNAS.MENSAJE}) 
-            VALUES ?
-        `;
-        await pool.query(query, [valores]);
+        await Promise.all(ids_usuarios.map(id => pool.query('CALL sp_notificacion_crear(?, ?, ?)', [id, titulo, mensaje])));
     } catch (error) {
         console.error('Error enviando notificación masiva:', error);
     }
@@ -33,14 +21,8 @@ const enviarNotificacionMasiva = async (ids_usuarios, titulo, mensaje) => {
 // Las notificaciones nunca se borran: se guardan en la base y solo cambian su estado "leida".
 // Se devuelven las 100 más recientes para que la lista no crezca sin límite.
 const obtenerNotificaciones = async (id_usuario) => {
-    const query = `
-        SELECT * FROM ${dict.TABLAS.NOTIFICACIONES}
-        WHERE ${dict.COLUMNAS.ID_USUARIO_DESTINO} = ?
-        ORDER BY ${dict.COLUMNAS.FECHA_CREACION} DESC
-        LIMIT 100
-    `;
-    const [notificaciones] = await pool.query(query, [id_usuario]);
-    return notificaciones;
+    const [notificaciones] = await pool.query('CALL sp_notificaciones_listar(?)', [id_usuario]);
+    return notificaciones[0];
 };
 
 // Marca una notificación como leída. Devuelve false si no existe o no es del usuario.

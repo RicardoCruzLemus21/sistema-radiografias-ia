@@ -1,15 +1,14 @@
 const nodemailer = require('nodemailer');
 const pool = require('../config/database');
-const dict = require('../config/dbDictionary');
 
 const obtenerConfigSmtp = async () => {
-    const [rows] = await pool.query(`SELECT * FROM ${dict.TABLAS.CONFIG_CORREOS} WHERE activo = TRUE LIMIT 1`);
-    return rows[0] || null;
+    const [rows] = await pool.query('CALL sp_config_correo_activa()');
+    return rows[0][0] || null;
 };
 
 const obtenerPlantilla = async (codigoEvento) => {
-    const [rows] = await pool.query(`SELECT * FROM ${dict.TABLAS.PLANTILLAS_CORREOS} WHERE codigo_evento = ?`, [codigoEvento]);
-    return rows[0] || null;
+    const [rows] = await pool.query('CALL sp_plantilla_correo(?)', [codigoEvento]);
+    return rows[0][0] || null;
 };
 
 // Envío genérico: toma la configuración SMTP activa y la plantilla del evento (ambas en BD),

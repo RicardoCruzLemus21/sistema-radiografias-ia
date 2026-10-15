@@ -1,5 +1,4 @@
 const pool = require('../config/database');
-const dict = require('../config/dbDictionary');
 const { ORDEN_NIVELES } = require('../config/distractoresConfig');
 const { obtenerDistractores } = require('../config/distractores');
 
@@ -115,10 +114,8 @@ const eliminarCaso = async (id_caso) => {
 
 // 10. Obtener Info de Patología: elige al azar una de las variantes pre-generadas por IA.
 const generarInfoPatologia = async (patologia) => {
-    const [catalogoRows] = await pool.query(
-        `SELECT ficha_ia_json FROM ${dict.TABLAS.CATALOGO_PATOLOGIAS} WHERE ${dict.COLUMNAS.NOMBRE_PATOLOGIA} = ?`,
-        [patologia]
-    );
+    const [catalogoResultado] = await pool.query('CALL sp_ficha_ia_patologia(?)', [patologia]);
+    const catalogoRows = catalogoResultado[0];
 
     if (catalogoRows.length === 0) {
         throw new Error('Patología no encontrada en el catálogo.');
