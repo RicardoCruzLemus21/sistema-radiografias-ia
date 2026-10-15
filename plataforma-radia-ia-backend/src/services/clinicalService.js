@@ -30,26 +30,6 @@ const verificarCursoDelDocente = async (id_docente, id_curso) => {
     return res[0].some(c => c.id_curso === idCurso);
 };
 
-// 1. Crear el paciente simulado
-const crearPaciente = async (datosPaciente) => {
-    const { codigo_paciente, edad, genero, antecedentes_medicos } = datosPaciente;
-    const [resultado] = await pool.query('CALL sp_crear_paciente_simulado(?, ?, ?, ?)', [codigo_paciente, edad, genero, antecedentes_medicos]);
-    return { id_paciente: resultado[0][0].id_paciente, codigo_paciente };
-};
-
-// 2. Crear el caso clínico asociándolo al curso y al paciente
-const crearCaso = async (datosCaso) => {
-    const { id_curso, id_paciente, titulo_caso, motivo_consulta, nivel_dificultad } = datosCaso;
-    const [resultado] = await pool.query('CALL sp_crear_caso_clinico(?, ?, ?, ?, ?)', [id_curso, id_paciente, titulo_caso, motivo_consulta, nivel_dificultad]);
-    return { id_caso: resultado[0][0].id_caso, titulo_caso };
-};
-
-// 3. Guardar el registro de la radiografía en la BD
-const guardarRadiografia = async (id_caso, tipo_proyeccion, ruta_imagen) => {
-    const [resultado] = await pool.query('CALL sp_guardar_radiografia(?, ?, ?)', [id_caso, tipo_proyeccion, ruta_imagen]);
-    return { id_radiografia: resultado[0][0].id_radiografia, id_caso, tipo_proyeccion, ruta_imagen };
-};
-
 // 5. Obtener todos los casos con información completa para gestión del catedrático
 const obtenerCasosDetallados = async (id_catedratico) => {
     const [casos] = await pool.query('CALL sp_obtener_casos_detallados(?)', [id_catedratico]);
@@ -63,33 +43,11 @@ const obtenerDetalleCaso = async (id_caso) => {
     return casos[0][0];
 };
 
-// 7. Obtener el siguiente código secuencial para Paciente
-const obtenerSiguienteCodigoPaciente = async () => {
-    const [rowsArray] = await pool.query('CALL sp_obtener_codigos_pacientes()');
-    const rows = rowsArray[0];
-
-    let maxNum = 0;
-    for (const row of rows) {
-        const numPart = row.codigo_paciente.replace('PAC-', '');
-        const num = parseInt(numPart, 10);
-        if (!isNaN(num) && num > maxNum) {
-            maxNum = num;
-        }
-    }
-
-    const nextNum = maxNum + 1;
-    return 'PAC-' + nextNum.toString().padStart(3, '0');
-};
-
-
-// 8. Editar Caso y Paciente
+// 8. Editar Caso
 const editarCaso = async (id_caso, datos) => {
     try {
-        const { titulo_caso, motivo_consulta, nivel_dificultad, id_paciente, edad, genero, antecedentes_medicos } = datos;
-        await pool.query('CALL sp_editar_caso_paciente(?, ?, ?, ?, ?, ?, ?, ?)', [
-            id_caso, titulo_caso, motivo_consulta, nivel_dificultad,
-            id_paciente, edad, genero, antecedentes_medicos
-        ]);
+        const { titulo_caso, motivo_consulta, nivel_dificultad } = datos;
+        await pool.query('CALL sp_editar_caso(?, ?, ?, ?)', [id_caso, titulo_caso, motivo_consulta, nivel_dificultad]);
         return true;
     } catch (error) {
         throw error;
@@ -254,8 +212,8 @@ const componerEjercicio = async (criterios) => {
             id_caso: r.id_caso,
             titulo_caso: r.titulo_caso,
             nivel_dificultad: r.nivel_dificultad,
-            edad: r.edad || seededRandomAge(r.id_caso),
-            genero: r.genero || seededRandomGender(r.id_caso),
+            edad: seededRandomAge(r.id_caso),
+            genero: seededRandomGender(r.id_caso),
             ruta_imagen: r.ruta_imagen,
             hallazgos_docente: docInfo?.etiquetas_reales || [],
             tipo_composicion: tipo
@@ -571,12 +529,8 @@ module.exports = {
     obtenerBitacoraEjercicio,
     obtenerRetroalimentacionEstudiante,
     ErrorNegocio,
-    crearPaciente,
-    crearCaso,
-    guardarRadiografia,
     obtenerCasosDetallados,
     obtenerDetalleCaso,
-    obtenerSiguienteCodigoPaciente,
     editarCaso,
     eliminarCaso,
     generarInfoPatologia,

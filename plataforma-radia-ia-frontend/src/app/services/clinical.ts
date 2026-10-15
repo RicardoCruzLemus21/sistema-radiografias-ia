@@ -84,12 +84,6 @@ export class ClinicalService {
     });
   }
 
-  getNextPacienteCode(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/next-paciente`, {
-      headers: this.authService.getAuthHeaders()
-    });
-  }
-
   editarCaso(id: number | string, datos: any): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/caso/${id}`, datos, {
       headers: this.authService.getAuthHeaders()

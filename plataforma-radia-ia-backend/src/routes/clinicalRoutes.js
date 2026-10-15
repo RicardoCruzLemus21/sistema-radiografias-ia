@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const clinicalController = require('../controllers/clinicalController');
 const { verificarToken, verificarRol } = require('../middlewares/authMiddleware');
-const upload = require('../middlewares/uploadMiddleware'); // Importamos Multer
 
 // Aseguramos todo el módulo temporalmente deshabilitado para pruebas
 router.use(verificarToken);
@@ -14,7 +13,6 @@ router.get('/ejercicios-progreso', verificarRol(['catedratico', 'admin']), clini
 router.put('/ejercicios/:id/visibilidad', verificarRol(['catedratico', 'admin']), clinicalController.visibilidadEjercicio);
 router.get('/ejercicios/:id/bitacora', verificarRol(['catedratico', 'admin']), clinicalController.bitacoraEjercicio);
 router.get('/caso/:id', clinicalController.obtenerCasoPorId);
-router.get('/next-paciente', clinicalController.obtenerSiguienteCodigoPaciente);
 router.get('/library/:patologia', clinicalController.obtenerInfoPatologiaIA);
 // Flujo de asignación del banco: solo catedráticos (y solo sobre sus propios cursos, ver el controlador)
 router.get('/banco-casos-ia/disponibilidad', verificarRol(['catedratico']), clinicalController.obtenerDisponibilidadBanco);
@@ -29,11 +27,6 @@ router.get('/caso/:id/retroalimentacion', verificarRol(['estudiante']), clinical
 // Solo estudiantes responden casos, y siempre a su propio nombre (el id sale del token)
 router.post('/respuestas', verificarRol(['estudiante']), clinicalController.registrarRespuesta);
 // =========================================================
-
-// Endpoints POST individuales
-router.post('/paciente', clinicalController.registrarPaciente);
-router.post('/caso', clinicalController.armarCaso);
-router.post('/radiografia', upload.single('imagen'), clinicalController.subirImagenRad);
 
 // Endpoint POST: Asignar casos del Banco NIH a un curso
 router.post('/evaluaciones', verificarRol(['catedratico']), clinicalController.asignarCasosBanco);

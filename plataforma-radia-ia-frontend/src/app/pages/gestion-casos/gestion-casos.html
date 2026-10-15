@@ -168,7 +168,6 @@
 
       <div class="case-card-content">
         <div class="case-meta-top">
-          <span class="patient-code">{{ caso.paciente }}</span>
           <span class="difficulty-pill" [ngClass]="{
             'diff-basico': caso.estado === 'pendiente',
             'diff-avanzado': caso.estado === 'disponible'
@@ -178,11 +177,6 @@
         </div>
 
         <h3 class="case-title">{{ caso.titulo }}</h3>
-        
-        <div class="patient-details">
-          <span><strong>Edad:</strong> {{ caso.edad }} años</span>
-          <span><strong>Género:</strong> {{ caso.genero === 'M' ? 'Masculino' : caso.genero === 'F' ? 'Femenino' : 'Otro' }}</span>
-        </div>
 
         <p class="case-summary">{{ caso.motivo_consulta }}</p>
 
@@ -352,7 +346,6 @@
 
               <div class="banco-info">
                 <h4>{{ caso.titulo_caso }}</h4>
-                <p class="banco-meta"><strong>Paciente:</strong> {{ caso.edad }} años, {{ caso.genero }}</p>
                 <div class="banco-hallazgos">
                   <span class="hallazgo-badge" *ngFor="let h of caso.hallazgos_docente">{{ h }}</span>
                 </div>
@@ -403,7 +396,7 @@
           </div>
           <div>
             <h3>Ficha Clínica: {{ casoSeleccionado?.titulo }}</h3>
-            <p class="text-muted">ID Caso #{{ casoSeleccionado?.id }} &bull; {{ casoSeleccionado?.paciente }}</p>
+            <p class="text-muted">ID Caso #{{ casoSeleccionado?.id }}</p>
           </div>
         </div>
         <button class="btn-close" (click)="cerrarDetalleCaso()">&times;</button>
@@ -423,11 +416,6 @@
 
         <div class="split-right">
           <div class="info-group">
-            <label>Paciente Simulado</label>
-            <p><strong>Código:</strong> {{ casoSeleccionado?.paciente }} &bull; <strong>Edad:</strong> {{ casoSeleccionado?.edad }} años &bull; <strong>Género:</strong> {{ casoSeleccionado?.genero === 'M' ? 'Masculino' : casoSeleccionado?.genero === 'F' ? 'Femenino' : 'Otro' }}</p>
-          </div>
-
-          <div class="info-group">
             <label>Nivel de Dificultad</label>
             <span class="difficulty-pill diff-intermedio">{{ casoSeleccionado?.nivel_dificultad || 'Intermedio' }}</span>
           </div>
@@ -445,11 +433,6 @@
           <div class="info-group">
             <label>Motivo de Consulta y Cuadro Clínico</label>
             <p class="clinical-box">{{ casoSeleccionado?.motivo_consulta }}</p>
-          </div>
-
-          <div class="info-group">
-            <label>Antecedentes Médicos</label>
-            <p class="clinical-box">{{ casoSeleccionado?.antecedentes || 'Sin antecedentes reportados' }}</p>
           </div>
 
           <div class="info-group">
@@ -481,27 +464,6 @@
       </div>
       <div class="modal-body">
         <form class="create-case-form" (ngSubmit)="guardarEdicionCaso()">
-          <div class="form-section">
-            <h4 class="form-section-title">Datos del Paciente</h4>
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label>Edad</label>
-                <input type="number" [(ngModel)]="casoEditando.edad" name="edad" required>
-              </div>
-              <div class="form-group">
-                <label>Género</label>
-                <select [(ngModel)]="casoEditando.genero" name="genero">
-                  <option value="M">Masculino</option>
-                  <option value="F">Femenino</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Antecedentes Médicos</label>
-              <textarea [(ngModel)]="casoEditando.antecedentes" name="antecedentes" rows="2"></textarea>
-            </div>
-          </div>
           <div class="form-section">
             <h4 class="form-section-title">Caso Clínico</h4>
             <div class="form-group">

@@ -2,48 +2,6 @@ const clinicalService = require('../services/clinicalService');
 const auditService = require('../services/auditService');
 const db = require('../config/database'); // <-- Ahora sí coincide con tu database.js
 
-const registrarPaciente = async (req, res) => {
-    try {
-        const paciente = await clinicalService.crearPaciente(req.body);
-        res.status(201).json({ status: 'success', data: paciente });
-    } catch (error) {
-        res.status(400).json({ status: 'error', message: error.message });
-    }
-};
-
-const armarCaso = async (req, res) => {
-    try {
-        const caso = await clinicalService.crearCaso(req.body);
-        res.status(201).json({ status: 'success', data: caso });
-    } catch (error) {
-        res.status(400).json({ status: 'error', message: error.message });
-    }
-};
-
-const subirImagenRad = async (req, res) => {
-    try {
-        // Multer procesa el archivo y lo mete en req.file
-        if (!req.file) {
-            return res.status(400).json({ status: 'error', message: 'No se proporcionó ninguna imagen' });
-        }
-
-        const { id_caso, tipo_proyeccion } = req.body;
-        
-        // Convertimos las diagonales invertidas de Windows a normales para la web
-        const ruta_imagen = req.file.path.replace(/\\/g, '/');
-
-        const radiografia = await clinicalService.guardarRadiografia(id_caso, tipo_proyeccion, ruta_imagen);
-        
-        res.status(201).json({ 
-            status: 'success', 
-            message: 'Radiografía subida y registrada exitosamente',
-            data: radiografia 
-        });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
-    }
-};
-
 // NUEVA FUNCIÓN: Obtener la Worklist para el estudiante usando el Diccionario de Datos
 const obtenerWorklist = async (req, res) => {
     try {
@@ -124,15 +82,6 @@ const registrarRespuesta = async (req, res) => {
     } catch (error) {
         if (!(error instanceof clinicalService.ErrorNegocio)) console.error('Error registrando respuesta:', error);
         res.status(estadoError(error)).json({ status: 'error', message: error.message });
-    }
-};
-
-const obtenerSiguienteCodigoPaciente = async (req, res) => {
-    try {
-        const codigo = await clinicalService.obtenerSiguienteCodigoPaciente();
-        res.status(200).json({ status: 'success', data: codigo });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: error.message });
     }
 };
 
@@ -279,9 +228,6 @@ module.exports = {
     visibilidadEjercicio,
     progresoEjercicios,
     bitacoraEjercicio,
-    registrarPaciente,
-    armarCaso,
-    subirImagenRad,
     obtenerWorklist,
     listarCasosCatedratico,
     obtenerCasoPorId,
@@ -289,7 +235,6 @@ module.exports = {
     guardarTiempoProgreso,
     registrarRespuesta,
     obtenerRetroalimentacion,
-    obtenerSiguienteCodigoPaciente,
     editarCaso,
     eliminarCaso,
     obtenerInfoPatologiaIA,

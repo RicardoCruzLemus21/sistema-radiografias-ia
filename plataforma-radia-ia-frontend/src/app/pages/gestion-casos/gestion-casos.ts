@@ -167,10 +167,6 @@ export class GestionCasosCatedratico implements OnInit {
   guardandoEdicion: boolean = false;
   casoEditando: any = {
     id: null,
-    id_paciente: null,
-    edad: null,
-    genero: '',
-    antecedentes: '',
     titulo_caso: '',
     motivo_consulta: '',
     nivel_dificultad: ''
@@ -269,9 +265,9 @@ export class GestionCasosCatedratico implements OnInit {
     );
     this.paginaCarpetas = 1;
 
-    // Los casos sueltos (sin ejercicio) se buscan por título o paciente
+    // Los casos sueltos (sin ejercicio) se buscan por título
     this.casosSueltos = this.casosSueltos.filter(c =>
-      !q || (c.titulo || '').toLowerCase().includes(q) || (c.paciente || '').toLowerCase().includes(q)
+      !q || (c.titulo || '').toLowerCase().includes(q)
     );
   }
 
@@ -660,10 +656,6 @@ export class GestionCasosCatedratico implements OnInit {
   abrirModalEditar(caso: any): void {
     this.casoEditando = {
       id: caso.id,
-      id_paciente: caso.id_paciente,
-      edad: caso.edad,
-      genero: caso.genero,
-      antecedentes: caso.antecedentes,
       titulo_caso: caso.titulo,
       motivo_consulta: caso.motivo_consulta,
       nivel_dificultad: caso.nivel_dificultad
