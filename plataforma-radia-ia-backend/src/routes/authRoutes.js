@@ -23,7 +23,6 @@ router.get('/roles', authController.listarRoles);
 // ENDPOINTS PRIVADOS (Requieren Token JWT)
 // ==========================================
 router.get('/usuarios', verificarToken, authController.listarUsuarios);
-router.get('/auditoria', verificarToken, authController.listarAuditoria);
 router.post('/cambiar-clave-inicial', verificarToken, authController.cambiarClaveInicial);
 router.post('/logout', verificarToken, authController.logout);
 

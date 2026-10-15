@@ -77,15 +77,6 @@ const listarUsuarios = async (req, res) => {
     }
 };
 
-const listarAuditoria = async (req, res) => {
-    try {
-        const auditoria = await authService.obtenerAuditoria();
-        res.status(200).json({ status: 'success', data: auditoria });
-    } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Error al obtener auditoría' });
-    }
-};
-
 const cambiarClaveInicial = async (req, res) => {
     try {
         const id_usuario = req.usuario.id_usuario;
@@ -146,6 +137,5 @@ module.exports = {
     logout,
     listarRoles,
     listarUsuarios,
-    listarAuditoria,
     cambiarClaveInicial
 };

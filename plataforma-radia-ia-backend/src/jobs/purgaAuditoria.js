@@ -9,9 +9,9 @@ const VEINTICUATRO_HORAS_MS = 24 * 60 * 60 * 1000;
 
 const ejecutarPurga = async () => {
     try {
-        const { acciones_eliminadas, accesos_eliminados } = await auditService.purgarAntiguos();
-        if (acciones_eliminadas > 0 || accesos_eliminados > 0) {
-            console.log(`🧹 Limpieza de auditoría: ${acciones_eliminadas} acciones y ${accesos_eliminados} accesos de más de 30 días eliminados.`);
+        const { acciones_eliminadas } = await auditService.purgarAntiguos();
+        if (acciones_eliminadas > 0) {
+            console.log(`🧹 Limpieza de auditoría: ${acciones_eliminadas} acciones de más de 30 días eliminadas.`);
         }
     } catch (error) {
         console.error('Error al purgar auditoría antigua:', error.message);

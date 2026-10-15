@@ -266,10 +266,8 @@ const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) =>
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
 
-    // 5. Registrar la actividad en la tabla Auditoria_Accesos
+    // 5. Registrar el inicio de sesión en la auditoría de actividad (la IP queda en el mensaje)
     const direccion_ip_segura = ip_address || 'Desconocida';
-    await pool.query('CALL sp_registrar_auditoria_acceso(?, ?)', [usuario.id_usuario, direccion_ip_segura]);
-    // También queda en la auditoría de actividad para que se vea en Seguridad y Logs
     await require('./auditService').registrarAccion(usuario.id_usuario, 'INICIO_SESION', `${usuario.nombre_completo} inició sesión desde ${direccion_ip_segura}`);
 
     return {
@@ -303,11 +301,6 @@ const obtenerUsuarios = async () => {
     return usuarios[0];
 };
 
-const obtenerAuditoria = async () => {
-    const [auditoria] = await pool.query('CALL sp_obtener_auditoria_accesos()');
-    return auditoria[0];
-};
-
 module.exports = {
     registrarUsuario,
     registrarDocente,
@@ -316,6 +309,5 @@ module.exports = {
     loginUsuario,
     cambiarClaveInicial,
     obtenerRoles,
-    obtenerUsuarios,
-    obtenerAuditoria
+    obtenerUsuarios
 };
