@@ -21,7 +21,7 @@ const editarUsuario = async (req, res) => {
 
         res.status(200).json({ status: 'success', message: 'Usuario actualizado correctamente.' });
     } catch (error) {
-        res.status(500).json({ status: 'error', message: 'Error al actualizar usuario.' });
+        res.status(400).json({ status: 'error', message: error.message || 'Error al actualizar usuario.' });
     }
 };
 

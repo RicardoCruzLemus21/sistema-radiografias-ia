@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { verificarToken } = require('../middlewares/authMiddleware');
+const { verificarToken, verificarRol } = require('../middlewares/authMiddleware');
 const { crearLimitador } = require('../middlewares/rateLimiter');
 
 // Freno a la fuerza bruta en los endpoints públicos de registro y de consulta de códigos
@@ -11,7 +11,6 @@ const limitarConsultaCodigo = crearLimitador({ ventanaMs: 60_000, maximo: 20, me
 // ==========================================
 // ENDPOINTS PÚBLICOS (No requieren sesión)
 // ==========================================
-router.post('/registrar', authController.registrar);
 router.post('/registrar-docente', limitarRegistro, authController.registrarDocente);
 router.post('/registrar-estudiante', limitarRegistro, authController.registrarEstudiante);
 router.get('/docente-por-codigo/:codigo', limitarConsultaCodigo, authController.consultarDocentePorCodigo);
@@ -22,6 +21,9 @@ router.get('/roles', authController.listarRoles);
 // ==========================================
 // ENDPOINTS PRIVADOS (Requieren Token JWT)
 // ==========================================
+// Crea un usuario con un rol a elección: solo catedratico (y siempre como estudiante,
+// ver authController) o admin (cualquier rol) pueden usarlo.
+router.post('/registrar', verificarToken, verificarRol(['catedratico', 'admin']), authController.registrar);
 router.get('/usuarios', verificarToken, authController.listarUsuarios);
 router.post('/cambiar-clave-inicial', verificarToken, authController.cambiarClaveInicial);
 router.post('/logout', verificarToken, authController.logout);

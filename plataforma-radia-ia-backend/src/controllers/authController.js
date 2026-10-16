@@ -1,25 +1,21 @@
 const authService = require('../services/authService');
 const auditService = require('../services/auditService');
 const academicService = require('../services/academicService');
-const jwt = require('jsonwebtoken');
 
 const registrar = async (req, res) => {
     try {
-        const nuevoUsuario = await authService.registrarUsuario(req.body);
-
-        // Intentar extraer el ID del administrador que está creando al usuario
-        let id_admin = 1; // ID de sistema por defecto
-        const authHeader = req.headers.authorization;
-        if (authHeader && authHeader.startsWith('Bearer ')) {
-            const token = authHeader.split(' ')[1];
-            try {
-                const decoded = jwt.verify(token, process.env.JWT_SECRET);
-                id_admin = decoded.id_usuario;
-            } catch (err) {}
+        // Un catedratico solo puede crear estudiantes (2); solo un admin (3) puede crear
+        // cuentas de docente o de otro administrador. req.usuario ya viene verificado por
+        // verificarToken, así que el rol del solicitante es de fiar.
+        const ROL_ESTUDIANTE = 2, ROL_ADMIN = 3;
+        const esAdmin = Number(req.usuario.id_rol) === ROL_ADMIN;
+        if (!esAdmin && Number(req.body?.id_rol) !== ROL_ESTUDIANTE) {
+            return res.status(403).json({ status: 'error', message: 'Solo un administrador puede crear cuentas de docente o administrador.' });
         }
 
-        // Registrar en auditoría
-        await auditService.registrarAccion(id_admin, 'CREAR_USUARIO', `Se creó el usuario ID: ${nuevoUsuario.id_usuario} del sistema`);
+        const nuevoUsuario = await authService.registrarUsuario(req.body);
+
+        await auditService.registrarAccion(req.usuario.id_usuario, 'CREAR_USUARIO', `Se creó el usuario ID: ${nuevoUsuario.id_usuario} del sistema`);
 
         res.status(201).json({
             status: 'success',
