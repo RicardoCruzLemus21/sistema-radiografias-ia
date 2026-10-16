@@ -986,6 +986,10 @@
 .btn-visibilidad { margin-top: 6px; align-self: flex-start; padding: 4px 12px; border-radius: 8px; cursor: pointer; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px; font-weight: 700; }
 .btn-visibilidad:hover { color: var(--text-main); border-color: var(--accent-cyan); }
 
+/* --- Eliminar ejercicio por completo --- */
+.btn-eliminar-ejercicio { margin-top: 6px; padding: 4px 12px; border-radius: 8px; cursor: pointer; background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); color: #ff4444; font-size: 12px; font-weight: 700; }
+.btn-eliminar-ejercicio:hover { background: rgba(255,68,68,0.18); border-color: #ff4444; }
+
 /* --- Rediseño de la tarjeta de ejercicio (estado arriba, avance al centro, acción abajo) --- */
 .carpeta-card { display: flex; flex-direction: column; align-items: stretch; gap: 14px; padding: 18px 18px 16px; border-radius: 14px; }
 .carpeta-cabeza { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -997,7 +1001,7 @@
 .barra-relleno { height: 100%; border-radius: 999px; background: var(--accent-cyan); transition: width 0.3s ease; }
 .barra-relleno.completo { background: #10b981; }
 .carpeta-meta { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
-.carpeta-pie { display: flex; justify-content: flex-end; padding-top: 10px; border-top: 1px solid var(--border-color); }
+.carpeta-pie { display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid var(--border-color); }
 
 .paginacion { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color); }
 .paginacion-info { font-size: 13px; color: var(--text-muted); }

@@ -317,6 +317,31 @@ export class GestionCasosCatedratico implements OnInit {
     });
   }
 
+  // Elimina el ejercicio completo (todos sus casos y evaluaciones de estudiantes)
+  async eliminarEjercicio(carpeta: any, evento: Event): Promise<void> {
+    evento.stopPropagation(); // que no abra el ejercicio al pulsar el botón
+
+    const confirmado = await this.alertService.confirmDanger(
+      'Eliminar ejercicio',
+      `¿Estás seguro de que deseas eliminar permanentemente "${carpeta.nombre}"? Se borrarán los ${carpeta.casos.length} ${carpeta.casos.length === 1 ? 'caso' : 'casos'} que contiene junto con las evaluaciones de los estudiantes que ya lo resolvieron. Esta acción no se puede deshacer.`,
+      'Sí, Eliminar'
+    );
+
+    if (!confirmado) return;
+
+    this.clinicalService.eliminarEjercicio(carpeta.id_ejercicio).subscribe({
+      next: () => {
+        this.alertService.success('Ejercicio eliminado', 'El ejercicio se eliminó correctamente.');
+        if (this.ejercicioAbierto?.id_ejercicio === carpeta.id_ejercicio) this.ejercicioAbierto = null;
+        this.cargarCasos();
+      },
+      error: (err) => {
+        console.error('Error al eliminar ejercicio:', err);
+        this.alertService.error('Error al eliminar', err.error?.message || 'No se pudo eliminar el ejercicio.');
+      }
+    });
+  }
+
   cargarProgreso(): void {
     this.clinicalService.getProgresoEjercicios().subscribe({
       next: (resp: any) => {

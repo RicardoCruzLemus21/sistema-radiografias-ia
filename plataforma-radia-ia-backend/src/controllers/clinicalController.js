@@ -224,8 +224,24 @@ const visibilidadEjercicio = async (req, res) => {
     }
 };
 
+const eliminarEjercicio = async (req, res) => {
+    try {
+        const id_ejercicio = Number(req.params.id);
+        if (!Number.isInteger(id_ejercicio) || id_ejercicio <= 0) {
+            return res.status(400).json({ status: 'error', message: 'Ejercicio no válido.' });
+        }
+        const ok = await clinicalService.eliminarEjercicio(id_ejercicio, req.usuario.id_usuario);
+        if (!ok) return res.status(404).json({ status: 'error', message: 'El ejercicio no existe en tus cursos.' });
+        auditService.registrarAccion(req.usuario.id_usuario, 'ELIMINAR_EJERCICIO', `Se eliminó el ejercicio ID: ${id_ejercicio}`);
+        res.status(200).json({ status: 'success', message: 'Ejercicio eliminado correctamente.' });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'No se pudo eliminar el ejercicio.' });
+    }
+};
+
 module.exports = {
     visibilidadEjercicio,
+    eliminarEjercicio,
     progresoEjercicios,
     bitacoraEjercicio,
     obtenerWorklist,

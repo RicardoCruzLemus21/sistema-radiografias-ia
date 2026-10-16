@@ -43,6 +43,13 @@ export class ClinicalService {
     });
   }
 
+  // Elimina un ejercicio completo (todos sus casos y evaluaciones asociadas)
+  eliminarEjercicio(idEjercicio: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/ejercicios/${idEjercicio}`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
   // Alumnos de un ejercicio con su avance (bitácora)
   getBitacoraEjercicio(idEjercicio: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/ejercicios/${idEjercicio}/bitacora`, {

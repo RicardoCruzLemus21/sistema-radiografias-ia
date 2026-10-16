@@ -100,6 +100,7 @@
         </div>
 
         <div class="carpeta-pie">
+          <button type="button" class="btn-eliminar-ejercicio" (click)="eliminarEjercicio(f, $event)">Eliminar</button>
           <button type="button" class="btn-visibilidad" (click)="toggleVisibilidad(f, $event)">{{ f.oculto ? 'Mostrar en el panel' : 'Ocultar' }}</button>
         </div>
       </div>

@@ -523,8 +523,28 @@ const cambiarVisibilidadEjercicio = async (id_ejercicio, id_catedratico, oculto)
     return res[0][0].filas > 0;
 };
 
+// Elimina un ejercicio completo (todos sus casos y lo que dependa de ellos: evaluaciones,
+// hallazgos, radiografias, comentarios, etc). Devuelve false si no existe o no es del docente.
+const eliminarEjercicio = async (id_ejercicio, id_catedratico) => {
+    const [info] = await pool.query(
+        `SELECT e.id_curso, e.nombre FROM ejercicios e
+         JOIN cursos_secciones c ON c.id_curso = e.id_curso
+         WHERE e.id_ejercicio = ? AND c.id_catedratico = ?`,
+        [id_ejercicio, id_catedratico]
+    );
+    if (info.length === 0) return false;
+
+    const [res] = await pool.query('CALL sp_eliminar_ejercicio(?, ?)', [id_ejercicio, id_catedratico]);
+    const ok = res[0][0].filas > 0;
+    if (ok) {
+        require('./notificationService').notificarEjercicioEliminado(info[0].id_curso, info[0].nombre);
+    }
+    return ok;
+};
+
 module.exports = {
     cambiarVisibilidadEjercicio,
+    eliminarEjercicio,
     obtenerProgresoEjercicios,
     obtenerBitacoraEjercicio,
     obtenerRetroalimentacionEstudiante,

@@ -11,6 +11,7 @@ router.get('/casos-clinicos', clinicalController.obtenerWorklist);
 router.get('/casos-admin', clinicalController.listarCasosCatedratico);
 router.get('/ejercicios-progreso', verificarRol(['catedratico', 'admin']), clinicalController.progresoEjercicios);
 router.put('/ejercicios/:id/visibilidad', verificarRol(['catedratico', 'admin']), clinicalController.visibilidadEjercicio);
+router.delete('/ejercicios/:id', verificarRol(['catedratico', 'admin']), clinicalController.eliminarEjercicio);
 router.get('/ejercicios/:id/bitacora', verificarRol(['catedratico', 'admin']), clinicalController.bitacoraEjercicio);
 router.get('/caso/:id', clinicalController.obtenerCasoPorId);
 router.get('/library/:patologia', clinicalController.obtenerInfoPatologiaIA);
