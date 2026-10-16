@@ -226,7 +226,7 @@ const registrarEstudiante = async (datos) => {
     }
 };
 
-const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) => {
+const loginUsuario = async (correo_electronico, contrasena_plana) => {
     if (!correo_electronico || !contrasena_plana) {
         throw new Error('Correo y contraseña son requeridos.');
     }
@@ -266,9 +266,8 @@ const loginUsuario = async (correo_electronico, contrasena_plana, ip_address) =>
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
 
-    // 5. Registrar el inicio de sesión en la auditoría de actividad (la IP queda en el mensaje)
-    const direccion_ip_segura = ip_address || 'Desconocida';
-    await require('./auditService').registrarAccion(usuario.id_usuario, 'INICIO_SESION', `${usuario.nombre_completo} inició sesión desde ${direccion_ip_segura}`);
+    // 5. Registrar el inicio de sesión en la auditoría de actividad
+    await require('./auditService').registrarAccion(usuario.id_usuario, 'INICIO_SESION', `${usuario.nombre_completo} inició sesión`);
 
     return {
         token,

@@ -5,8 +5,8 @@ require('dotenv').config({ override: true });
 const app = express();
 
 // Railway pone un proxy de borde delante de la app: sin esto, req.ip devuelve la IP interna
-// del proxy (rango 100.64.0.0/10) en vez de la IP real del cliente. Afecta tanto al log de
-// inicio de sesion como al limitador de fuerza bruta de registro, que identifica por req.ip.
+// del proxy (rango 100.64.0.0/10) en vez de la IP real del cliente. Afecta al limitador
+// de fuerza bruta de registro, que identifica por req.ip.
 app.set('trust proxy', 1);
 
 app.use(cors());

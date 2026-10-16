@@ -35,10 +35,8 @@ const registrar = async (req, res) => {
 const login = async (req, res) => {
     try {
         const { correo_electronico, contrasena } = req.body;
-        // Se captura la IP para la tabla de Auditoria_Accesos
-        const ip_address = req.ip || req.connection.remoteAddress || '127.0.0.1'; 
-        
-        const acceso = await authService.loginUsuario(correo_electronico, contrasena, ip_address);
+
+        const acceso = await authService.loginUsuario(correo_electronico, contrasena);
         
         res.status(200).json({
             status: 'success',
