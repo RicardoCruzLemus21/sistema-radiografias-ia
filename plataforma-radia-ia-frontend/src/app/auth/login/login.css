@@ -102,6 +102,10 @@
 .input-icon { position: absolute; left: 15px; color: var(--text-muted); pointer-events: none; transition: color 0.3s ease; }
 .input-wrapper input:focus ~ .input-icon { color: var(--accent-cyan); }
 
+.toggle-contrasena { position: absolute; right: 12px; display: flex; align-items: center; justify-content: center; padding: 4px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; transition: color 0.3s ease; }
+.toggle-contrasena:hover { color: var(--accent-cyan); }
+.input-wrapper:has(.toggle-contrasena) input { padding-right: 42px; }
+
 .login-btn {
   display: flex;
   align-items: center;

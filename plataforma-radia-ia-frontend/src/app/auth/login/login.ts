@@ -20,6 +20,7 @@ import {
 export class LoginComponent implements OnInit {
   correo: string = '';
   contrasena: string = '';
+  mostrarContrasena: boolean = false;
   errorMensaje: string = '';
   cargando: boolean = false;
 
@@ -76,6 +77,10 @@ export class LoginComponent implements OnInit {
 
   limpiarError() {
     this.errorMensaje = '';
+  }
+
+  toggleMostrarContrasena() {
+    this.mostrarContrasena = !this.mostrarContrasena;
   }
 
   tocar(campo: string) {
