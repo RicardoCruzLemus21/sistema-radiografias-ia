@@ -72,7 +72,7 @@
             </td>
             <td class="text-center">
               <button class="btn-cancel" style="padding: 6px 12px; font-size: 12px;" (click)="abrirModalEditarAlumno(alumno)">Editar</button>
-              <button class="btn-cancel" style="padding: 6px 12px; font-size: 12px; background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); margin-left: 6px;" (click)="abrirModalEliminarAlumno(alumno)">Eliminar</button>
+              <button class="btn-cancel" style="padding: 6px 12px; font-size: 12px; background: rgba(255,68,68,0.1); color: #ff4444; border: 1px solid rgba(255,68,68,0.3); margin-left: 6px;" [disabled]="eliminandoAlumno" (click)="eliminarAlumno(alumno)">Desasignar</button>
             </td>
           </tr>
           <tr *ngIf="alumnosFiltrados.length === 0 && !errorCarga">
@@ -178,26 +178,6 @@
         <button class="btn-cancel" (click)="cerrarModalEditarAlumno()">Cancelar</button>
         <button class="btn-primary" (click)="guardarEdicionAlumno()" [disabled]="guardandoEdicionAlumno">
           {{ guardandoEdicionAlumno ? 'Guardando...' : 'Guardar Cambios' }}
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: ELIMINAR ALUMNO -->
-  <div class="modal-backdrop" *ngIf="modalEliminarAlumnoAbierto" (click)="cerrarModalEliminarAlumno()">
-    <div class="modal-card glass-panel" style="max-width: 420px;" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3 style="color: #ff4444;">Eliminar Estudiante</h3>
-        <button class="btn-close" (click)="cerrarModalEliminarAlumno()">×</button>
-      </div>
-      <div class="modal-body">
-        <p>¿Deseas eliminar a <strong>{{ alumnoAEliminar?.nombre }}</strong> de tus secciones?</p>
-        <p class="text-muted" style="margin-top: 10px;">El estudiante se desvinculará de tus cursos. Sus evaluaciones ya registradas no se borran.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="cerrarModalEliminarAlumno()">Cancelar</button>
-        <button class="btn-primary" style="background: #ff4444;" (click)="confirmarEliminarAlumno()" [disabled]="eliminandoAlumno">
-          {{ eliminandoAlumno ? 'Eliminando...' : 'Sí, eliminar' }}
         </button>
       </div>
     </div>

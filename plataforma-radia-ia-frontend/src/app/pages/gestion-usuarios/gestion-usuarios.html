@@ -56,7 +56,7 @@
               </td>
               <td class="actions-cell">
                 <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
-                <button class="btn-delete" (click)="abrirModalEliminar(u)" [disabled]="u.id_rol === 3 && adminUsuarios.length <= 1">Eliminar</button>
+                <button class="btn-delete" (click)="eliminarUsuario(u)" [disabled]="u.id_rol === 3 && adminUsuarios.length <= 1">Eliminar</button>
               </td>
             </tr>
             <tr *ngIf="resultadosBusquedaPlana.length === 0">
@@ -100,7 +100,7 @@
                 </td>
                 <td class="actions-cell">
                   <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
-                  <button class="btn-delete" (click)="abrirModalEliminar(u)" [disabled]="adminUsuarios.length <= 1">Eliminar</button>
+                  <button class="btn-delete" (click)="eliminarUsuario(u)" [disabled]="adminUsuarios.length <= 1">Eliminar</button>
                 </td>
               </tr>
               <tr *ngIf="adminUsuarios.length === 0">
@@ -140,7 +140,7 @@
                 </td>
                 <td class="actions-cell">
                   <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
-                  <button class="btn-delete" (click)="abrirModalEliminar(u)">Eliminar</button>
+                  <button class="btn-delete" (click)="eliminarUsuario(u)">Eliminar</button>
                 </td>
               </tr>
               <tr *ngIf="catedraticosUsuarios.length === 0">
@@ -190,7 +190,7 @@
                 <td><span class="course-badge">{{ u.nombre_curso }}</span></td>
                 <td class="actions-cell">
                   <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
-                  <button class="btn-delete" (click)="abrirModalEliminar(u)">Eliminar</button>
+                  <button class="btn-delete" (click)="eliminarUsuario(u)">Eliminar</button>
                 </td>
               </tr>
             </tbody>
@@ -226,7 +226,7 @@
                 </td>
                 <td class="actions-cell">
                   <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
-                  <button class="btn-delete" (click)="abrirModalEliminar(u)">Eliminar</button>
+                  <button class="btn-delete" (click)="eliminarUsuario(u)">Eliminar</button>
                 </td>
               </tr>
             </tbody>
@@ -280,23 +280,6 @@
     </div>
   </div>
 
-  <!-- MODAL: ELIMINAR USUARIO -->
-  <div class="modal-backdrop" *ngIf="modalEliminarAbierto" (click)="cerrarModalEliminar()">
-    <div class="modal-card modal-sm glass-panel" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>Eliminar Cuenta</h3>
-      </div>
-      <div class="modal-body">
-        <p>¿Estás seguro que deseas eliminar el acceso a <strong>{{ usuarioAEliminar?.nombre }}</strong>?</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="cerrarModalEliminar()">Cancelar</button>
-        <button class="btn-delete" (click)="confirmarEliminar()" [disabled]="eliminandoUsuario">
-          {{ eliminandoUsuario ? 'Eliminando...' : 'Sí, Eliminar' }}
-        </button>
-      </div>
-    </div>
-  </div>
 
   <!-- MODAL: REGISTRAR NUEVO USUARIO -->
   <div class="modal-backdrop" *ngIf="modalRegistroAbierto" (click)="cerrarModalRegistro()">

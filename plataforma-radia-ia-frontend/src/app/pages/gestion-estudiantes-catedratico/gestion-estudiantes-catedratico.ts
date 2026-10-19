@@ -42,9 +42,7 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
   guardandoEdicionAlumno: boolean = false;
   alumnoEditando: any = { id_usuario: null, nombre_completo: '', correo_electronico: '' };
 
-  modalEliminarAlumnoAbierto: boolean = false;
   eliminandoAlumno: boolean = false;
-  alumnoAEliminar: any = null;
 
   constructor(
     private academicService: AcademicService,
@@ -138,30 +136,24 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
     });
   }
 
-  abrirModalEliminarAlumno(alumno: any): void {
-    this.alumnoAEliminar = alumno;
-    this.modalEliminarAlumnoAbierto = true;
-  }
+  async eliminarAlumno(alumno: any): Promise<void> {
+    const confirmado = await this.alertService.confirmDanger(
+      'Desasignar estudiante',
+      `¿Deseas desasignar a ${alumno.nombre} de tus secciones? El estudiante se desvinculará de tus cursos. Sus evaluaciones ya registradas no se borran.`,
+      'Sí, desasignar'
+    );
+    if (!confirmado) return;
 
-  cerrarModalEliminarAlumno(): void {
-    this.modalEliminarAlumnoAbierto = false;
-    this.alumnoAEliminar = null;
-  }
-
-  confirmarEliminarAlumno(): void {
-    if (!this.alumnoAEliminar) return;
     this.eliminandoAlumno = true;
-    this.academicService.eliminarEstudiante(this.alumnoAEliminar.id_usuario).subscribe({
+    this.academicService.eliminarEstudiante(alumno.id_usuario).subscribe({
       next: () => {
         this.eliminandoAlumno = false;
-        this.cerrarModalEliminarAlumno();
-        this.alertService.success('Estudiante eliminado', 'El estudiante fue desvinculado de tu sección.');
+        this.alertService.success('Estudiante desasignado', 'El estudiante fue desvinculado de tu sección.');
         this.cargarDatos();
       },
       error: (err) => {
         this.eliminandoAlumno = false;
-        this.cerrarModalEliminarAlumno();
-        this.alertService.error('Error al eliminar', err.error?.message || 'No se pudo eliminar al estudiante.');
+        this.alertService.error('Error al desasignar', err.error?.message || 'No se pudo desasignar al estudiante.');
       }
     });
   }

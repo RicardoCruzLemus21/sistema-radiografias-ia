@@ -42,8 +42,6 @@ export class GestionUsuariosComponent implements OnInit {
   usuarioEditando: any = { id: null, carnet: '', nombre_completo: '', email: '', password: '', id_rol: 2 };
   guardandoEdicion: boolean = false;
 
-  modalEliminarAbierto: boolean = false;
-  usuarioAEliminar: any = null;
   eliminandoUsuario: boolean = false;
 
   // Registro de nuevo usuario
@@ -220,27 +218,23 @@ export class GestionUsuariosComponent implements OnInit {
     });
   }
 
-  abrirModalEliminar(usuario: any): void {
-    this.usuarioAEliminar = usuario;
-    this.modalEliminarAbierto = true;
-  }
+  async eliminarUsuario(usuario: any): Promise<void> {
+    const confirmado = await this.alertService.confirmDanger(
+      'Eliminar Cuenta',
+      `¿Estás seguro que deseas eliminar el acceso a ${usuario.nombre}?`,
+      'Sí, Eliminar'
+    );
+    if (!confirmado) return;
 
-  cerrarModalEliminar(): void {
-    this.modalEliminarAbierto = false;
-    this.usuarioAEliminar = null;
-  }
-
-  confirmarEliminar(): void {
     this.eliminandoUsuario = true;
-    this.userService.eliminarUsuario(this.usuarioAEliminar.id).subscribe({
+    this.userService.eliminarUsuario(usuario.id).subscribe({
       next: () => {
         this.eliminandoUsuario = false;
-        this.cerrarModalEliminar();
+        this.alertService.success('Usuario eliminado', 'La cuenta se eliminó correctamente.');
         this.cargarUsuarios();
       },
       error: (err) => {
         this.eliminandoUsuario = false;
-        this.cerrarModalEliminar();
         this.alertService.error("Error al eliminar", err.error?.message || 'Error al eliminar usuario. Puede que tenga evaluaciones o cursos asociados.');
       }
     });
