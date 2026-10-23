@@ -225,6 +225,7 @@
                   <span class="role-badge badge-student">{{ u.rol | uppercase }}</span>
                 </td>
                 <td class="actions-cell">
+                  <button class="btn-edit" (click)="asignarEstudianteACurso(u)">Asignar</button>
                   <button class="btn-edit" (click)="abrirModalEditar(u)">Editar</button>
                   <button class="btn-delete" (click)="eliminarUsuario(u)">Eliminar</button>
                 </td>

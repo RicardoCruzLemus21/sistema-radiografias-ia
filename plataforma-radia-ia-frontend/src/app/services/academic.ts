@@ -74,9 +74,25 @@ export class AcademicService {
     });
   }
 
-  // Asigna un estudiante a un curso
-  asignarEstudiante(id_curso: number, id_estudiante: number, contrasena_temporal?: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/asignar`, { id_curso, id_estudiante, contrasena_temporal }, {
+  // Catálogo de cursos con su catedrático (solo admin), para reasignar a un estudiante sin curso
+  getCatalogoCursosAdmin(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/admin/cursos`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  // Busca un estudiante existente por carnet o correo, para que el catedrático lo reasigne a su curso
+  buscarEstudianteSinAsignar(busqueda: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/buscar-estudiante-sin-asignar`, {
+      headers: this.authService.getAuthHeaders(),
+      params: { q: busqueda }
+    });
+  }
+
+  // Asigna un estudiante a un curso. omitir_correo evita el correo de "bienvenida con clave
+  // temporal" cuando es una reasignación de un estudiante que ya tenía cuenta propia.
+  asignarEstudiante(id_curso: number, id_estudiante: number, contrasena_temporal?: string, omitir_correo: boolean = false): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/asignar`, { id_curso, id_estudiante, contrasena_temporal, omitir_correo }, {
       headers: this.authService.getAuthHeaders()
     });
   }

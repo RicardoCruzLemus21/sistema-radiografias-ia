@@ -136,6 +136,49 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
     });
   }
 
+  // Vuelve a vincular a tu curso un estudiante que ya tenía cuenta (p. ej. lo habías desasignado
+  // por error) sin crear una cuenta nueva. Se busca puntualmente por carnet o correo, no se
+  // expone la lista completa de estudiantes sin asignar de la plataforma.
+  async agregarEstudianteExistente(): Promise<void> {
+    if (!this.cursoActual) {
+      this.alertService.warning('Sin curso asignado', 'No se pudo determinar tu curso actual.');
+      return;
+    }
+
+    const busqueda = await this.alertService.prompt(
+      'Agregar estudiante existente',
+      'Escribe el carnet o el correo del estudiante que quieres volver a agregar a tu curso.',
+      'Ej. 1234-56-7890 o correo@ejemplo.com',
+      'Buscar'
+    );
+    if (!busqueda) return;
+
+    this.academicService.buscarEstudianteSinAsignar(busqueda).subscribe({
+      next: async (resp: any) => {
+        const estudiante = resp.data;
+        const confirmado = await this.alertService.confirm(
+          '¿Es este el estudiante?',
+          `${estudiante.nombre_completo} — ${estudiante.correo_electronico}`,
+          'Sí, agregar'
+        );
+        if (!confirmado) return;
+
+        this.academicService.asignarEstudiante(this.cursoActual.id_curso, estudiante.id_usuario, undefined, true).subscribe({
+          next: () => {
+            this.alertService.success('Estudiante agregado', `${estudiante.nombre_completo} fue agregado a tu curso.`);
+            this.cargarDatos();
+          },
+          error: (err) => {
+            this.alertService.error('Error al agregar', err.error?.message || 'No se pudo agregar al estudiante.');
+          }
+        });
+      },
+      error: (err) => {
+        this.alertService.error('No encontrado', err.error?.message || 'No se encontró ningún estudiante con ese carnet o correo.');
+      }
+    });
+  }
+
   async eliminarAlumno(alumno: any): Promise<void> {
     const confirmado = await this.alertService.confirmDanger(
       'Desasignar estudiante',

@@ -75,6 +75,45 @@ export class AlertService {
     }).then(result => result.isConfirmed);
   }
 
+  // Pide un texto corto (p. ej. un carnet o correo) antes de continuar un flujo.
+  prompt(title: string, text: string = '', placeholder: string = '', confirmText: string = 'Continuar'): Promise<string | null> {
+    return Swal.fire({
+      title,
+      text,
+      input: 'text',
+      inputPlaceholder: placeholder,
+      showCancelButton: true,
+      background: this.getBackground(),
+      color: this.getColor(),
+      confirmButtonColor: '#0ea5e9',
+      cancelButtonColor: '#a1a1aa',
+      confirmButtonText: confirmText,
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => (!value || !value.trim()) ? 'Escribe un valor para continuar' : undefined
+    }).then(result => result.isConfirmed ? (result.value as string).trim() : null);
+  }
+
+  // Selector de una opción entre varias (p. ej. elegir un curso) manteniendo el formato de SweetAlert.
+  seleccionar(title: string, text: string, opciones: { value: string; label: string }[], confirmText: string = 'Confirmar'): Promise<string | null> {
+    const inputOptions: Record<string, string> = {};
+    opciones.forEach(o => inputOptions[o.value] = o.label);
+    return Swal.fire({
+      title,
+      text,
+      input: 'select',
+      inputOptions,
+      inputPlaceholder: 'Selecciona una opción',
+      showCancelButton: true,
+      background: this.getBackground(),
+      color: this.getColor(),
+      confirmButtonColor: '#0ea5e9',
+      cancelButtonColor: '#a1a1aa',
+      confirmButtonText: confirmText,
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => !value ? 'Debes seleccionar una opción' : undefined
+    }).then(result => result.isConfirmed ? (result.value as string) : null);
+  }
+
   confirmDanger(title: string, text: string = '', confirmText: string = 'Eliminar'): Promise<boolean> {
     return Swal.fire({
       title,

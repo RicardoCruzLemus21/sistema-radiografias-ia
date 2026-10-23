@@ -62,6 +62,7 @@ export class GestionUsuariosComponent implements OnInit {
 
   cursosDisponibles: any[] = [];
   catalogoCursos: any[] = [];
+  catalogoCursosAdmin: any[] = []; // con id_curso + catedratico, para reasignar estudiantes sin curso
   readonly valorCursoNuevo = '__nuevo__';
   nombreCursoNuevo: string = '';
 
@@ -77,6 +78,7 @@ export class GestionUsuariosComponent implements OnInit {
     this.cargarRoles();
     this.cargarUsuarios();
     this.cargarCatalogoCursos();
+    this.cargarCatalogoCursosAdmin();
   }
 
   cargarRoles(): void {
@@ -115,6 +117,43 @@ export class GestionUsuariosComponent implements OnInit {
       error: (err) => {
         console.error('Error al cargar catálogo de cursos:', err);
         this.alertService.toast('No se pudo cargar el catálogo de cursos.', 'warning');
+      }
+    });
+  }
+
+  cargarCatalogoCursosAdmin(): void {
+    this.academicService.getCatalogoCursosAdmin().subscribe({
+      next: (res) => { this.catalogoCursosAdmin = res.data || []; },
+      error: (err) => console.error('Error al cargar el catálogo de cursos (admin):', err)
+    });
+  }
+
+  async asignarEstudianteACurso(usuario: any): Promise<void> {
+    if (this.catalogoCursosAdmin.length === 0) {
+      this.alertService.warning('Sin cursos disponibles', 'Todavía no hay cursos creados para asignar.');
+      return;
+    }
+
+    const opciones = this.catalogoCursosAdmin.map(c => ({
+      value: String(c.id_curso),
+      label: `${c.nombre_curso} — ${c.nombre_catedratico} (${c.semestre} ${c.anio})`
+    }));
+
+    const idCursoElegido = await this.alertService.seleccionar(
+      'Asignar a un curso',
+      `Elige el curso donde quieres matricular a ${usuario.nombre}.`,
+      opciones,
+      'Asignar'
+    );
+    if (!idCursoElegido) return;
+
+    this.academicService.asignarEstudiante(Number(idCursoElegido), usuario.id, undefined, true).subscribe({
+      next: () => {
+        this.alertService.success('Estudiante asignado', `${usuario.nombre} fue matriculado correctamente.`);
+        this.cargarUsuarios();
+      },
+      error: (err) => {
+        this.alertService.error('Error al asignar', err.error?.message || 'No se pudo asignar al estudiante.');
       }
     });
   }

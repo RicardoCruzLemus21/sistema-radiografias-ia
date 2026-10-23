@@ -74,6 +74,30 @@ const listarCatalogoCursos = async (req, res) => {
     }
 };
 
+// Catálogo de cursos con su catedrático, para que el admin elija dónde reasignar a un estudiante
+const listarCatalogoCursosAdmin = async (req, res) => {
+    try {
+        const catalogo = await academicService.obtenerCatalogoCursosAdmin();
+        res.status(200).json({ status: 'success', data: catalogo });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: 'Error al obtener el catálogo de cursos' });
+    }
+};
+
+// Busca un estudiante sin asignar por carnet o correo, para que el catedrático lo reasigne a su curso
+const buscarEstudianteSinAsignar = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q || !q.trim()) {
+            return res.status(400).json({ status: 'error', message: 'Escribe un carnet o correo para buscar.' });
+        }
+        const estudiante = await academicService.buscarEstudianteSinAsignar(q.trim());
+        res.status(200).json({ status: 'success', data: estudiante });
+    } catch (error) {
+        res.status(404).json({ status: 'error', message: error.message });
+    }
+};
+
 const listarEstudiantes = async (req, res) => {
     try {
         const { id_curso } = req.params;
@@ -239,5 +263,7 @@ module.exports = {
     editarCurso,
     eliminarCurso,
     listarCursosDeCatedratico,
-    listarCatalogoCursos
+    listarCatalogoCursos,
+    listarCatalogoCursosAdmin,
+    buscarEstudianteSinAsignar
 };

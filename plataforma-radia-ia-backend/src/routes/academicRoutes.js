@@ -12,7 +12,7 @@ router.post('/mi-codigo/regenerar', verificarRol(['catedratico']), academicContr
 
 // Endpoints de Escritura (POST)
 router.post('/crear', academicController.crear);
-router.post('/asignar', academicController.asignar);
+router.post('/asignar', verificarRol(['catedratico', 'admin']), academicController.asignar);
 
 // Endpoints de Lectura (GET) para cubrir las 3 tablas y Dashboards
 // Informe PDF de calificaciones (solo catedráticos)
@@ -25,6 +25,10 @@ router.get('/resumen-general', academicController.verResumenGeneral);
 router.get('/estudiante/:id/detalle', academicController.verDetalleEstudiante);
 router.get('/mis-cursos', academicController.listarMisCursos);
 router.get('/catalogo-cursos', academicController.listarCatalogoCursos);
+// Catálogo con catedrático, para que el admin reasigne un estudiante sin curso a cualquier sección
+router.get('/admin/cursos', verificarRol(['admin']), academicController.listarCatalogoCursosAdmin);
+// Para que el catedrático reasigne a su curso un estudiante existente (ya desvinculado) sin crear cuenta nueva
+router.get('/buscar-estudiante-sin-asignar', verificarRol(['catedratico']), academicController.buscarEstudianteSinAsignar);
 router.get('/catedratico/:id_catedratico/cursos', academicController.listarCursosDeCatedratico);
 router.get('/:id_curso/estudiantes', academicController.listarEstudiantes);
 router.get('/:id_curso/dashboard', academicController.verDashboard);

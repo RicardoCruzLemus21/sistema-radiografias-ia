@@ -21,17 +21,23 @@ const crearCurso = async (datosCurso) => {
 
 // 2. Servicio para asignar un estudiante a un curso
 const asignarEstudiante = async (datosAsignacion) => {
-    const { id_curso, id_estudiante } = datosAsignacion;
+    const { id_curso, id_estudiante, omitir_correo } = datosAsignacion;
 
     try {
         const [existentes] = await pool.query('CALL sp_verificar_estudiante_curso(?, ?)', [id_curso, id_estudiante]);
-        
+
         if (existentes[0].length > 0) {
             throw new Error('El estudiante ya se encuentra matriculado en este curso.');
         }
 
         const [resultado] = await pool.query('CALL sp_asignar_estudiante_curso(?, ?)', [id_curso, id_estudiante]);
         require('./notificationService').notificarMatricula(id_estudiante, id_curso);
+
+        // Al reasignar un estudiante que ya tenía cuenta (no una matrícula nueva con clave temporal),
+        // no tiene sentido el correo de "bienvenida con tu clave temporal" porque ya tiene su propia clave.
+        if (omitir_correo) {
+            return { id_asignacion: resultado[0][0].id_asignacion, id_curso, id_estudiante };
+        }
 
         // === NOTIFICACIÓN POR CORREO DINÁMICO ===
         try {
@@ -75,6 +81,33 @@ const obtenerCursosCatedratico = async (id_catedratico) => {
 const obtenerCatalogoCursos = async () => {
     const [catalogo] = await pool.query('CALL sp_obtener_nombres_cursos_disponibles()');
     return catalogo[0];
+};
+
+// 3.6 Catálogo de cursos con su catedrático, para que el admin elija dónde reasignar a un estudiante
+const obtenerCatalogoCursosAdmin = async () => {
+    const [catalogo] = await pool.query('CALL sp_obtener_catalogo_cursos()');
+    return catalogo[0];
+};
+
+// 3.7 Busca un estudiante por carnet o correo para que un catedrático lo vuelva a asignar a su
+// curso sin crear una cuenta nueva. Rechaza si no existe o si ya está matriculado en algún curso.
+const buscarEstudianteSinAsignar = async (busqueda) => {
+    const [resultado] = await pool.query('CALL sp_buscar_estudiante_sin_asignar(?)', [busqueda]);
+    const estudiante = resultado[0][0];
+
+    if (!estudiante) {
+        throw new Error('No se encontró ningún estudiante con ese carnet o correo.');
+    }
+    if (estudiante.total_cursos_asignados > 0) {
+        throw new Error('Ese estudiante ya está asignado a un curso.');
+    }
+
+    return {
+        id_usuario: estudiante.id_usuario,
+        carnet: estudiante.carnet,
+        nombre_completo: estudiante.nombre_completo,
+        correo_electronico: estudiante.correo_electronico
+    };
 };
 
 // 4. Obtener la lista de estudiantes matriculados en un curso
@@ -249,6 +282,8 @@ module.exports = {
     asignarEstudiante,
     obtenerCursosCatedratico,
     obtenerCatalogoCursos,
+    obtenerCatalogoCursosAdmin,
+    buscarEstudianteSinAsignar,
     obtenerEstudiantesPorCurso,
     obtenerEstadisticas,
     obtenerResumenGeneral,
