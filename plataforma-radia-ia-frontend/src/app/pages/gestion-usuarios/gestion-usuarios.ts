@@ -141,7 +141,7 @@ export class GestionUsuariosComponent implements OnInit {
 
     const idCursoElegido = await this.alertService.seleccionar(
       'Asignar a un curso',
-      `Elige el curso donde quieres matricular a ${usuario.nombre}.`,
+      `Elige el curso donde quieres matricular a ${(usuario.nombre || '').trim()}.`,
       opciones,
       'Asignar'
     );

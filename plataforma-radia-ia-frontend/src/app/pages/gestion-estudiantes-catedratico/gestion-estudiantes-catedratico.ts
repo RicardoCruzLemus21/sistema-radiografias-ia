@@ -156,6 +156,7 @@ export class GestionEstudiantesCatedraticoComponent implements OnInit {
     this.academicService.buscarEstudianteSinAsignar(busqueda).subscribe({
       next: async (resp: any) => {
         const estudiante = resp.data;
+        estudiante.nombre_completo = (estudiante.nombre_completo || '').trim();
         const confirmado = await this.alertService.confirm(
           '¿Es este el estudiante?',
           `${estudiante.nombre_completo} — ${estudiante.correo_electronico}`,

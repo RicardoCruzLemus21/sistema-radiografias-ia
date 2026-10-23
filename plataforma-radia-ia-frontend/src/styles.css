@@ -405,5 +405,29 @@ select::-webkit-scrollbar-thumb {
 .btn-con-icono { display: inline-flex; align-items: center; gap: 6px; }
 .icono-flecha { width: 16px; height: 16px; flex-shrink: 0; }
 
+/* El <select> nativo de SweetAlert (alertService.seleccionar) viene con el estilo por defecto
+   de la librería, que desentona con el resto de los inputs del sistema. Se iguala al look de
+   .glass-input/.input-wrapper select, y color-scheme hace que el navegador pinte la lista de
+   opciones nativa en oscuro cuando el tema activo lo es (si no, la lista sale blanca encima de
+   un popup oscuro). */
+.swal2-select {
+  width: 100% !important;
+  margin: 1em auto 0 !important;
+  padding: 12px 14px !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border-color) !important;
+  background: var(--input-bg) !important;
+  color: var(--text-main) !important;
+  font-size: 14px !important;
+  color-scheme: light dark;
+}
+[data-theme="darkglass"] .swal2-select { color-scheme: dark; }
+[data-theme="light"] .swal2-select { color-scheme: light; }
+.swal2-select:focus {
+  outline: none !important;
+  border-color: var(--accent-cyan) !important;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.15) !important;
+}
+
 /* Imagen base de una radiografía ampliada: recibe brillo e inversión desde app-herramientas-imagen */
 .imagen-base { filter: var(--hi-filter, none); transition: filter 0.15s ease; }
