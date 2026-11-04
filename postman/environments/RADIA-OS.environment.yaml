@@ -1,0 +1,22 @@
+name: RADIA-OS - Local
+values:
+  - key: base_url
+    value: 'http://localhost:3000'
+    enabled: true
+    type: default
+  - key: token
+    value: ''
+    enabled: true
+    type: secret
+  - key: id_curso
+    value: '1'
+    enabled: true
+    type: default
+  - key: id_caso
+    value: '1'
+    enabled: true
+    type: default
+  - key: id_estudiante
+    value: '1'
+    enabled: true
+    type: default

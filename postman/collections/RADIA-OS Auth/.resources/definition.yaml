@@ -1,0 +1,9 @@
+$kind: collection
+name: RADIA-OS Auth
+description: |-
+  Colección de autenticación y registro para el sistema RADIA-OS.
+  Incluye endpoints públicos de registro de estudiante, login y consulta de docente por código.
+variables:
+  - key: base_url
+    value: 'http://localhost:3000'
+    description: URL base del backend local

@@ -1,0 +1,19 @@
+$kind: http-request
+name: 'Registrar Estudiante'
+method: POST
+url: '{{base_url}}/api/auth/registrar-estudiante'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "carnet": "2021-01-0001",
+      "nombre_completo": "Juan Pérez García",
+      "correo_electronico": "juan.perez@example.com",
+      "contrasena": "miClave123",
+      "codigo_docente": "ABCD-1234",
+      "id_curso": 1
+    }
