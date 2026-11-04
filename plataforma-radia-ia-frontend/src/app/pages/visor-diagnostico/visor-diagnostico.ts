@@ -16,12 +16,23 @@ import { environment } from '../../../environments/environment';
   templateUrl: './visor-diagnostico.html',
   styleUrl: './visor-diagnostico.css'
 })
+// Pantalla donde el estudiante resuelve un caso clínico, organizada en un
+// FLUJO DE 4 FASES controlado por "faseActual" (se usa en el .html con
+// *ngIf/[hidden] para mostrar un bloque distinto en cada fase):
+//   Fase 1 -> diagnóstico "ciego": el estudiante elige patología(s), marca
+//             una región sospechosa en la imagen y da su nivel de confianza.
+//             Al enviar (enviarDiagnostico) la respuesta queda BLOQUEADA.
+//   Fase 2 -> se revela el diagnóstico real del caso (aplicarVerdad).
+//   Fase 3 -> se muestra el Grad-CAM: el mapa de calor que generó el modelo
+//             de IA (ResNet50, ver iaService.js del backend) para comparar
+//             en qué se fijó la IA contra lo que marcó el estudiante.
+//   Fase 4 -> retroalimentación final con los puntajes (puntajesEstudiante).
 export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
-  
+
   idCasoActual: string = '';
   patologias: any[] = [];
   justificacionClinica: string = '';
-  
+
   // Nuevas variables para el Flujo de 4 Fases
   faseActual: number = 1;
   nivelConfianza: number = 50; // Slider de 0 a 100
@@ -271,6 +282,9 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // --- TRANSICIONES DE FASE ---
+  // Simplemente cambian el número de fase visible; como la app es "zoneless"
+  // (ver app.config.ts), hay que forzar detectChanges() para que la vista se
+  // repinte -- Angular ya no lo detecta solo.
   avanzarFase2() {
     this.faseActual = 2;
     this.cdr.detectChanges();
@@ -286,6 +300,12 @@ export class VisorDiagnostico implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  // FASE 1: envía el diagnóstico del estudiante al backend (POST /respuestas,
+  // ver clinicalController.registrarRespuesta -> clinicalService.guardarRespuestaEstudiante).
+  // Antes de enviar se pide confirmación porque la respuesta queda bloqueada:
+  // el backend, en la misma llamada, calcula los puntajes reales (ejes 1/2/3)
+  // y devuelve el diagnóstico verdadero del caso (aplicarVerdad), con lo que
+  // se avanza automáticamente a la Fase 2.
   async enviarDiagnostico(): Promise<void> {
     const patologiasSeleccionadas = this.patologias.filter(p => p.seleccionada).map(p => p.id);
 

@@ -17,10 +17,18 @@ import { roleGuard } from './guards/role.guard';
 
 import { DashboardAdminComponent } from './pages/dashboard-admin/dashboard-admin';
 
+// Mapa de rutas de toda la aplicación. Cada ruta hija dentro de "sistema" lleva
+// DOS guardias encadenados:
+//   1) authGuard (en el padre "sistema"): ¿hay una sesión (JWT) guardada? si no, al login.
+//   2) roleGuard (en cada hija): ¿el rol del usuario coincide con "expectedRole"
+//      (o está dentro de "expectedRoles" cuando la pantalla es compartida)?
+//      si no coincide, lo manda a SU PROPIO dashboard en vez de dejarlo pasar.
+// Así un estudiante nunca puede llegar, ni escribiendo la URL a mano, a una
+// pantalla pensada para el catedrático o el admin.
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
-  { 
-    path: 'sistema', 
+  {
+    path: 'sistema',
     component: LayoutComponent,
     canActivate: [authGuard],
     children: [
@@ -32,7 +40,8 @@ export const routes: Routes = [
       { path: 'codigo-docente', component: CodigoDocenteComponent, canActivate: [roleGuard], data: { expectedRole: 'catedratico' } },
       { path: 'gestion-admin-usuarios', component: GestionUsuariosComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
       { path: 'auditoria', component: AuditoriaLogsComponent, canActivate: [roleGuard], data: { expectedRole: 'admin' } },
-      { path: 'visor/:id', component: VisorDiagnostico, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } }, 
+      // Pantalla del flujo de 4 fases (diagnóstico -> verdad real -> Grad-CAM -> puntajes)
+      { path: 'visor/:id', component: VisorDiagnostico, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
       { path: 'resultado/:id', component: RetroalimentacionIa, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } }, 
       { path: 'mi-rendimiento', component: RendimientoEstudiante, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },
       { path: 'biblioteca', component: BibliotecaPatologias, canActivate: [roleGuard], data: { expectedRole: 'estudiante' } },

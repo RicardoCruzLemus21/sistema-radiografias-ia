@@ -55,6 +55,8 @@
         <p class="helper-text">Cargando tu caso...</p>
       </div>
 
+      <!-- FASE 1: diagnóstico "a ciegas". El estudiante elige patología(s), marca la
+           región sospechosa sobre la radiografía y da su nivel de confianza. -->
       <div *ngIf="faseActual === 1 && !comprobandoRevision" class="fase-container">
         <div class="panel-section" *ngIf="casoDetalle?.historia_usuario">
           <button type="button" class="btn-secondary" style="width: 100%;" (click)="mostrarHistoria = !mostrarHistoria">

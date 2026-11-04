@@ -7,6 +7,10 @@ import { AuthService } from './auth';
 @Injectable({
   providedIn: 'root'
 })
+// Capa de SERVICIOS del frontend (equivalente conceptual a los servicios del
+// backend): ningún componente llama a HttpClient directamente, todos pasan
+// por aquí. Ventaja: la URL base y el header de autenticación están en un
+// solo lugar; si cambia la forma de autenticar, solo se toca este archivo.
 export class ClinicalService {
   private apiUrl = `${environment.apiUrl}/api/clinical`;
 

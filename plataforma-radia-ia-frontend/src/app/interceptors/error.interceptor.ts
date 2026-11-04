@@ -5,6 +5,14 @@ import { AlertService } from '../services/alert.service';
 import { SesionService } from '../services/sesion.service';
 import { catchError, throwError } from 'rxjs';
 
+// Interceptor HTTP GLOBAL: pasa por aquí toda petición que haga cualquier
+// servicio de la app (no adjunta el token -- eso lo hace cada servicio con
+// AuthService.getAuthHeaders(), ver clinical.ts -- este interceptor solo
+// observa la RESPUESTA). Centraliza la reacción a los errores más comunes
+// para no repetir ese código en cada componente:
+//   401 -> el token venció o es inválido -> cierra la sesión automáticamente
+//   403 -> sesión válida pero sin permiso para esa acción -> solo avisa
+//   500 / 0 -> error del servidor / sin conexión -> alerta genérica
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const alertService = inject(AlertService);

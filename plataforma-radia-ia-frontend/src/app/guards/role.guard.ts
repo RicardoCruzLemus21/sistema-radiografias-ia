@@ -2,6 +2,11 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth';
 
+// Guard de ROL: se ejecuta DESPUÉS de authGuard (que ya garantizó que hay sesión).
+// Lee de route.data (definido en app.routes.ts) qué rol se esperaba para esa
+// ruta puntual, y lo compara contra el rol real del usuario (decodificado del
+// JWT por AuthService). Si no coincide, en vez de solo bloquear, lo redirige
+// a SU PROPIO dashboard -- una mejor experiencia que una pantalla de error.
 export const roleGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);

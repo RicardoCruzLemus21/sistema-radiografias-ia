@@ -17,6 +17,9 @@ export class AuthService {
     for (const clave of ['token', 'usuario', 'token_temporal', 'usuario_temporal']) localStorage.removeItem(clave);
   }
 
+  // Login: el backend responde con un JWT. Se guarda en sessionStorage (no en
+  // localStorage, ver el comentario del constructor) y de ahí en adelante
+  // getAuthHeaders() lo adjunta manualmente en cada llamada HTTP protegida.
   login(correo_electronico: string, contrasena: string) {
     return this.http.post<any>(`${this.apiUrl}/api/auth/login`, { correo_electronico, contrasena })
       .pipe(
@@ -81,6 +84,9 @@ export class AuthService {
     return sessionStorage.getItem('token');
   }
 
+  // Construye el header "Authorization: Bearer <token>" que cada servicio
+  // (ver clinical.ts) pasa manualmente en cada petición protegida -- el mismo
+  // formato que lee authMiddleware.js del lado del backend.
   getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
     return new HttpHeaders({
@@ -88,6 +94,8 @@ export class AuthService {
     });
   }
 
+  // El rol no se vuelve a pedir al backend: se decodifica directo del JWT
+  // (la segunda parte del token, separada por puntos, es un JSON en base64).
   getRolUsuario(): string {
     const usuarioStr = sessionStorage.getItem('usuario');
     if (usuarioStr) {
