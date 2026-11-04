@@ -4,7 +4,6 @@ const { ErrorAprendizaje } = require('./aprendizajeService');
 const geminiService = require('./geminiService');
 
 const parseJson = (v, def) => { try { return typeof v === 'string' ? JSON.parse(v) : (v ?? def); } catch (e) { return def; } };
-const esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const validarClase = (c) => { if (!obtenerClases().includes(c)) throw new ErrorAprendizaje('Categoría no válida.'); return c; };
 const texto = (v, min, max, campo) => {
@@ -72,50 +71,87 @@ const guardarLeccion = async (clase, contenido, estado, idDocente, idVersion = n
 
 // ===== Generación de lecciones con IA =====
 // El docente presiona un botón y se generan 8 candidatas (una por patología), sin publicarlas todavía.
-const esquemaLeccionIA = {
-    type: 'OBJECT',
-    properties: {
-        resumen: { type: 'STRING' },
-        que_buscar: { type: 'ARRAY', items: { type: 'STRING' } },
-        errores_tipicos: { type: 'ARRAY', items: { type: 'STRING' } },
-        dato_clave: { type: 'STRING' },
-        se_confunde_con: {
-            type: 'ARRAY',
-            items: {
-                type: 'OBJECT',
-                properties: { clase: { type: 'STRING' }, clave: { type: 'STRING' } },
-                required: ['clase', 'clave']
+// Esquema para pedirle a Gemini VARIAS patologías en una sola llamada: un array con un
+// objeto por patología (cada uno igual al esquema de una lección individual, más "clase"
+// para poder emparejar cada objeto de la respuesta con lo que se pidió).
+const esquemaLoteLeccionesIA = {
+    type: 'ARRAY',
+    items: {
+        type: 'OBJECT',
+        properties: {
+            clase: { type: 'STRING' },
+            resumen: { type: 'STRING' },
+            que_buscar: { type: 'ARRAY', items: { type: 'STRING' } },
+            errores_tipicos: { type: 'ARRAY', items: { type: 'STRING' } },
+            dato_clave: { type: 'STRING' },
+            se_confunde_con: {
+                type: 'ARRAY',
+                items: {
+                    type: 'OBJECT',
+                    properties: { clase: { type: 'STRING' }, clave: { type: 'STRING' } },
+                    required: ['clase', 'clave']
+                }
             }
-        }
-    },
-    required: ['resumen', 'que_buscar', 'errores_tipicos', 'dato_clave', 'se_confunde_con']
+        },
+        required: ['clase', 'resumen', 'que_buscar', 'errores_tipicos', 'dato_clave', 'se_confunde_con']
+    }
 };
 
-const promptLeccion = (clase, nombre) => {
-    const otras = obtenerClases().filter(c => c !== clase);
-    const listaOtras = otras.map(c => `${c} (${obtenerLecciones()[c]?.nombre || c})`).join(', ');
-    return `Eres un radiólogo que escribe material educativo en español para estudiantes de medicina sobre cómo reconocer "${nombre}" en una radiografía de tórax.
-Responde SOLO con un JSON (sin texto adicional) con estos campos:
-- resumen: 1 a 3 frases (10 a 600 caracteres) de cómo se reconoce ${nombre} en la radiografía.
+// Un solo prompt para TODAS las patologías del lote (antes se mandaba una petición por
+// patología, hasta 8 por clic; la cuota gratuita de Gemini es de pocas peticiones al día,
+// así que agrupar todo en una sola llamada es lo que hace viable la función).
+const promptLoteLecciones = (clases) => {
+    const detalle = clases.map(clase => {
+        const nombre = obtenerLecciones()[clase]?.nombre || clase;
+        const otras = obtenerClases().filter(c => c !== clase);
+        const listaOtras = otras.map(c => `${c} (${obtenerLecciones()[c]?.nombre || c})`).join(', ');
+        return `- clase="${clase}" (nombre visible: "${nombre}"). Categorías válidas para su "se_confunde_con" (no incluyas "${clase}"): ${listaOtras}.`;
+    }).join('\n');
+
+    return `Eres un radiólogo que escribe material educativo en español para estudiantes de medicina sobre cómo reconocer distintos hallazgos en una radiografía de tórax.
+Responde SOLO con un JSON: un array con exactamente un objeto por cada una de estas ${clases.length} categorías:
+${detalle}
+
+Cada objeto del array debe tener:
+- clase: EXACTAMENTE el identificador dado arriba (tal cual, sin acentos ni cambios), para saber a cuál categoría corresponde.
+- resumen: 1 a 3 frases (10 a 600 caracteres) de cómo se reconoce esa condición en la radiografía.
 - que_buscar: entre 2 y 8 señales radiológicas concretas (cada una de 8 a 400 caracteres).
-- errores_tipicos: entre 1 y 6 errores comunes que cometen los estudiantes al diagnosticar esto (cada uno de 8 a 400 caracteres).
+- errores_tipicos: entre 1 y 6 errores comunes que cometen los estudiantes al diagnosticarla (cada uno de 8 a 400 caracteres).
 - dato_clave: un dato breve y memorable (5 a 300 caracteres).
-- se_confunde_con: 2 o 3 objetos {clase, clave}. "clase" debe ser EXACTAMENTE uno de estos valores (tal cual, sin acentos ni cambios): ${otras.join(', ')}. "clave" (10 a 500 caracteres) explica cómo distinguir ${nombre} de esa otra condición. Las otras categorías del sistema son: ${listaOtras}.
-No repitas "${clase}" en se_confunde_con.`;
+- se_confunde_con: 2 o 3 objetos {clase, clave} usando los identificadores EXACTOS de categorías listados arriba para esa patología. "clave" (10 a 500 caracteres) explica cómo distinguirlas.
+
+Devuelve el array completo, con las ${clases.length} categorías pedidas, en cualquier orden.`;
 };
 
 // Genera candidatas con IA para una lista de clases y las inserta en el lote indicado.
-// Pausa entre patologías (no antes de la primera) para no disparar las peticiones de golpe y
-// chocar con el límite de peticiones por minuto de la cuenta gratuita.
+// Una sola llamada a Gemini para todas las patologías pedidas (ver promptLoteLecciones):
+// si falla, falla para todas por igual; si responde, cada patología se valida por separado
+// (una mal formada no tumba a las demás).
 const generarCandidatasEnLote = async (idLote, clases) => {
     const generadas = [];
     const errores = [];
+
+    let crudo;
+    try {
+        crudo = await geminiService.generarJSON({ prompt: promptLoteLecciones(clases), schema: esquemaLoteLeccionesIA });
+    } catch (error) {
+        for (const clase of clases) errores.push({ clase, nombre: obtenerLecciones()[clase]?.nombre || clase, mensaje: error.message });
+        return { generadas, errores };
+    }
+
+    const porClase = new Map();
+    if (Array.isArray(crudo)) {
+        for (const item of crudo) {
+            if (item && typeof item.clase === 'string' && !porClase.has(item.clase)) porClase.set(item.clase, item);
+        }
+    }
+
     for (const clase of clases) {
-        if (generadas.length + errores.length > 0) await esperar(1500);
         const nombre = obtenerLecciones()[clase]?.nombre || clase;
         try {
-            const crudo = await geminiService.generarJSON({ prompt: promptLeccion(clase, nombre), schema: esquemaLeccionIA });
-            const limpio = validarLeccion(crudo, clase);
+            const item = porClase.get(clase);
+            if (!item) throw new ErrorAprendizaje('Gemini no devolvió esta patología en el lote.');
+            const limpio = validarLeccion(item, clase);
             const [res] = await pool.query('CALL sp_apr_crear_version_leccion(?, ?, ?)', [idLote, clase, JSON.stringify(limpio)]);
             generadas.push({ id_version: res[0][0].id_version, clase, nombre, contenido: limpio });
         } catch (error) {
