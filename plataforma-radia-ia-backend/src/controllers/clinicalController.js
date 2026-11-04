@@ -140,6 +140,12 @@ const asignarCasosBanco = async (req, res) => {
     }
 };
 
+// CONTROLADOR de la composición automática de ejercicios. Nótese el rol de esta capa:
+// no decide CÓMO se eligen los casos (eso vive en clinicalService.componerEjercicio),
+// solo se encarga de las responsabilidades típicas de un controlador HTTP:
+//   1) leer lo que llegó en el request (req.body),
+//   2) una verificación de seguridad rápida (que el curso sea del docente que llama),
+//   3) delegar al servicio y traducir el resultado (o el error) a una respuesta HTTP.
 const componerEjercicio = async (req, res) => {
     try {
         const { id_curso } = req.body || {};

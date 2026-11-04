@@ -3,6 +3,11 @@ const router = express.Router();
 const clinicalController = require('../controllers/clinicalController');
 const { verificarToken, verificarRol } = require('../middlewares/authMiddleware');
 
+// Esta es la CAPA DE RUTAS: define los endpoints HTTP y, antes de llegar al
+// controlador, encadena los middlewares de seguridad (verificarToken = ¿hay
+// sesión válida?, verificarRol = ¿el rol tiene permiso para esta acción
+// puntual?). Así el controlador y el servicio ya no se preocupan por permisos.
+//
 // Aseguramos todo el módulo temporalmente deshabilitado para pruebas
 router.use(verificarToken);
 
@@ -17,6 +22,7 @@ router.get('/caso/:id', clinicalController.obtenerCasoPorId);
 router.get('/library/:patologia', clinicalController.obtenerInfoPatologiaIA);
 // Flujo de asignación del banco: solo catedráticos (y solo sobre sus propios cursos, ver el controlador)
 router.get('/banco-casos-ia/disponibilidad', verificarRol(['catedratico']), clinicalController.obtenerDisponibilidadBanco);
+// Endpoint que dispara la composición aleatoria de un ejercicio (ver clinicalService.componerEjercicio)
 router.post('/banco-casos-ia/componer', verificarRol(['catedratico']), clinicalController.componerEjercicio);
 router.get('/metricas-modelo', clinicalController.obtenerMetricasModelo);
 router.get('/estadisticas-estudiante', clinicalController.obtenerEstadisticasEstudiante);

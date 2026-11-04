@@ -8,6 +8,12 @@ const path = require('path');
 // CONFIGURACIÓN DEL MOTOR DE INFERENCIA
 // ==========================================
 
+// El modelo (ResNet50) se entrenó en Google Colab y se exportó a formato
+// TensorFlow.js (carpeta ml_models/: model.json + varios .bin con los pesos).
+// Este arreglo traduce el índice numérico que devuelve la red (0 al 7) al
+// nombre real de la patología; el orden tiene que coincidir EXACTO con el
+// orden de clases usado durante el entrenamiento en Colab.
+//
 // Clases de salida de la Red Neuronal (ResNet50) en el orden alfabético en que fue entrenada
 const CLASES_IA = [
     { index: 0, nombre: 'Atelectasia', id_patologia: 7 },
@@ -40,6 +46,9 @@ class NodeLocalFileSystem {
     }
 }
 
+// Patrón singleton: el modelo pesa varios cientos de MB y tarda en cargar, así que
+// se carga UNA sola vez al arrancar el servidor (ver server.js) y se reutiliza la
+// misma instancia en memoria para todas las peticiones de IA que lleguen después.
 let modeloIA = null;
 
 const cargarModeloIA = async () => {

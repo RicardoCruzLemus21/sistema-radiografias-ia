@@ -143,6 +143,21 @@ const asignarCasosBanco = async (id_curso, ids_casos) => {
 // NUEVA FUNCIÓN: Componer un ejercicio automáticamente por criterios (diana + normales + distractores).
 // El docente sigue pudiendo ajustar el resultado a mano en el carrito (agregar/quitar), esto solo
 // rellena la selección inicial para no obligarlo a buscar caso por caso.
+// ============================================================================
+// COMPOSICIÓN AUTOMÁTICA DE EJERCICIOS (selección aleatoria de patologías)
+// ----------------------------------------------------------------------------
+// Esta es la función que el catedrático dispara al crear un ejercicio nuevo.
+// En vez de elegir caso por caso, el docente solo indica QUÉ patologías quiere
+// evaluar, y esta función arma automáticamente una mezcla balanceada de casos:
+//   - una parte son "diana"  -> contienen las patologías que el docente eligió
+//   - una parte son "normal" -> radiografías sanas, para que el estudiante
+//                                también practique descartar un diagnóstico
+//   - el resto son "distractores" -> patologías parecidas/confundibles con la
+//                                     diana, para que el ejercicio no sea obvio
+// La parte "aleatoria" real ocurre más abajo, en seleccionarCasos(): se cuenta
+// cuántos casos hay disponibles y se calcula un offset con Math.random() para
+// no traer siempre los mismos casos ni en el mismo orden.
+// ============================================================================
 const componerEjercicio = async (criterios) => {
     const {
         patologias_objetivo = [],
@@ -162,6 +177,8 @@ const componerEjercicio = async (criterios) => {
     const propNormales = Math.min(Math.max(Number.isFinite(pn) ? pn : 0.3, 0), 1);
 
     // Fórmula de mezcla (ver documento de diseño): diana + normales + el resto como distractores
+    // Ejemplo con 10 casos y 30% normales: 3 normales, el 70% restante de 7 son diana (~5),
+    // y lo que sobra (2) son distractores.
     const casosNormales = Math.round(total * propNormales);
     const casosDiana = Math.round(total * (1 - propNormales) * 0.7);
     const casosDistractores = Math.max(0, total - casosNormales - casosDiana);
@@ -180,12 +197,20 @@ const componerEjercicio = async (criterios) => {
         return slots;
     };
 
+    // AQUÍ ocurre la selección aleatoria: dado un grupo de patologías (diana, "Normal"
+    // o distractores) y cuántos casos se necesitan de ese grupo, primero se CUENTA
+    // cuántos casos cumplen el criterio (patología + nivel + no repetidos) con
+    // sp_contar_casos_banco_nih, y luego se pide ese número de casos pero empezando
+    // en una posición aleatoria (randomOffset) dentro de lo disponible, con
+    // sp_listar_casos_banco_nih. Así, aunque el docente repita el mismo ejercicio para
+    // 30 estudiantes, cada uno puede recibir una combinación distinta de casos.
     const seleccionarCasos = async (patologiasSet, cantidad, excluirIds) => {
         if (cantidad <= 0 || patologiasSet.length === 0) return [];
 
         const nivelesCsv = nivelesIncluidos.join(',');
         const excluirCsv = excluirIds.join(',');
 
+        // 1) ¿Cuántos casos hay disponibles que cumplan el criterio?
         const [countResult] = await pool.query(
             'CALL sp_contar_casos_banco_nih(?,?,?,?,?,?,?,?,?,?,?)',
             [...patSlots(patologiasSet), nivelesCsv, excluirCsv, idCurso]
@@ -193,10 +218,12 @@ const componerEjercicio = async (criterios) => {
         const totalDisponibles = countResult[0][0]?.total || 0;
         if (totalDisponibles === 0) return [];
 
+        // 2) Punto de partida aleatorio (como "barajar" el banco de casos antes de tomar la porción que se necesita)
         const tomar = Math.min(cantidad, totalDisponibles);
         const maxOffset = Math.max(0, totalDisponibles - tomar);
         const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
 
+        // 3) Se traen los casos reales a partir de ese offset aleatorio
         const [dataResult] = await pool.query(
             'CALL sp_listar_casos_banco_nih(?,?,?,?,?,?,?,?,?,?,?,?,?)',
             [...patSlots(patologiasSet), nivelesCsv, excluirCsv, idCurso, tomar, randomOffset]
@@ -220,6 +247,8 @@ const componerEjercicio = async (criterios) => {
         };
     });
 
+    // Se seleccionan los 3 grupos en orden, acumulando los IDs ya usados para que
+    // un mismo caso no pueda caer dos veces en el mismo ejercicio (p. ej. como "diana" y luego otra vez como "distractor").
     const filasDiana = await seleccionarCasos(patologias_objetivo, casosDiana, []);
     const idsUsados = filasDiana.map(r => r.id_caso);
 

@@ -1,6 +1,11 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config({ override: true });
 
+// Esta es la CAPA DE CONFIGURACIÓN del backend (arquitectura de 3 capas:
+// rutas -> controladores -> servicios -> aquí). Todo lo que necesita hablar con
+// MySQL importa este archivo y reutiliza el mismo pool, en vez de abrir una
+// conexión nueva por cada petición.
+//
 // Creación del Pool de conexiones para manejar múltiples peticiones asíncronas
 const pool = mysql.createPool({
     host: process.env.DB_HOST,

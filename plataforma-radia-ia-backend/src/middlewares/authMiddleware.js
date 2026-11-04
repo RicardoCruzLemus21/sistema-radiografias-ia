@@ -1,5 +1,8 @@
 const jwt = require('jsonwebtoken');
 
+// Estos dos middlewares son los "guardias de seguridad" que se insertan en las
+// rutas antes del controlador. verificarToken responde "¿quién eres?" (sesión
+// válida) y verificarRol responde "¿tienes permiso para esto?" (rol correcto).
 const verificarToken = (req, res, next) => {
     // Leer el token de los encabezados (Headers)
     let token = req.header('Authorization');
