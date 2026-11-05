@@ -32,8 +32,8 @@ export class GestionCasosCatedratico implements OnInit {
   // Por defecto el panel muestra solo los ejercicios visibles; "verOcultos" muestra los ocultos
   verOcultos: boolean = false;
 
-  // Carpetas de ejercicios paginadas de 6 en 6, las más recientes primero
-  readonly TAMANO_PAGINA_CARPETAS = 8;
+  // Carpetas de ejercicios paginadas de 9 en 9, las más recientes primero
+  readonly TAMANO_PAGINA_CARPETAS = 9;
   paginaCarpetas: number = 1;
 
   get totalPaginasCarpetas(): number {
@@ -377,8 +377,9 @@ export class GestionCasosCatedratico implements OnInit {
       carpeta.casos.push(c);
       carpeta.intentos += Number(c.total_evaluaciones) || 0;
     }
-    // El ejercicio publicado más recientemente primero (id_ejercicio es autoincremental)
-    this.carpetas = [...porEjercicio.values()].sort((a, b) => b.id_ejercicio - a.id_ejercicio);
+    // El ejercicio más reciente primero, según su número (NO el id_ejercicio: al insertar
+    // ejercicios históricos fuera de orden, el id autoincremental ya no refleja la cronología real).
+    this.carpetas = [...porEjercicio.values()].sort((a, b) => b.numero - a.numero);
     this.casosSueltos = sueltos;
 
     // Si la carpeta abierta ya no existe (se eliminó o el filtro la vació), se vuelve a la vista general

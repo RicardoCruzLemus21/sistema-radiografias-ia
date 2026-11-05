@@ -926,7 +926,7 @@
    CARPETAS DE EJERCICIOS
    ======================================================== */
 .seccion-titulo { margin: 8px 0 12px; font-size: 16px; color: var(--text-main); }
-.carpetas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.carpetas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .carpeta-card { display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 14px; cursor: pointer; transition: transform 0.15s ease, border-color 0.15s ease; }
 .carpeta-card:hover { transform: translateY(-2px); border-color: var(--accent-cyan); }
 .carpeta-card:focus-visible { outline: 2px solid var(--accent-cyan); outline-offset: 2px; }
